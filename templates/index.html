@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Watch Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="site-header">
+    <span class="site-title">🎬 My Watch Tracker</span>
+    <div class="header-right">
+        {% if logged_in %}
+            <form method="POST" action="/logout" style="margin:0">
+                <button type="submit" class="logout-btn">Log Out</button>
+            </form>
+        {% else %}
+            <a href="/login" class="login-link">Admin Login</a>
+        {% endif %}
+    </div>
+</header>
+
+<main>
+
+    {% if logged_in %}
+    <form method="POST" action="/add" class="add-form">
+        <input type="text" name="title" placeholder="Search movie or show title..." required>
+        <select name="entry_type">
+            <option value="Movie">Movie</option>
+            <option value="TV Show">TV Show</option>
+        </select>
+        <select name="status">
+            <option value="Watched">Watched</option>
+            <option value="Want to Watch">Want to Watch</option>
+        </select>
+        <div class="rating-group">
+            <label>Rating</label>
+            <input type="range" name="rating" id="rating" min="1" max="10" step="1" value="7">
+            <span><span id="rating-val">7</span>/10</span>
+        </div>
+        <button type="submit" class="add-btn">+ Add</button>
+    </form>
+    {% endif %}
+
+    {% macro render_card(entry) %}
+        {% set rc = 'rating-red' if entry.rating <= 3 else 'rating-orange' if entry.rating <= 5 else 'rating-yellow' if entry.rating <= 7 else 'rating-lightgreen' if entry.rating <= 9 else 'rating-green' %}
+        <div class="card">
+            {% if entry.poster_url %}
+                <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
+            {% else %}
+                <div class="poster-placeholder">No Image</div>
+            {% endif %}
+
+            <div class="card-body">
+                <h3>{{ entry.title }}</h3>
+
+                {% if entry.status == "Watched" %}
+                    <span class="badge badge-watched">Watched</span>
+                {% else %}
+                    <span class="badge badge-want">Want to Watch</span>
+                {% endif %}
+
+                <div class="rating-label">{{ entry.rating }}/10</div>
+                <div class="rating-bar">
+                    <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}"></div>
+                </div>
+
+                {% if logged_in %}
+                <div class="card-actions">
+                    <button class="edit-btn"
+                            data-id="{{ entry.id }}"
+                            data-status="{{ entry.status }}"
+                            data-rating="{{ entry.rating }}">✎ Edit</button>
+                    <form method="POST" action="/delete/{{ entry.id }}" style="margin:0">
+                        <button type="submit" class="delete-btn">✕ Delete</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endmacro %}
+
+    {% set movies = entries | selectattr("entry_type", "equalto", "Movie") | list %}
+    {% set shows  = entries | selectattr("entry_type", "equalto", "TV Show") | list %}
+
+    <h2 class="section-title">🎬 Movies</h2>
+    {% if movies %}
+        <div class="card-grid">
+            {% for entry in movies %}{{ render_card(entry) }}{% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-section">No movies added yet.</p>
+    {% endif %}
+
+    <h2 class="section-title">📺 TV Shows</h2>
+    {% if shows %}
+        <div class="card-grid">
+            {% for entry in shows %}{{ render_card(entry) }}{% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-section">No TV shows added yet.</p>
+    {% endif %}
+
+</main>
+
+{% if logged_in %}
+<div id="edit-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h2>Edit Entry</h2>
+        <form id="edit-form" method="POST" action="">
+            <div class="modal-field">
+                <label for="modal-status">Status</label>
+                <select name="status" id="modal-status">
+                    <option value="Watched">Watched</option>
+                    <option value="Want to Watch">Want to Watch</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Rating</label>
+                <div class="modal-rating-row">
+                    <input type="range" name="rating" id="modal-rating" min="1" max="10" step="1" value="7">
+                    <span><span id="modal-rating-val">7</span>/10</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-save">Save Changes</button>
+                <button type="button" id="modal-close">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    // Add form live rating
+    const ratingInput = document.getElementById('rating');
+    if (ratingInput) {
+        ratingInput.addEventListener('input', function () {
+            document.getElementById('rating-val').textContent = this.value;
+        });
+    }
+
+    // Edit modal
+    const modal = document.getElementById('edit-modal');
+    if (modal) {
+        document.querySelectorAll('.edit-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit-form').action = '/edit/' + this.dataset.id;
+                document.getElementById('modal-status').value = this.dataset.status;
+                document.getElementById('modal-rating').value = this.dataset.rating;
+                document.getElementById('modal-rating-val').textContent = this.dataset.rating;
+                modal.classList.add('active');
+            });
+        });
+
+        document.getElementById('modal-close').addEventListener('click', function () {
+            modal.classList.remove('active');
+        });
+
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) modal.classList.remove('active');
+        });
+
+        document.getElementById('modal-rating').addEventListener('input', function () {
+            document.getElementById('modal-rating-val').textContent = this.value;
+        });
+    }
+</script>
+
+</body>
+</html>
