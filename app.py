@@ -22,7 +22,8 @@ def login():
     if session.get("logged_in"):
         return redirect(url_for("index"))
     if request.method == "POST":
-        if request.form.get("password") == ADMIN_PASSWORD:
+        typed = request.form.get("password")
+        if typed == ADMIN_PASSWORD:
             session["logged_in"] = True
             return redirect(url_for("index"))
         flash("Incorrect password.")
