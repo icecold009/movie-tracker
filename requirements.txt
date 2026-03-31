@@ -1,2 +1,6 @@
 # Add your Python dependencies here, one per line.
-
+flask
+requests
+python-dotenv
+psycopg2-binary
+gunicorn
