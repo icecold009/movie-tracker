@@ -4,8 +4,6 @@ A personal web app to track movies and TV shows I've watched or want to watch.
 Movies and TV Shows are displayed in separate sections. Cover art is auto-fetched from TMDB using an API.
 Built with Flask + PostgreSQL, hosted publicly on Render — only I can add, edit, or delete entries.
 
-![screenshot](screenshot.png)
-
 ## Features
 
 - 🔍 Search any movie or TV show — cover art pulled automatically from TMDB
