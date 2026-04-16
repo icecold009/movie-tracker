@@ -8,14 +8,14 @@ https://movie-tracker-uynj.onrender.com
 
 ## Features
 
-- 🔍 Search any movie or TV show, cover art pulled automatically from TMDB
-- 🎨 Rate 1–10 with a colour-coded bar (red → orange → yellow → green)
+- 🎨 Rate 1–10 with a colour-coded bar (red → yellow → green)
 - 📋 Track status: **Watched** or **Want to Watch**
 - 🎬 Movies and 📺 TV Shows displayed in separate sections
 - ✎ Edit rating and status on any entry
 - ✕ Delete any entry
-- 🌐 Public view — anyone can see the watchlist
-- 🔐 Password-protected admin — only the owner can add, edit, or delete
+- 🌐 Public view - anyone can see the watchlist
+- 🔐 Password-protected admin - only the owner can add, edit, or delete
+- 🛡️ **Row Level Security (RLS)** - Database-level protection ensuring only authenticated requests can modify data
 
 ## Tech Stack
 
@@ -23,7 +23,7 @@ https://movie-tracker-uynj.onrender.com
 |---|---|
 | Language | Python 3.10+ |
 | Framework | Flask |
-| Database | PostgreSQL (Supabase free tier) |
+| Database | PostgreSQL (Supabase) + **Row Level Security (RLS)** |
 | Cover Art | TMDB API (free) |
 | Hosting | Render (free web service) |
 | Server | Gunicorn |
