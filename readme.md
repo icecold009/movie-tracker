@@ -40,4 +40,22 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Create a `.env` file:
+## 🛡️ Database Security (RLS)
+
+I recently implemented **Row Level Security** on the PostgreSQL database to add an extra layer of protection. This ensures that even if the API keys were exposed, the database itself restricts who can modify the records.
+
+I used the following SQL logic to manage access:
+* **SELECT:** Allowed for everyone (public access).
+* **INSERT/UPDATE/DELETE:** Restricted to the `authenticated` role only.
+
+```sql
+-- Example of the policy used
+ALTER TABLE items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read-only" 
+ON items FOR SELECT USING (true);
+
+CREATE POLICY "Allow admin to edit" 
+ON items FOR ALL 
+TO authenticated 
+USING (auth.role() = 'authenticated');
