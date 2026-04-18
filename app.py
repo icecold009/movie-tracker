@@ -6,9 +6,18 @@ from tmdb import search_tmdb
 
 load_dotenv()
 
+_secret_key = os.getenv("SECRET_KEY")
+_admin_password = os.getenv("ADMIN_PASSWORD")
+
+if not _secret_key or not _admin_password:
+    raise RuntimeError(
+        "SECRET_KEY and ADMIN_PASSWORD must be set as environment variables. "
+        "See .env.example for required configuration."
+    )
+
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "dev-fallback-key")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
+app.secret_key = _secret_key
+ADMIN_PASSWORD = _admin_password
 
 
 @app.route("/")

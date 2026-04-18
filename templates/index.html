@@ -133,6 +133,11 @@
 {% endif %}
 
 <script>
+    // Apply stored rating-bar widths
+    document.querySelectorAll('.rating-fill').forEach(function (el) {
+        el.style.width = (el.dataset.width || 0) + '%';
+    });
+
     // Add form live rating
     const ratingInput = document.getElementById('rating');
     if (ratingInput) {

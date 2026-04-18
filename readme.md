@@ -31,7 +31,7 @@ https://movie-tracker-uynj.onrender.com
 ## Local Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/movie-tracker.git
+git clone https://github.com/icecold009/movie-tracker.git
 cd movie-tracker
 
 python -m venv venv
