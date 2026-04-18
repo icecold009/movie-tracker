@@ -1,14 +1,34 @@
+import hmac
 import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 from database import add_entry, get_all, delete_entry, update_entry
 from tmdb import search_tmdb
 
 load_dotenv()
 
+_secret_key = os.getenv("SECRET_KEY")
+_admin_password = os.getenv("ADMIN_PASSWORD")
+
+if not _secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is not set")
+if not _admin_password:
+    raise RuntimeError("ADMIN_PASSWORD environment variable is not set")
+
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "dev-fallback-key")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
+app.secret_key = _secret_key
+ADMIN_PASSWORD = _admin_password
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    # Use Redis in production (set REDIS_URL env var) for cross-process rate limiting.
+    # Falls back to in-memory storage for local development (limits are per-process only).
+    storage_uri=os.getenv("REDIS_URL", "memory://"),
+)
 
 
 @app.route("/")
@@ -18,12 +38,13 @@ def index():
 
 
 @app.route("/login", methods=["GET", "POST"])
+@limiter.limit("10 per minute")
 def login():
     if session.get("logged_in"):
         return redirect(url_for("index"))
     if request.method == "POST":
-        typed = request.form.get("password")
-        if typed == ADMIN_PASSWORD:
+        typed = request.form.get("password", "")
+        if hmac.compare_digest(typed.encode(), ADMIN_PASSWORD.encode()):
             session["logged_in"] = True
             return redirect(url_for("index"))
         flash("Incorrect password.")

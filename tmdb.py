@@ -1,6 +1,9 @@
+import logging
 import os
 import requests
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -38,4 +41,5 @@ def search_tmdb(title):
         }
 
     except Exception:
+        logger.exception("TMDB search failed for title: %s", title)
         return None
