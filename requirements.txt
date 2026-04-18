@@ -1,5 +1,6 @@
 # Add your Python dependencies here, one per line.
 flask
+flask-limiter
 requests
 python-dotenv
 psycopg2-binary
