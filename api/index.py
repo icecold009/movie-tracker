@@ -6,7 +6,11 @@ from tmdb import search_tmdb
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__,
+    template_folder=os.path.join(os.path.dirname(__file__), '..', 'templates'),
+    static_folder=os.path.join(os.path.dirname(__file__), '..', 'static')
+)
+
 app.secret_key = os.getenv("SECRET_KEY", "dev-fallback-key")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
 
@@ -71,9 +75,3 @@ def delete(entry_id):
         return redirect(url_for("login"))
     delete_entry(entry_id)
     return redirect(url_for("index"))
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
-    app.run(host="0.0.0.0", port=port, debug=debug_mode)
