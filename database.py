@@ -10,7 +10,7 @@ def get_conn():
     url = os.getenv("DATABASE_URL", "")
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
-    return psycopg2.connect(url)
+    return psycopg2.connect(url, sslmode="require")
 
 def init_db():
     conn = get_conn()
@@ -68,5 +68,3 @@ def delete_entry(entry_id):
     conn.commit()
     cur.close()
     conn.close()
-
-init_db()
