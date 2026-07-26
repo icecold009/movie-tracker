@@ -29,7 +29,8 @@ capability and evidence that people actually use it.
 - The Flask application is defined in `api/index.py`; `vercel.json` routes to
   that file and the stale Render `Procfile` has been removed.
 - The README now identifies Vercel as canonical and marks the live deployment
-  URL as pending verification.
+  URL and dated verification status; the current production smoke test found a
+  500 public view and a missing `/healthz` route.
 - The application uses `ADMIN_PASSWORD` and a Flask signed session. It does
   not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections. There is no tracked
@@ -58,10 +59,20 @@ capability and evidence that people actually use it.
 - [x] Add a lightweight `/healthz` endpoint that reports application liveness
       without exposing secrets or requiring a full watchlist query. The focused
       Flask test-client check passed with HTTP 200 and `{"status":"ok"}`.
-- [ ] Verify the deployed URL with a dated smoke test covering public view,
-      login, one authorized write path, and unauthorized write rejection.
-- [ ] Record deployment URL, commit SHA, verification date, and any manual
-      verification limits in the README.
+- [ ] Complete the deployed-URL smoke test covering public view, login, one
+      authorized write path, and unauthorized write rejection. Partial evidence
+      was collected on 2026-07-26: `/login` returned 200, invalid login showed
+      the expected error, anonymous `POST /add` returned 302 to `/login`, `/`
+      returned 500, and `/healthz` returned 404. The authorized write was not
+      attempted because production is not healthy and no rollback fixture is
+      verified.
+- [x] Record deployment URL, production deployment commit SHA, verification
+      date, and manual verification limits in the README. The current record is
+      for `https://movie-tracker-umber-sigma.vercel.app`, source commit
+      `ac5f7633577c44e046fa605f7c3bf266525faa2c`, and deployment `5112547143`.
+- [ ] Repair the production deployment/database configuration, redeploy the
+      repaired application, and repeat the complete smoke test with a
+      reversible authorized-write fixture.
 
 ### Configuration and database setup
 
@@ -245,6 +256,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Baseline inspection | Repository review of `api/index.py`, `database.py`, `tmdb.py`, `Procfile`, `vercel.json`, and `readme.md` | Deployment, auth/RLS, schema setup, validation, and test gaps recorded above |
 | 2026-07-26 | Deployment alignment | `vercel.json`, `api/index.py`, README, and removal of `Procfile` | Vercel is the only documented/configured target; live smoke verification remains open |
 | 2026-07-26 | Health endpoint | `venv\\Scripts\\python.exe` Flask test client against `GET /healthz` | Passed: HTTP 200 with `{"status":"ok"}`; live deployment check remains open |
+| 2026-07-26 | Production smoke test | `https://movie-tracker-umber-sigma.vercel.app`; GitHub deployment `5112547143`; source `ac5f7633577c44e046fa605f7c3bf266525faa2c` | Partial: `/login` 200, invalid login rejected, anonymous add redirected, `/` 500, `/healthz` 404; authorized write deferred until repair |
 
 ## Decisions
 
