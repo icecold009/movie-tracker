@@ -1,0 +1,253 @@
+# Movie Tracker Backlog
+
+This is the working source of truth for improving the project. Before starting a
+task, review this file and choose the highest-priority unblocked item. After
+each work session, update the checkbox, notes, evidence, and any newly exposed
+follow-up work here.
+
+## Product goal
+
+Turn the project from a conventional TMDB watchlist CRUD app into a reliable,
+security-conscious application with one genuinely non-trivial engineering
+capability and evidence that people actually use it.
+
+## Definition of done
+
+- [ ] The deployment target, runtime entrypoint, environment variables, and
+      database setup agree with the code.
+- [ ] Authentication, authorization, validation, CSRF protection, and external
+      API handling are implemented and tested.
+- [ ] One differentiating feature is productionized, explainable, and tested;
+      it is not presented as ML or data engineering without evaluation or
+      historical data to support that claim.
+- [ ] A dated, privacy-conscious usage summary is backed by real measurements.
+- [ ] The architecture and tradeoffs are documented accurately.
+- [ ] README, tests, deployment evidence, and known limitations are current.
+
+## Current state and known gaps
+
+- The Flask application is defined in `api/index.py`; `vercel.json` routes to
+  that file, but `Procfile` still points to `app:app` even though there is no
+  `app.py`.
+- The README describes Render hosting, while the recent repository structure
+  is Vercel-oriented. The live URL has not yet been re-verified in this
+  checkout.
+- The application uses `ADMIN_PASSWORD` and a Flask signed session. It does
+  not currently integrate Supabase Auth.
+- The database layer uses direct `psycopg2` connections. There is no tracked
+  migration establishing the claimed RLS policies, and the README example
+  refers to `items` while the application table is `entries`.
+- `init_db()` exists but is not called by the application, and the README does
+  not explain how to create the production schema.
+- There is no automated test suite.
+- Rating and status values are accepted from request data with minimal
+  validation; TMDB requests have no timeout, explicit status handling, or
+  caching/rate limiting.
+
+## P0 — Make the existing project truthful and reliable
+
+### Deployment and runtime
+
+- [ ] Decide whether the canonical deployment is Vercel or Render.
+- [ ] Align the deployment configuration with that decision: entrypoint,
+      build/start command, static/template paths, and required environment
+      variables.
+- [ ] Remove or correct the stale deployment configuration for the non-canonical
+      platform so future contributors do not deploy a broken entrypoint.
+- [ ] Add a lightweight `/healthz` endpoint that reports application health
+      without exposing secrets or requiring a full watchlist query.
+- [ ] Verify the deployed URL with a dated smoke test covering public view,
+      login, one authorized write path, and unauthorized write rejection.
+- [ ] Record deployment URL, commit SHA, verification date, and any manual
+      verification limits in the README.
+
+### Configuration and database setup
+
+- [ ] Add a documented `.env.example` covering `SECRET_KEY`,
+      `ADMIN_PASSWORD` or the chosen auth variables, `DATABASE_URL`, and
+      `TMDB_API_KEY` without real credentials.
+- [ ] Fail fast when required production configuration is missing; remove the
+      `dev-fallback-key` and `changeme` production fallbacks.
+- [ ] Choose a reproducible schema workflow: tracked SQL migration(s), a
+      migration tool, or an explicitly documented provisioning command.
+- [ ] Define the `entries` schema with constraints for allowed status, rating
+      range, non-empty title, and valid entry type.
+- [ ] Decide whether `init_db()` should be removed in favor of migrations or
+      retained as a clearly scoped local-development bootstrap.
+- [ ] Add indexes and a connection strategy appropriate for the deployment
+      environment; document whether direct Postgres connections or a Supabase
+      API/pooler are used.
+- [ ] Define failure behavior and transaction cleanup for database errors.
+
+### Request validation and application behavior
+
+- [ ] Validate title length and non-empty input server-side.
+- [ ] Validate `entry_type`, `status`, and rating against allowlists and bounds;
+      return a useful form error instead of a 500 on malformed input.
+- [ ] Handle missing or invalid entry IDs consistently and return an appropriate
+      response when an update/delete affects no row.
+- [ ] Add user-visible error states for database and TMDB failures.
+- [ ] Preserve the selected entry type correctly when TMDB returns mixed movie
+      and TV results, or use TMDB's returned media type intentionally.
+- [ ] Add safe escaping and length limits before introducing any free-text
+      review or note fields.
+
+### External TMDB integration
+
+- [ ] Add a finite request timeout and call `raise_for_status()` or equivalent
+      response validation.
+- [ ] Handle TMDB quota, authentication, malformed JSON, and network failures
+      separately enough to make operational diagnosis possible.
+- [ ] Add server-side rate limiting and caching for repeated title searches;
+      protect TMDB quota rather than exposing the API key to browsers.
+- [ ] Store TMDB IDs and relevant metadata needed by the chosen differentiating
+      feature, not only the display title and poster URL.
+- [ ] Document TMDB attribution, API-key boundaries, and data-refresh behavior.
+
+### Authentication and security baseline
+
+- [ ] Decide between Supabase Auth and a deliberately hardened single-admin
+      authentication flow.
+- [ ] If using Supabase Auth, integrate identity/session verification with the
+      Flask routes and make database policies use the same identity boundary.
+- [ ] If retaining custom auth, store a password hash rather than a plaintext
+      environment password and add secure credential rotation guidance.
+- [ ] Add CSRF protection to login, logout, add, edit, and delete forms.
+- [ ] Set secure, HTTP-only, and appropriate SameSite session-cookie settings in
+      production; rotate the Flask secret when required.
+- [ ] Add login throttling or rate limiting and avoid revealing unnecessary
+      authentication details in responses.
+- [ ] Add authorization tests proving public reads, rejected anonymous writes,
+      and accepted authenticated writes.
+- [ ] Either implement and test actual RLS policies for the chosen access path,
+      or remove the RLS claim from the README until it is reproducible.
+- [ ] Check dependency versions and add a repeatable dependency/update process.
+
+### Automated verification
+
+- [ ] Add a test runner and test layout.
+- [ ] Test application import and route registration without requiring a live
+      database or TMDB key.
+- [ ] Test login success/failure, session logout, and authorization guards.
+- [ ] Test add/edit/delete with mocked database calls and valid/invalid input.
+- [ ] Test TMDB success, no-result, timeout, non-2xx, and malformed-response
+      behavior.
+- [ ] Add a CI job for tests, linting/format checks, and dependency failure
+      visibility.
+
+## P1 — Add one real differentiator
+
+Choose one track. Do not implement both unless the first one is complete and
+the project still has a clear product reason for the second.
+
+### Track A: explainable content-based recommendations
+
+- [ ] Decide the recommendation contract: recommended unseen titles, a reason
+      for each recommendation, and a cold-start fallback.
+- [ ] Extend the schema to retain TMDB IDs, media type, genres, keywords or
+      other reproducible features, and the user's interaction/status data.
+- [ ] Build a deterministic feature-extraction and normalization pipeline.
+- [ ] Implement cosine similarity or an equivalent transparent baseline.
+- [ ] Exclude titles already watched or already on the watchlist.
+- [ ] Add an explanation such as “recommended because it shares genres with…”.
+- [ ] Expose recommendations through a tested Flask route and a focused UI
+      section with loading, empty, and error states.
+- [ ] Add a cold-start strategy for a new or sparse watch history.
+- [ ] Evaluate the recommender with a small offline holdout, precision@k, or a
+      similarly stated metric; document the limitations of the evaluation.
+- [ ] Add tests for feature extraction, ranking, filtering, explanations, and
+      deterministic output.
+- [ ] Document that this is a content-based baseline, not a claimed deep-learning
+      system.
+
+### Track B: streaming-availability history pipeline
+
+- [ ] Choose a legitimate, documented availability data source and confirm its
+      terms, regional coverage, and request limits.
+- [ ] Define a time-series schema for titles, providers, regions, snapshots,
+      and observed availability changes.
+- [ ] Add uniqueness/idempotency rules so a repeated job does not duplicate
+      snapshots.
+- [ ] Implement a scheduled job with retries, exponential backoff, timeout,
+      rate-limit handling, and observable failures.
+- [ ] Store historical observations rather than only the latest availability.
+- [ ] Add a change/history view showing when a title appeared or disappeared
+      from a provider.
+- [ ] Add tests for idempotent runs, partial provider failure, stale data, and
+      rate-limit responses.
+- [ ] Document data freshness, regional limitations, and source attribution.
+
+## P2 — Prove real usage
+
+- [ ] Decide which privacy-conscious usage events are necessary; do not collect
+      more personal data than the project needs.
+- [ ] Add measurement for meaningful events such as public visits, successful
+      additions, recommendation views, or availability-history views.
+- [ ] Do not call a single-admin watchlist “N registered users”; implement
+      multi-user accounts first if registered-user counts are desired.
+- [ ] Recruit 5–10 real testers and record structured feedback about the core
+      flow and differentiating feature.
+- [ ] Fix the highest-value usability issues found by testers.
+- [ ] Publish a dated usage summary in the README with exact numbers and a
+      short explanation of how they were measured.
+- [ ] Add a privacy note and opt-out or consent behavior if analytics are
+      externally hosted.
+- [ ] Keep screenshots or a short demo recording that matches the verified
+      deployed commit.
+
+## P3 — Architecture, documentation, and operational evidence
+
+- [ ] Create `docs/architecture.md` with a diagram of the actual request,
+      authentication, database, and TMDB flows.
+- [ ] Explain why the chosen database/auth approach fits this project and name
+      one accepted tradeoff with its scaling consequence.
+- [ ] Document trust boundaries: browser, Flask server, database, auth system,
+      and TMDB credentials.
+- [ ] Document the chosen differentiating feature's data model, algorithm or
+      scheduled pipeline, and failure modes.
+- [ ] Add a local setup guide that includes environment variables, schema setup,
+      development start command, and test command.
+- [ ] Update README features only after each feature is verified in code.
+- [ ] Replace example RLS SQL with the actual tracked migration and table names,
+      or remove the section until that migration exists.
+- [ ] Add a known-limitations section covering single-admin versus multi-user
+      scope, recommendation/data-source limits, TMDB dependency, and deployment
+      constraints.
+- [ ] Add a small operations/runbook section for migrations, secret rotation,
+      scheduled jobs, logs, and rollback.
+- [ ] Link the backlog, architecture document, verification evidence, and live
+      demo from the README.
+
+## P4 — Quality and release polish
+
+- [ ] Check keyboard navigation, visible focus, form labels, modal behavior, and
+      error announcements.
+- [ ] Verify responsive behavior at narrow mobile and desktop widths.
+- [ ] Add useful empty/loading/error states for the core and differentiating
+      feature flows.
+- [ ] Add structured logging that excludes passwords, API keys, and session
+      contents.
+- [ ] Add database backup/export guidance appropriate to the chosen provider.
+- [ ] Run a release checklist: tests, dependency audit, secret scan, deployment
+      smoke test, README accuracy, and accessibility review.
+- [ ] Create a logical feature-branch commit history and open a reviewable PR;
+      do not merge directly to `main` without explicit approval.
+
+## Evidence log
+
+Record verification here as work lands. Prefer commands, test results, commit
+SHAs, URLs, dates, and screenshots over subjective claims.
+
+| Date | Area | Evidence | Result / follow-up |
+|---|---|---|---|
+| 2026-07-26 | Baseline inspection | Repository review of `api/index.py`, `database.py`, `tmdb.py`, `Procfile`, `vercel.json`, and `readme.md` | Deployment, auth/RLS, schema setup, validation, and test gaps recorded above |
+
+## Decisions
+
+Record decisions that affect scope here so future work does not reopen settled
+questions without new evidence.
+
+- Canonical deployment: _undecided_
+- Authentication model: _undecided_
+- Differentiator track: _undecided_
+- Usage measurement approach: _undecided_
