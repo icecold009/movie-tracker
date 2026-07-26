@@ -4,11 +4,21 @@ import psycopg2.extras
 
 from config import DATABASE_URL
 
+
+DB_CONNECT_TIMEOUT_SECONDS = 5
+
+
 def get_conn():
     url = DATABASE_URL
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
-    return psycopg2.connect(url, sslmode="require")
+    # Vercel should use Supabase's Shared Pooler transaction-mode URL. Keep
+    # connection attempts bounded because serverless requests have finite time.
+    return psycopg2.connect(
+        url,
+        sslmode="require",
+        connect_timeout=DB_CONNECT_TIMEOUT_SECONDS,
+    )
 
 def add_entry(title, entry_type, status, rating, poster_url):
     conn = get_conn()

@@ -73,6 +73,11 @@ Copy `.env.example` to `.env` and replace every placeholder with a local
 secret or service credential. Keep `.env` untracked; production values belong
 in Vercel's encrypted environment variables.
 
+For Vercel, `DATABASE_URL` should use the Supabase Shared Pooler
+transaction-mode connection (port `6543`) from the project's Connect settings.
+The Flask database client uses a five-second connection timeout; the current
+production pooler tenant-mapping issue is recorded above and in `BACKLOG.md`.
+
 ## 🛡️ Database Security (RLS)
 
 I recently implemented **Row Level Security** on the PostgreSQL database to add an extra layer of protection. This ensures that even if the API keys were exposed, the database itself restricts who can modify the records.
