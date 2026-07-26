@@ -1,4 +1,6 @@
 import datetime
+from contextlib import contextmanager
+
 import psycopg2
 import psycopg2.extras
 
@@ -20,41 +22,47 @@ def get_conn():
         connect_timeout=DB_CONNECT_TIMEOUT_SECONDS,
     )
 
-def add_entry(title, entry_type, status, rating, poster_url):
+
+@contextmanager
+def db_transaction(cursor_factory=None):
     conn = get_conn()
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO entries (title, entry_type, status, rating, poster_url, added_on) VALUES (%s, %s, %s, %s, %s, %s)",
-        (title, entry_type, status, rating, poster_url, str(datetime.date.today()))
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+    cur = None
+    try:
+        if cursor_factory is None:
+            cur = conn.cursor()
+        else:
+            cur = conn.cursor(cursor_factory=cursor_factory)
+        yield cur
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        if cur is not None:
+            cur.close()
+        conn.close()
+
+
+def add_entry(title, entry_type, status, rating, poster_url):
+    with db_transaction() as cur:
+        cur.execute(
+            "INSERT INTO entries (title, entry_type, status, rating, poster_url, added_on) VALUES (%s, %s, %s, %s, %s, %s)",
+            (title, entry_type, status, rating, poster_url, str(datetime.date.today()))
+        )
 
 def get_all():
-    conn = get_conn()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute("SELECT * FROM entries ORDER BY id DESC")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+    with db_transaction(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT * FROM entries ORDER BY id DESC")
+        rows = cur.fetchall()
     return [dict(r) for r in rows]
 
 def update_entry(entry_id, status, rating):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE entries SET status = %s, rating = %s WHERE id = %s",
-        (status, rating, entry_id)
-    )
-    conn.commit()
-    cur.close()
-    conn.close()
+    with db_transaction() as cur:
+        cur.execute(
+            "UPDATE entries SET status = %s, rating = %s WHERE id = %s",
+            (status, rating, entry_id)
+        )
 
 def delete_entry(entry_id):
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM entries WHERE id = %s", (entry_id,))
-    conn.commit()
-    cur.close()
-    conn.close()
+    with db_transaction() as cur:
+        cur.execute("DELETE FROM entries WHERE id = %s", (entry_id,))

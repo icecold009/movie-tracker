@@ -130,7 +130,10 @@ capability and evidence that people actually use it.
             intended Supabase Shared Pooler transaction-mode URL for Vercel.
       - [ ] Resolve the provider-side pooler tenant mapping before declaring
             the deployed connection strategy complete.
-- [ ] Define failure behavior and transaction cleanup for database errors.
+- [x] Define failure behavior and transaction cleanup for database errors.
+      All database operations now run through a shared context manager that
+      commits on success, rolls back and re-raises on failure, and closes the
+      cursor and connection in all cases.
 
 ### Request validation and application behavior
 
@@ -303,6 +306,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Configuration fail-fast | `venv\Scripts\python.exe` compile check; configured app import; import with all four variables intentionally empty | Passed: configured Flask import succeeds; missing configuration exits with `Missing required environment variable: SECRET_KEY`; no runtime fallback values remain |
 | 2026-07-26 | Schema bootstrap decision | `rg -n "init_db"` usage search; `database.py`; tracked files under `supabase/migrations/` | Passed: removed the unused weaker bootstrap; migrations are the only tracked schema-creation path |
 | 2026-07-26 | Database connection strategy | Query review, `database.py`, README, and AGENTS guidance | Partially complete: no redundant index is warranted for current queries; connection attempts now time out after 5 seconds and Vercel is documented for Supabase transaction pooling; provider tenant mapping remains blocked |
+| 2026-07-26 | Database transaction cleanup | `database.py` transaction context and fake-connection success/failure verification | Passed: successful operations commit and close resources; raised operation errors roll back, re-raise, and close resources |
 
 ## Decisions
 

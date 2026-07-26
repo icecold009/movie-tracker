@@ -41,7 +41,8 @@ Current application locations:
   connect timeout. Vercel is intended to use the Supabase Shared Pooler
   transaction-mode URL; Supabase RLS is documented but not yet reproducibly
   established by a tracked migration or proven to align with the Flask
-  session.
+  session. Database operations use a shared transaction context that commits
+  on success and rolls back/closes resources on failure.
 - Schema creation is owned by the tracked migrations under
   `supabase/migrations/`; the obsolete `init_db()` bootstrap was removed so it
   cannot create a weaker competing `entries` schema. Do not assume a fresh
