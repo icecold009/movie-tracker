@@ -35,9 +35,13 @@ capability and evidence that people actually use it.
   not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections. There is no tracked
   migration establishing the claimed RLS policies, and the README example
-  refers to `items` while the application table is `entries`.
-- `init_db()` exists but is not called by the application, and the README does
-  not explain how to create the production schema.
+  refers to `items` while the application table is `entries`. Tracked
+  migrations now define the `entries` table and validation constraints.
+- The Supabase `movie-tracker` project was restored from inactive status and is
+  now healthy; its shared pooler still rejects the `postgres.<project-ref>`
+  tenant used by Vercel, so database-backed production routes remain blocked.
+- `init_db()` exists but is not called by the application. Deployments must
+  apply the tracked migrations or provision the schema explicitly.
 - There is no automated test suite.
 - Rating and status values are accepted from request data with minimal
   validation; TMDB requests have no timeout, explicit status handling, or
@@ -73,6 +77,17 @@ capability and evidence that people actually use it.
 - [ ] Repair the production deployment/database configuration, redeploy the
       repaired application, and repeat the complete smoke test with a
       reversible authorized-write fixture.
+      - [x] Restored Supabase project `vgirgwxehcsxloclanhf` from inactive status.
+      - [x] Provisioned `public.entries` and verified zero rows plus the three
+            rating/type/status constraints.
+      - [x] Added tracked migrations under `supabase/migrations/` and deployed
+            the current branch as Vercel production deployment
+            `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1`.
+      - [ ] Repair or refresh the Supavisor tenant mapping/connection string;
+            both local and Vercel attempts still receive
+            `ENOTFOUND tenant/user postgres.vgirgwxehcsxloclanhf`.
+      - [ ] Repeat the public-view and reversible authorized-write checks after
+            the pooler connection is healthy.
 
 ### Configuration and database setup
 
@@ -81,10 +96,14 @@ capability and evidence that people actually use it.
       `TMDB_API_KEY` without real credentials.
 - [ ] Fail fast when required production configuration is missing; remove the
       `dev-fallback-key` and `changeme` production fallbacks.
-- [ ] Choose a reproducible schema workflow: tracked SQL migration(s), a
-      migration tool, or an explicitly documented provisioning command.
-- [ ] Define the `entries` schema with constraints for allowed status, rating
-      range, non-empty title, and valid entry type.
+- [x] Choose a reproducible schema workflow: tracked Supabase SQL migrations
+      created with the Supabase CLI. Remote migration-history synchronization
+      remains a follow-up after the provider connection is repaired.
+- [x] Define the `entries` schema with constraints for allowed status, rating
+      range, non-empty title, and valid entry type. The production table and
+      rating/type/status constraints were verified on 2026-07-26; non-empty
+      title and nullability hardening for an existing table remain separate
+      follow-up work.
 - [ ] Decide whether `init_db()` should be removed in favor of migrations or
       retained as a clearly scoped local-development bootstrap.
 - [ ] Add indexes and a connection strategy appropriate for the deployment
@@ -257,6 +276,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Deployment alignment | `vercel.json`, `api/index.py`, README, and removal of `Procfile` | Vercel is the only documented/configured target; live smoke verification remains open |
 | 2026-07-26 | Health endpoint | `venv\\Scripts\\python.exe` Flask test client against `GET /healthz` | Passed: HTTP 200 with `{"status":"ok"}`; live deployment check remains open |
 | 2026-07-26 | Production smoke test | `https://movie-tracker-umber-sigma.vercel.app`; GitHub deployment `5112547143`; source `ac5f7633577c44e046fa605f7c3bf266525faa2c` | Partial: `/login` 200, invalid login rejected, anonymous add redirected, `/` 500, `/healthz` 404; authorized write deferred until repair |
+| 2026-07-26 | Production repair | Supabase project `vgirgwxehcsxloclanhf`, SQL verification, Vercel deployment `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1` | Supabase restored and schema verified; `/healthz` now 200, but database routes still 500 because Supavisor rejects the tenant/user identity |
 
 ## Decisions
 

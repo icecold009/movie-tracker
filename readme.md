@@ -25,6 +25,16 @@ The deployment is therefore **not release-ready**. Repeat the full smoke test
 after redeploying the repaired application, including a reversible authorized
 write check.
 
+### Latest repair attempt — 2026-07-26
+
+The Supabase project was restored from inactive status, and the `entries` table
+plus rating/type/status constraints were provisioned. The current branch was
+deployed as Vercel production deployment `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1`;
+`/healthz` now returns HTTP 200. Database-backed routes still return HTTP 500
+because Supavisor rejects tenant/user `postgres.vgirgwxehcsxloclanhf`. The
+provider connection identity must be refreshed or repaired before the full
+smoke test can pass.
+
 ## Features
 
 - 🎨 Rate 1–10 with a colour-coded bar (red → yellow → green)
