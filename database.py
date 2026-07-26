@@ -1,4 +1,5 @@
 import datetime
+import logging
 from contextlib import contextmanager
 
 import psycopg2
@@ -7,7 +8,12 @@ import psycopg2.extras
 from config import DATABASE_URL
 
 
+logger = logging.getLogger(__name__)
 DB_CONNECT_TIMEOUT_SECONDS = 5
+
+
+class DatabaseError(Exception):
+    """Safe application-level error for database connectivity or SQL failures."""
 
 
 def get_conn():
@@ -34,6 +40,10 @@ def db_transaction(cursor_factory=None):
             cur = conn.cursor(cursor_factory=cursor_factory)
         yield cur
         conn.commit()
+    except psycopg2.Error as exc:
+        conn.rollback()
+        logger.warning("Database operation failed: %s", type(exc).__name__)
+        raise DatabaseError("The watchlist database is temporarily unavailable.") from exc
     except Exception:
         conn.rollback()
         raise

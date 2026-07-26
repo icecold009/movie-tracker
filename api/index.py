@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 from config import ADMIN_PASSWORD, SECRET_KEY
-from database import add_entry, get_all, delete_entry, update_entry
+from database import DatabaseError, add_entry, get_all, delete_entry, update_entry
 from tmdb import TMDBError, search_tmdb
 
 app = Flask(__name__,
@@ -63,7 +63,15 @@ def healthz():
 
 @app.route("/")
 def index():
-    entries = get_all()
+    try:
+        entries = get_all()
+    except DatabaseError as error:
+        flash(str(error))
+        return render_template(
+            "index.html",
+            entries=[],
+            logged_in=session.get("logged_in", False),
+        ), 503
     return render_template("index.html", entries=entries, logged_in=session.get("logged_in", False))
 
 
@@ -110,7 +118,12 @@ def add():
     else:
         full_title = title
         poster_url = ""
-    add_entry(full_title, entry_type, status, rating, poster_url)
+    # The admin's explicit Movie/TV Show selection is authoritative. TMDB's
+    # mixed-search media_type is used for lookup metadata, not classification.
+    try:
+        add_entry(full_title, entry_type, status, rating, poster_url)
+    except DatabaseError as error:
+        flash(str(error))
     return redirect(url_for("index"))
 
 
@@ -123,7 +136,11 @@ def edit(entry_id):
         for error in errors:
             flash(error)
         return redirect(url_for("index"))
-    updated = update_entry(entry_id, values["status"], values["rating"])
+    try:
+        updated = update_entry(entry_id, values["status"], values["rating"])
+    except DatabaseError as error:
+        flash(str(error))
+        return redirect(url_for("index"))
     if not updated:
         flash("Entry not found.")
     return redirect(url_for("index"))
@@ -133,7 +150,11 @@ def edit(entry_id):
 def delete(entry_id):
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-    deleted = delete_entry(entry_id)
+    try:
+        deleted = delete_entry(entry_id)
+    except DatabaseError as error:
+        flash(str(error))
+        return redirect(url_for("index"))
     if not deleted:
         flash("Entry not found.")
     return redirect(url_for("index"))
