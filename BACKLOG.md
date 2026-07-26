@@ -44,9 +44,8 @@ capability and evidence that people actually use it.
   them or provision the schema explicitly before serving database-backed
   routes.
 - There is no automated test suite.
-- Rating and status values are accepted from request data with minimal
-  validation; TMDB requests have no timeout, explicit status handling, or
-  caching/rate limiting.
+- TMDB requests now have bounded timeout, HTTP/JSON validation, and safe error
+  handling; caching and rate limiting remain open.
 
 ## P0 — Make the existing project truthful and reliable
 
@@ -149,6 +148,9 @@ capability and evidence that people actually use it.
 - [x] Add user-visible validation error states for these malformed request
       cases through the shared flash-message display on the index page.
 - [ ] Add user-visible error states for database and TMDB failures.
+      - [x] TMDB timeout, network, authentication, rate-limit, and malformed
+            response failures now flash safe messages during add.
+      - [ ] Add equivalent user-visible handling for database failures.
 - [ ] Preserve the selected entry type correctly when TMDB returns mixed movie
       and TV results, or use TMDB's returned media type intentionally.
 - [ ] Add safe escaping and length limits before introducing any free-text
@@ -156,10 +158,12 @@ capability and evidence that people actually use it.
 
 ### External TMDB integration
 
-- [ ] Add a finite request timeout and call `raise_for_status()` or equivalent
-      response validation.
-- [ ] Handle TMDB quota, authentication, malformed JSON, and network failures
-      separately enough to make operational diagnosis possible.
+- [x] Add a finite request timeout and call `raise_for_status()` or equivalent
+      response validation. TMDB requests use a five-second timeout and validate
+      HTTP status plus JSON shape.
+- [x] Handle TMDB quota, authentication, malformed JSON, and network failures
+      separately enough to make operational diagnosis possible. Safe user
+      messages and log categories distinguish these cases without credentials.
 - [ ] Add server-side rate limiting and caching for repeated title searches;
       protect TMDB quota rather than exposing the API key to browsers.
 - [ ] Store TMDB IDs and relevant metadata needed by the chosen differentiating
@@ -314,6 +318,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Database connection strategy | Query review, `database.py`, README, and AGENTS guidance | Partially complete: no redundant index is warranted for current queries; connection attempts now time out after 5 seconds and Vercel is documented for Supabase transaction pooling; provider tenant mapping remains blocked |
 | 2026-07-26 | Database transaction cleanup | `database.py` transaction context and fake-connection success/failure verification | Passed: successful operations commit and close resources; raised operation errors roll back, re-raise, and close resources |
 | 2026-07-26 | Request validation | Flask test-client checks with mocked TMDB/database functions; `api/index.py`, `database.py`, and index template | Passed: blank/overlong titles, invalid type/status, and malformed/out-of-range ratings are rejected with flash errors; unknown update/delete IDs report `Entry not found.` |
+| 2026-07-26 | TMDB boundary handling | Mocked `requests.get` success, timeout, network, 401/403, 429, non-2xx, and malformed JSON cases; Flask add-route error check | Passed: requests use a five-second timeout, HTTP/JSON failures raise categorized safe errors, and the add flow flashes the user-safe message; caching/rate limiting remain open |
 
 ## Decisions
 
