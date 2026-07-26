@@ -14,6 +14,47 @@ app = Flask(__name__,
 
 app.secret_key = SECRET_KEY
 
+ALLOWED_ENTRY_TYPES = {"Movie", "TV Show"}
+ALLOWED_STATUSES = {"Watched", "Want to Watch"}
+MIN_RATING = 1
+MAX_RATING = 10
+MAX_TITLE_LENGTH = 200
+
+
+def _validated_entry_form(include_title=False):
+    values = {}
+    errors = []
+
+    if include_title:
+        title = request.form.get("title", "").strip()
+        if not title:
+            errors.append("Title is required.")
+        elif len(title) > MAX_TITLE_LENGTH:
+            errors.append(f"Title must be {MAX_TITLE_LENGTH} characters or fewer.")
+        values["title"] = title
+
+    entry_type = request.form.get("entry_type", "Movie")
+    if entry_type not in ALLOWED_ENTRY_TYPES:
+        errors.append("Choose a valid entry type.")
+    values["entry_type"] = entry_type
+
+    status = request.form.get("status", "Watched")
+    if status not in ALLOWED_STATUSES:
+        errors.append("Choose a valid status.")
+    values["status"] = status
+
+    raw_rating = request.form.get("rating", "7")
+    try:
+        rating = int(raw_rating)
+    except (TypeError, ValueError):
+        rating = None
+        errors.append("Rating must be a whole number from 1 to 10.")
+    if rating is not None and not MIN_RATING <= rating <= MAX_RATING:
+        errors.append("Rating must be a whole number from 1 to 10.")
+    values["rating"] = rating
+
+    return (None, errors) if errors else (values, [])
+
 
 @app.route("/healthz")
 def healthz():
@@ -49,10 +90,15 @@ def logout():
 def add():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-    title = request.form.get("title", "").strip()
-    entry_type = request.form.get("entry_type", "Movie")
-    status = request.form.get("status", "Watched")
-    rating = int(request.form.get("rating", 7))
+    values, errors = _validated_entry_form(include_title=True)
+    if errors:
+        for error in errors:
+            flash(error)
+        return redirect(url_for("index"))
+    title = values["title"]
+    entry_type = values["entry_type"]
+    status = values["status"]
+    rating = values["rating"]
     result = search_tmdb(title)
     if result:
         full_title = result["full_title"]
@@ -68,9 +114,14 @@ def add():
 def edit(entry_id):
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-    status = request.form.get("status", "Watched")
-    rating = int(request.form.get("rating", 7))
-    update_entry(entry_id, status, rating)
+    values, errors = _validated_entry_form()
+    if errors:
+        for error in errors:
+            flash(error)
+        return redirect(url_for("index"))
+    updated = update_entry(entry_id, values["status"], values["rating"])
+    if not updated:
+        flash("Entry not found.")
     return redirect(url_for("index"))
 
 
@@ -78,5 +129,7 @@ def edit(entry_id):
 def delete(entry_id):
     if not session.get("logged_in"):
         return redirect(url_for("login"))
-    delete_entry(entry_id)
+    deleted = delete_entry(entry_id)
+    if not deleted:
+        flash("Entry not found.")
     return redirect(url_for("index"))

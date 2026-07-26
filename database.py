@@ -62,7 +62,9 @@ def update_entry(entry_id, status, rating):
             "UPDATE entries SET status = %s, rating = %s WHERE id = %s",
             (status, rating, entry_id)
         )
+        return cur.rowcount
 
 def delete_entry(entry_id):
     with db_transaction() as cur:
         cur.execute("DELETE FROM entries WHERE id = %s", (entry_id,))
+        return cur.rowcount

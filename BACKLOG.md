@@ -137,11 +137,17 @@ capability and evidence that people actually use it.
 
 ### Request validation and application behavior
 
-- [ ] Validate title length and non-empty input server-side.
-- [ ] Validate `entry_type`, `status`, and rating against allowlists and bounds;
-      return a useful form error instead of a 500 on malformed input.
-- [ ] Handle missing or invalid entry IDs consistently and return an appropriate
-      response when an update/delete affects no row.
+- [x] Validate title length and non-empty input server-side. The add form now
+      rejects blank titles and titles over 200 characters before TMDB/database
+      work.
+- [x] Validate `entry_type`, `status`, and rating against allowlists and bounds;
+      malformed input now flashes a user-visible error instead of raising a
+      conversion error or reaching the database.
+- [x] Handle missing or invalid entry IDs consistently and return an appropriate
+      response when an update/delete affects no row. Update/delete now use
+      affected-row counts and flash `Entry not found.` when no row exists.
+- [x] Add user-visible validation error states for these malformed request
+      cases through the shared flash-message display on the index page.
 - [ ] Add user-visible error states for database and TMDB failures.
 - [ ] Preserve the selected entry type correctly when TMDB returns mixed movie
       and TV results, or use TMDB's returned media type intentionally.
@@ -307,6 +313,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Schema bootstrap decision | `rg -n "init_db"` usage search; `database.py`; tracked files under `supabase/migrations/` | Passed: removed the unused weaker bootstrap; migrations are the only tracked schema-creation path |
 | 2026-07-26 | Database connection strategy | Query review, `database.py`, README, and AGENTS guidance | Partially complete: no redundant index is warranted for current queries; connection attempts now time out after 5 seconds and Vercel is documented for Supabase transaction pooling; provider tenant mapping remains blocked |
 | 2026-07-26 | Database transaction cleanup | `database.py` transaction context and fake-connection success/failure verification | Passed: successful operations commit and close resources; raised operation errors roll back, re-raise, and close resources |
+| 2026-07-26 | Request validation | Flask test-client checks with mocked TMDB/database functions; `api/index.py`, `database.py`, and index template | Passed: blank/overlong titles, invalid type/status, and malformed/out-of-range ratings are rejected with flash errors; unknown update/delete IDs report `Entry not found.` |
 
 ## Decisions
 

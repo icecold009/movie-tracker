@@ -23,9 +23,17 @@
 
 <main>
 
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="flash-error">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     {% if logged_in %}
     <form method="POST" action="/add" class="add-form">
-        <input type="text" name="title" placeholder="Search movie or show title..." required>
+        <input type="text" name="title" placeholder="Search movie or show title..." maxlength="200" required>
         <select name="entry_type">
             <option value="Movie">Movie</option>
             <option value="TV Show">TV Show</option>
