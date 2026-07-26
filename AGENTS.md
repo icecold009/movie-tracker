@@ -40,8 +40,15 @@ Current application locations:
 - The database layer uses direct `psycopg2` connections. Supabase RLS is
   documented but not yet reproducibly established by a tracked migration or
   proven to align with the Flask session.
-- `init_db()` exists in `database.py` but is not called automatically. Do not
-  assume a fresh deployment has an `entries` table.
+- `init_db()` exists in `database.py` but is not called automatically. The
+  tracked migrations under `supabase/migrations/` now define the `entries`
+  table and its validation constraints; do not assume a fresh deployment has
+  applied them.
+- The Supabase `movie-tracker` project was restored from inactive status and its
+  database is healthy, but the shared pooler currently rejects the
+  `postgres.<project-ref>` tenant used by Vercel. Treat this as a provider-side
+  connection configuration blocker until the current Connect-string identity is
+  verified.
 - There is currently no automated test suite. New behavior should include tests
   before being described as verified.
 
@@ -68,8 +75,10 @@ When changing request-handling code, preserve or add:
 
 The current database code expects an `entries` table with fields for `id`,
 `title`, `entry_type`, `status`, `rating`, `poster_url`, and `added_on`.
-Schema creation is not currently represented by a tracked migration. Any schema
-change should add constraints, indexes, and a reproducible migration path.
+Schema creation is represented by tracked migrations under `supabase/migrations/`.
+Any future schema change should add constraints, indexes, and a reproducible
+migration path rather than relying on `init_db()` or an undocumented dashboard
+operation.
 
 ## Verification expectations
 
