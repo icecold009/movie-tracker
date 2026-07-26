@@ -2,9 +2,9 @@
 
 A personal web app to track movies and TV shows I've watched or want to watch.
 Movies and TV Shows are displayed in separate sections. Cover art is auto-fetched from TMDB using an API.
-Built with Flask + PostgreSQL, hosted publicly on Render and only I can add, edit, or delete entries.
+Built with Flask + PostgreSQL, with Vercel as the canonical deployment target. Only the admin session can add, edit, or delete entries.
 
-https://movie-tracker-uynj.onrender.com
+Live deployment: pending verification
 
 ## Features
 
@@ -25,8 +25,8 @@ https://movie-tracker-uynj.onrender.com
 | Framework | Flask |
 | Database | PostgreSQL (Supabase) + **Row Level Security (RLS)** |
 | Cover Art | TMDB API (free) |
-| Hosting | Render (free web service) |
-| Server | Gunicorn |
+| Hosting | Vercel (Python function) |
+| Runtime | Vercel Python runtime |
 
 ## Local Setup
 

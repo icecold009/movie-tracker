@@ -33,8 +33,8 @@ Current application locations:
 
 - Vercel is the canonical deployment target. `vercel.json` routes requests to
   `api/index.py`.
-- The Render `Procfile` is stale and must be handled as a separate backlog task;
-  do not silently treat it as the active deployment configuration.
+- The stale Render `Procfile` has been removed. Do not reintroduce a second
+  deployment target without updating the canonical-deployment decision.
 - The current application uses `ADMIN_PASSWORD` and a Flask signed session. It
   does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections. Supabase RLS is
