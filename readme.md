@@ -4,7 +4,26 @@ A personal web app to track movies and TV shows I've watched or want to watch.
 Movies and TV Shows are displayed in separate sections. Cover art is auto-fetched from TMDB using an API.
 Built with Flask + PostgreSQL, with Vercel as the canonical deployment target. Only the admin session can add, edit, or delete entries.
 
-Live deployment: pending verification
+Live deployment: https://movie-tracker-umber-sigma.vercel.app
+
+## Deployment verification
+
+Last checked: **2026-07-26** against the Vercel production alias. The latest
+GitHub production deployment record points to commit `ac5f7633577c44e046fa605f7c3bf266525faa2c`
+(deployment `5112547143`, created 2026-06-18).
+
+- `/login`: HTTP 200; invalid-password handling returned the expected error.
+- Anonymous `POST /add`: HTTP 302 to `/login`; no write was attempted without a
+  session.
+- `/`: HTTP 500; the public database-backed view is not currently healthy.
+- `/healthz`: HTTP 404; the deployed version predates the health endpoint on the
+  current branch.
+- An authorized write was not attempted because the deployed public view is
+  failing and there is no verified rollback fixture for production data.
+
+The deployment is therefore **not release-ready**. Repeat the full smoke test
+after redeploying the repaired application, including a reversible authorized
+write check.
 
 ## Features
 
