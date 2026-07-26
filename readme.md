@@ -69,6 +69,10 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Copy `.env.example` to `.env` and replace every placeholder with a local
+secret or service credential. Keep `.env` untracked; production values belong
+in Vercel's encrypted environment variables.
+
 ## 🛡️ Database Security (RLS)
 
 I recently implemented **Row Level Security** on the PostgreSQL database to add an extra layer of protection. This ensures that even if the API keys were exposed, the database itself restricts who can modify the records.

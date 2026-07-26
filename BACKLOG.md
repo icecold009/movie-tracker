@@ -99,9 +99,10 @@ capability and evidence that people actually use it.
 
 ### Configuration and database setup
 
-- [ ] Add a documented `.env.example` covering `SECRET_KEY`,
-      `ADMIN_PASSWORD` or the chosen auth variables, `DATABASE_URL`, and
-      `TMDB_API_KEY` without real credentials.
+- [x] Add a documented `.env.example` covering `SECRET_KEY`,
+      `ADMIN_PASSWORD`, `DATABASE_URL`, and `TMDB_API_KEY` without real
+      credentials. `.gitignore` explicitly allows the example, and the README
+      explains copying it to the ignored local `.env` file.
 - [ ] Fail fast when required production configuration is missing; remove the
       `dev-fallback-key` and `changeme` production fallbacks.
 - [x] Choose a reproducible schema workflow: tracked Supabase SQL migrations
@@ -286,6 +287,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Production smoke test | `https://movie-tracker-umber-sigma.vercel.app`; GitHub deployment `5112547143`; source `ac5f7633577c44e046fa605f7c3bf266525faa2c` | Partial: `/login` 200, invalid login rejected, anonymous add redirected, `/` 500, `/healthz` 404; authorized write deferred until repair |
 | 2026-07-26 | Production repair | Supabase project `vgirgwxehcsxloclanhf`, direct SQL verification, Vercel deployment `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1` | Project is `ACTIVE_HEALTHY`; `public.entries` exists with 9 existing rows, 0 smoke-marker rows, and the three checks; `/healthz` is 200, but database routes still 500 because Supavisor rejects the tenant/user identity |
 | 2026-07-26 | Pooler diagnosis | Local tests of project-qualified/plain users on Supavisor ports 6543 and 5432; Vercel preview test with the direct database host | Project-qualified user returns `ENOTFOUND tenant/user`; plain user returns `ENOIDENTIFIER`; direct host succeeds locally but fails from Vercel on IPv6. Provider Connect settings or tenant mapping must be refreshed before another deployment attempt |
+| 2026-07-26 | Environment template | `.env.example`, `.gitignore`, README local setup, `git diff --check` | Passed: all four runtime variables are documented with placeholders; the example is trackable while `.env` remains ignored |
 
 ## Decisions
 
