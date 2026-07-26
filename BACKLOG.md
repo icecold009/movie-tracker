@@ -44,8 +44,8 @@ capability and evidence that people actually use it.
   them or provision the schema explicitly before serving database-backed
   routes.
 - There is no automated test suite.
-- TMDB requests now have bounded timeout, HTTP/JSON validation, and safe error
-  handling; caching and rate limiting remain open.
+- TMDB requests now have bounded timeout, HTTP/JSON validation, safe error
+  handling, five-minute caching, and per-warm-instance rate limiting.
 
 ## P0 — Make the existing project truthful and reliable
 
@@ -166,8 +166,11 @@ capability and evidence that people actually use it.
 - [x] Handle TMDB quota, authentication, malformed JSON, and network failures
       separately enough to make operational diagnosis possible. Safe user
       messages and log categories distinguish these cases without credentials.
-- [ ] Add server-side rate limiting and caching for repeated title searches;
-      protect TMDB quota rather than exposing the API key to browsers.
+- [x] Add server-side rate limiting and caching for repeated title searches;
+      protect TMDB quota rather than exposing the API key to browsers. The
+      current five-minute cache and 30-uncached-requests-per-minute limiter are
+      in-process protections; a shared store is still needed for global limits
+      across scaled Vercel instances.
 - [ ] Store TMDB IDs and relevant metadata needed by the chosen differentiating
       feature, not only the display title and poster URL.
 - [ ] Document TMDB attribution, API-key boundaries, and data-refresh behavior.
@@ -322,6 +325,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Request validation | Flask test-client checks with mocked TMDB/database functions; `api/index.py`, `database.py`, and index template | Passed: blank/overlong titles, invalid type/status, and malformed/out-of-range ratings are rejected with flash errors; unknown update/delete IDs report `Entry not found.` |
 | 2026-07-26 | TMDB boundary handling | Mocked `requests.get` success, timeout, network, 401/403, 429, non-2xx, and malformed JSON cases; Flask add-route error check | Passed: requests use a five-second timeout, HTTP/JSON failures raise categorized safe errors, and the add flow flashes the user-safe message; caching/rate limiting remain open |
 | 2026-07-26 | Database error states and media classification | Fake `psycopg2.Error` plus Flask test-client checks for public read/add/edit/delete; mocked mixed TMDB result | Passed: database driver failures become safe 503/flash states, and the selected Movie/TV type is preserved independently of TMDB `media_type` |
+| 2026-07-26 | TMDB cache and rate limit | Mocked request counter with normalized repeated titles, uncached request window, and route-level rate-limit exception | Passed: repeated searches within five minutes reuse the in-process cache; uncached requests are limited to 30 per 60 seconds per warm instance; distributed enforcement remains a documented limitation |
 
 ## Decisions
 

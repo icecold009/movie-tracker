@@ -78,6 +78,11 @@ transaction-mode connection (port `6543`) from the project's Connect settings.
 The Flask database client uses a five-second connection timeout; the current
 production pooler tenant-mapping issue is recorded above and in `BACKLOG.md`.
 
+TMDB searches use a five-minute in-process cache and limit uncached searches to
+30 requests per minute per warm application instance. This protects quota on a
+single instance; a shared cache/rate-limit store would be required for global
+enforcement across scaled serverless instances.
+
 ## 🛡️ Database Security (RLS)
 
 I recently implemented **Row Level Security** on the PostgreSQL database to add an extra layer of protection. This ensures that even if the API keys were exposed, the database itself restricts who can modify the records.
