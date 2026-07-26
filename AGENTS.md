@@ -46,6 +46,9 @@ Current application locations:
 - Database failures are converted to a safe `DatabaseError`; public reads use
   HTTP 503 with an empty-state message, while authorized mutations flash a
   retryable error without exposing driver details.
+- TMDB search uses a five-minute in-process cache and a 30-per-minute limit on
+  uncached searches per warm instance; do not describe this as distributed
+  quota enforcement without adding shared state.
 - Schema creation is owned by the tracked migrations under
   `supabase/migrations/`; the obsolete `init_db()` bootstrap was removed so it
   cannot create a weaker competing `entries` schema. Do not assume a fresh
