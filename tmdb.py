@@ -1,10 +1,6 @@
-import os
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
-
-TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
+from config import TMDB_API_KEY
 
 def search_tmdb(title):
     try:

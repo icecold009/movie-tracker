@@ -1,13 +1,11 @@
-import os
 import datetime
 import psycopg2
 import psycopg2.extras
-from dotenv import load_dotenv
 
-load_dotenv()
+from config import DATABASE_URL
 
 def get_conn():
-    url = os.getenv("DATABASE_URL", "")
+    url = DATABASE_URL
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
     return psycopg2.connect(url, sslmode="require")
