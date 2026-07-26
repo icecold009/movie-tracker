@@ -27,11 +27,9 @@ capability and evidence that people actually use it.
 ## Current state and known gaps
 
 - The Flask application is defined in `api/index.py`; `vercel.json` routes to
-  that file, but `Procfile` still points to `app:app` even though there is no
-  `app.py`.
-- The README describes Render hosting, while the recent repository structure
-  is Vercel-oriented. The live URL has not yet been re-verified in this
-  checkout.
+  that file and the stale Render `Procfile` has been removed.
+- The README now identifies Vercel as canonical and marks the live deployment
+  URL as pending verification.
 - The application uses `ADMIN_PASSWORD` and a Flask signed session. It does
   not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections. There is no tracked
@@ -51,11 +49,12 @@ capability and evidence that people actually use it.
 - [x] Decide whether the canonical deployment is Vercel or Render. Vercel is
       canonical because `vercel.json`, `api/index.py`, and the latest migration
       commits are Vercel-oriented; live verification remains a separate task.
-- [ ] Align the deployment configuration with that decision: entrypoint,
-      build/start command, static/template paths, and required environment
-      variables.
-- [ ] Remove or correct the stale deployment configuration for the non-canonical
-      platform so future contributors do not deploy a broken entrypoint.
+- [x] Align the deployment configuration with that decision: `vercel.json`
+      routes to `api/index.py`, whose Flask configuration resolves the shared
+      templates and static directories. Required environment variables remain
+      a separate configuration task.
+- [x] Remove or correct the stale deployment configuration for the non-canonical
+      platform by deleting the broken Render `Procfile`.
 - [ ] Add a lightweight `/healthz` endpoint that reports application health
       without exposing secrets or requiring a full watchlist query.
 - [ ] Verify the deployed URL with a dated smoke test covering public view,
@@ -243,13 +242,14 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | Date | Area | Evidence | Result / follow-up |
 |---|---|---|---|
 | 2026-07-26 | Baseline inspection | Repository review of `api/index.py`, `database.py`, `tmdb.py`, `Procfile`, `vercel.json`, and `readme.md` | Deployment, auth/RLS, schema setup, validation, and test gaps recorded above |
+| 2026-07-26 | Deployment alignment | `vercel.json`, `api/index.py`, README, and removal of `Procfile` | Vercel is the only documented/configured target; live smoke verification remains open |
 
 ## Decisions
 
 Record decisions that affect scope here so future work does not reopen settled
 questions without new evidence.
 
-- Canonical deployment: Vercel; live verification and stale Render cleanup remain open
+- Canonical deployment: Vercel; live verification remains open
 - Authentication model: _undecided_
 - Differentiator track: _undecided_
 - Usage measurement approach: _undecided_
