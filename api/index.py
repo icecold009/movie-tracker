@@ -3,19 +3,16 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
-from dotenv import load_dotenv
+from config import ADMIN_PASSWORD, SECRET_KEY
 from database import add_entry, get_all, delete_entry, update_entry
 from tmdb import search_tmdb
-
-load_dotenv()
 
 app = Flask(__name__,
     template_folder=os.path.join(os.path.dirname(__file__), '..', 'templates'),
     static_folder=os.path.join(os.path.dirname(__file__), '..', 'static')
 )
 
-app.secret_key = os.getenv("SECRET_KEY", "dev-fallback-key")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "changeme")
+app.secret_key = SECRET_KEY
 
 
 @app.route("/healthz")
