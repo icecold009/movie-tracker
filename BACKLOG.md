@@ -55,8 +55,9 @@ capability and evidence that people actually use it.
       a separate configuration task.
 - [x] Remove or correct the stale deployment configuration for the non-canonical
       platform by deleting the broken Render `Procfile`.
-- [ ] Add a lightweight `/healthz` endpoint that reports application health
-      without exposing secrets or requiring a full watchlist query.
+- [x] Add a lightweight `/healthz` endpoint that reports application liveness
+      without exposing secrets or requiring a full watchlist query. The focused
+      Flask test-client check passed with HTTP 200 and `{"status":"ok"}`.
 - [ ] Verify the deployed URL with a dated smoke test covering public view,
       login, one authorized write path, and unauthorized write rejection.
 - [ ] Record deployment URL, commit SHA, verification date, and any manual
@@ -243,6 +244,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 |---|---|---|---|
 | 2026-07-26 | Baseline inspection | Repository review of `api/index.py`, `database.py`, `tmdb.py`, `Procfile`, `vercel.json`, and `readme.md` | Deployment, auth/RLS, schema setup, validation, and test gaps recorded above |
 | 2026-07-26 | Deployment alignment | `vercel.json`, `api/index.py`, README, and removal of `Procfile` | Vercel is the only documented/configured target; live smoke verification remains open |
+| 2026-07-26 | Health endpoint | `venv\\Scripts\\python.exe` Flask test client against `GET /healthz` | Passed: HTTP 200 with `{"status":"ok"}`; live deployment check remains open |
 
 ## Decisions
 
