@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 from config import ADMIN_PASSWORD, SECRET_KEY
 from database import add_entry, get_all, delete_entry, update_entry
-from tmdb import search_tmdb
+from tmdb import TMDBError, search_tmdb
 
 app = Flask(__name__,
     template_folder=os.path.join(os.path.dirname(__file__), '..', 'templates'),
@@ -99,7 +99,11 @@ def add():
     entry_type = values["entry_type"]
     status = values["status"]
     rating = values["rating"]
-    result = search_tmdb(title)
+    try:
+        result = search_tmdb(title)
+    except TMDBError as error:
+        flash(str(error))
+        return redirect(url_for("index"))
     if result:
         full_title = result["full_title"]
         poster_url = result["poster_url"]
