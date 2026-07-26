@@ -78,14 +78,22 @@ capability and evidence that people actually use it.
       repaired application, and repeat the complete smoke test with a
       reversible authorized-write fixture.
       - [x] Restored Supabase project `vgirgwxehcsxloclanhf` from inactive status.
-      - [x] Provisioned `public.entries` and verified zero rows plus the three
-            rating/type/status constraints.
+      - [x] Provisioned `public.entries` and verified the three
+            rating/type/status constraints. A direct SQL count found 9 existing
+            entries; the smoke-marker query found 0 test rows, so production
+            data was preserved and no smoke fixture was left behind.
       - [x] Added tracked migrations under `supabase/migrations/` and deployed
             the current branch as Vercel production deployment
             `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1`.
       - [ ] Repair or refresh the Supavisor tenant mapping/connection string;
             both local and Vercel attempts still receive
-            `ENOTFOUND tenant/user postgres.vgirgwxehcsxloclanhf`.
+            `ENOTFOUND tenant/user postgres.vgirgwxehcsxloclanhf`. A
+            read-only variant check on 2026-07-26 produced the same tenant
+            error for the project-qualified user on ports 6543 and 5432;
+            using plain `postgres` instead produced
+            `ENOIDENTIFIER no tenant identifier provided` on both ports.
+            The direct database host works locally but cannot be used by
+            Vercel because its IPv6 connection fails there.
       - [ ] Repeat the public-view and reversible authorized-write checks after
             the pooler connection is healthy.
 
@@ -276,7 +284,8 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Deployment alignment | `vercel.json`, `api/index.py`, README, and removal of `Procfile` | Vercel is the only documented/configured target; live smoke verification remains open |
 | 2026-07-26 | Health endpoint | `venv\\Scripts\\python.exe` Flask test client against `GET /healthz` | Passed: HTTP 200 with `{"status":"ok"}`; live deployment check remains open |
 | 2026-07-26 | Production smoke test | `https://movie-tracker-umber-sigma.vercel.app`; GitHub deployment `5112547143`; source `ac5f7633577c44e046fa605f7c3bf266525faa2c` | Partial: `/login` 200, invalid login rejected, anonymous add redirected, `/` 500, `/healthz` 404; authorized write deferred until repair |
-| 2026-07-26 | Production repair | Supabase project `vgirgwxehcsxloclanhf`, SQL verification, Vercel deployment `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1` | Supabase restored and schema verified; `/healthz` now 200, but database routes still 500 because Supavisor rejects the tenant/user identity |
+| 2026-07-26 | Production repair | Supabase project `vgirgwxehcsxloclanhf`, direct SQL verification, Vercel deployment `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1` | Project is `ACTIVE_HEALTHY`; `public.entries` exists with 9 existing rows, 0 smoke-marker rows, and the three checks; `/healthz` is 200, but database routes still 500 because Supavisor rejects the tenant/user identity |
+| 2026-07-26 | Pooler diagnosis | Local tests of project-qualified/plain users on Supavisor ports 6543 and 5432; Vercel preview test with the direct database host | Project-qualified user returns `ENOTFOUND tenant/user`; plain user returns `ENOIDENTIFIER`; direct host succeeds locally but fails from Vercel on IPv6. Provider Connect settings or tenant mapping must be refreshed before another deployment attempt |
 
 ## Decisions
 
