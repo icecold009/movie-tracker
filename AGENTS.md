@@ -40,10 +40,10 @@ Current application locations:
 - The database layer uses direct `psycopg2` connections. Supabase RLS is
   documented but not yet reproducibly established by a tracked migration or
   proven to align with the Flask session.
-- `init_db()` exists in `database.py` but is not called automatically. The
-  tracked migrations under `supabase/migrations/` now define the `entries`
-  table and its validation constraints; do not assume a fresh deployment has
-  applied them.
+- Schema creation is owned by the tracked migrations under
+  `supabase/migrations/`; the obsolete `init_db()` bootstrap was removed so it
+  cannot create a weaker competing `entries` schema. Do not assume a fresh
+  deployment has applied the migrations.
 - The Supabase `movie-tracker` project was restored from inactive status and its
   database is healthy, but the shared pooler currently rejects the
   `postgres.<project-ref>` tenant used by Vercel. Treat this as a provider-side

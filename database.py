@@ -10,24 +10,6 @@ def get_conn():
         url = url.replace("postgres://", "postgresql://", 1)
     return psycopg2.connect(url, sslmode="require")
 
-def init_db():
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS entries (
-            id SERIAL PRIMARY KEY,
-            title TEXT NOT NULL,
-            entry_type TEXT,
-            status TEXT,
-            rating INTEGER,
-            poster_url TEXT,
-            added_on TEXT
-        )
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-
 def add_entry(title, entry_type, status, rating, poster_url):
     conn = get_conn()
     cur = conn.cursor()

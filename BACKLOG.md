@@ -40,8 +40,9 @@ capability and evidence that people actually use it.
 - The Supabase `movie-tracker` project was restored from inactive status and is
   now healthy; its shared pooler still rejects the `postgres.<project-ref>`
   tenant used by Vercel, so database-backed production routes remain blocked.
-- `init_db()` exists but is not called by the application. Deployments must
-  apply the tracked migrations or provision the schema explicitly.
+- Schema creation is owned by the tracked migrations; deployments must apply
+  them or provision the schema explicitly before serving database-backed
+  routes.
 - There is no automated test suite.
 - Rating and status values are accepted from request data with minimal
   validation; TMDB requests have no timeout, explicit status handling, or
@@ -115,8 +116,10 @@ capability and evidence that people actually use it.
       rating/type/status constraints were verified on 2026-07-26; non-empty
       title and nullability hardening for an existing table remain separate
       follow-up work.
-- [ ] Decide whether `init_db()` should be removed in favor of migrations or
-      retained as a clearly scoped local-development bootstrap.
+- [x] Remove the obsolete `init_db()` bootstrap in favor of the tracked
+      migrations. This prevents local or deployment code from creating a weaker
+      competing `entries` schema; fresh environments must apply the migration
+      files before serving database-backed routes.
 - [ ] Add indexes and a connection strategy appropriate for the deployment
       environment; document whether direct Postgres connections or a Supabase
       API/pooler are used.
@@ -291,6 +294,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Pooler diagnosis | Local tests of project-qualified/plain users on Supavisor ports 6543 and 5432; Vercel preview test with the direct database host | Project-qualified user returns `ENOTFOUND tenant/user`; plain user returns `ENOIDENTIFIER`; direct host succeeds locally but fails from Vercel on IPv6. Provider Connect settings or tenant mapping must be refreshed before another deployment attempt |
 | 2026-07-26 | Environment template | `.env.example`, `.gitignore`, README local setup, `git diff --check` | Passed: all four runtime variables are documented with placeholders; the example is trackable while `.env` remains ignored |
 | 2026-07-26 | Configuration fail-fast | `venv\Scripts\python.exe` compile check; configured app import; import with all four variables intentionally empty | Passed: configured Flask import succeeds; missing configuration exits with `Missing required environment variable: SECRET_KEY`; no runtime fallback values remain |
+| 2026-07-26 | Schema bootstrap decision | `rg -n "init_db"` usage search; `database.py`; tracked files under `supabase/migrations/` | Passed: removed the unused weaker bootstrap; migrations are the only tracked schema-creation path |
 
 ## Decisions
 
