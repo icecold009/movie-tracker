@@ -48,7 +48,9 @@ capability and evidence that people actually use it.
 
 ### Deployment and runtime
 
-- [ ] Decide whether the canonical deployment is Vercel or Render.
+- [x] Decide whether the canonical deployment is Vercel or Render. Vercel is
+      canonical because `vercel.json`, `api/index.py`, and the latest migration
+      commits are Vercel-oriented; live verification remains a separate task.
 - [ ] Align the deployment configuration with that decision: entrypoint,
       build/start command, static/template paths, and required environment
       variables.
@@ -247,7 +249,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 Record decisions that affect scope here so future work does not reopen settled
 questions without new evidence.
 
-- Canonical deployment: _undecided_
+- Canonical deployment: Vercel; live verification and stale Render cleanup remain open
 - Authentication model: _undecided_
 - Differentiator track: _undecided_
 - Usage measurement approach: _undecided_
