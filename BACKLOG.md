@@ -147,12 +147,14 @@ capability and evidence that people actually use it.
       affected-row counts and flash `Entry not found.` when no row exists.
 - [x] Add user-visible validation error states for these malformed request
       cases through the shared flash-message display on the index page.
-- [ ] Add user-visible error states for database and TMDB failures.
+- [x] Add user-visible error states for database and TMDB failures.
       - [x] TMDB timeout, network, authentication, rate-limit, and malformed
             response failures now flash safe messages during add.
-      - [ ] Add equivalent user-visible handling for database failures.
-- [ ] Preserve the selected entry type correctly when TMDB returns mixed movie
-      and TV results, or use TMDB's returned media type intentionally.
+      - [x] Database failures now produce a safe HTTP 503 public-read state or
+            a retryable flash message for authorized mutations.
+- [x] Preserve the selected entry type correctly when TMDB returns mixed movie
+      and TV results by treating the admin's explicit form selection as
+      authoritative; TMDB media type remains lookup metadata.
 - [ ] Add safe escaping and length limits before introducing any free-text
       review or note fields.
 
@@ -319,6 +321,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Database transaction cleanup | `database.py` transaction context and fake-connection success/failure verification | Passed: successful operations commit and close resources; raised operation errors roll back, re-raise, and close resources |
 | 2026-07-26 | Request validation | Flask test-client checks with mocked TMDB/database functions; `api/index.py`, `database.py`, and index template | Passed: blank/overlong titles, invalid type/status, and malformed/out-of-range ratings are rejected with flash errors; unknown update/delete IDs report `Entry not found.` |
 | 2026-07-26 | TMDB boundary handling | Mocked `requests.get` success, timeout, network, 401/403, 429, non-2xx, and malformed JSON cases; Flask add-route error check | Passed: requests use a five-second timeout, HTTP/JSON failures raise categorized safe errors, and the add flow flashes the user-safe message; caching/rate limiting remain open |
+| 2026-07-26 | Database error states and media classification | Fake `psycopg2.Error` plus Flask test-client checks for public read/add/edit/delete; mocked mixed TMDB result | Passed: database driver failures become safe 503/flash states, and the selected Movie/TV type is preserved independently of TMDB `media_type` |
 
 ## Decisions
 
