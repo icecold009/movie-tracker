@@ -19,5 +19,8 @@ browser or external analytics provider receives the events. If the counter
 write fails, the user-facing request still succeeds and the failure is logged
 as a safe diagnostic event.
 
-The first real usage summary remains blocked until the production database
-route is healthy and a dated observation period can be recorded.
+First dated production observation: **2026-07-27** recorded 22 `public_view`
+events, 1 `successful_add`, and 1 `recommendation_view`. The values came from
+a read-only aggregate query over `public.usage_daily`; they describe event
+activity during that date and do not estimate unique people or registered
+users.

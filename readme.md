@@ -71,6 +71,11 @@ daily aggregate counts for successful public views, adds, and recommendation
 views; it does not store IP addresses, user agents, referrers, account IDs, or
 browser identifiers. These counters describe activity, not registered users.
 
+Usage summary for **2026-07-27**: 22 public views, 1 successful add, and 1
+recommendation view. These counts were read from the production
+`public.usage_daily` table with a read-only aggregate query and represent
+activity events, not unique people or registered users.
+
 ## Tech Stack
 
 | Layer | Tool |

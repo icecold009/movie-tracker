@@ -20,7 +20,7 @@ capability and evidence that people actually use it.
 - [ ] One differentiating feature is productionized, explainable, and tested;
       it is not presented as ML or data engineering without evaluation or
       historical data to support that claim.
-- [ ] A dated, privacy-conscious usage summary is backed by real measurements.
+- [x] A dated, privacy-conscious usage summary is backed by real measurements.
 - [ ] The architecture and tradeoffs are documented accurately.
 - [ ] README, tests, deployment evidence, and known limitations are current.
 
@@ -317,7 +317,7 @@ the project still has a clear product reason for the second.
 - [x] Add measurement for meaningful events such as public visits, successful
       additions, recommendation views, or availability-history views. The Flask
       routes increment the three selected daily counters; production summary
-      evidence remains pending until the database-backed deployment is healthy.
+      evidence is recorded below from the healthy database-backed deployment.
 - [x] Do not call a single-admin watchlist “N registered users”; implement
       multi-user accounts first if registered-user counts are desired. README
       and usage-measurement documentation explicitly define counters as
@@ -325,8 +325,10 @@ the project still has a clear product reason for the second.
 - [ ] Recruit 5–10 real testers and record structured feedback about the core
       flow and differentiating feature.
 - [ ] Fix the highest-value usability issues found by testers.
-- [ ] Publish a dated usage summary in the README with exact numbers and a
-      short explanation of how they were measured.
+- [x] Publish a dated usage summary in the README with exact numbers and a
+      short explanation of how they were measured. The 2026-07-27 production
+      observation recorded 22 public views, 1 successful add, and 1
+      recommendation view from `public.usage_daily`.
 - [x] Add a privacy note and opt-out or consent behavior if analytics are
       externally hosted. No external analytics provider is used; README now
       documents the aggregate-only, identifier-free measurement boundary.
@@ -450,23 +452,25 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Operational evidence and limitations | `docs/operations.md`, `docs/verification.md`, `readme.md`, and `git diff --check` | Added rollback/rotation/migration procedures, dated live limitations, cross-links, and an accurately qualified recommendation feature description |
 | 2026-07-27 | Accessibility and responsive baseline | `templates/index.html`, `templates/login.html`, `static/style.css`, and `git diff --check` | Added form labels, alert roles, visible focus styles, modal semantics/focus return, and narrow-screen header wrapping; browser-based verification remains open because no browser is available |
 | 2026-07-27 | Release polish baseline | `observability.py`, `tests/test_observability.py`, `docs/operations.md`, `docs/release-checklist.md`, and `git diff --check` | Added safe JSON event logging, state coverage notes, Supabase backup/export guidance, and a release checklist with current blockers; runtime execution remains pending |
-| 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, read-only SQL/advisor checks, and `git diff --check` | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; API roles are revoked and a deny policy protects the table; production measurement remains pending |
+| 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, and a read-only production SQL query | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; the 2026-07-27 production observation recorded 22 public views, 1 successful add, and 1 recommendation view |
+| 2026-07-27 | Dated usage summary | `readme.md`, `docs/usage-measurement.md`, and Supabase project `vgirgwxehcsxloclanhf` read-only query | Published the first exact production summary; counts represent aggregate event activity, not unique users |
 | 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, pytest, and GitHub Actions run `30239984101` | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks pass with 40 tests and the pushed Python 3.10/3.12/3.14 matrix is green |
 | 2026-07-27 | Usage privacy documentation | `readme.md`, `docs/usage-measurement.md`, and `git diff --check` | Explicitly separated aggregate activity counters from registered-user counts and documented that no external analytics provider or user identifiers are collected |
 | 2026-07-27 | Draft PR handoff | GitHub draft PR #3, `project-backlog`, and clean worktree | Opened `https://github.com/icecold009/movie-tracker/pull/3` against `main`; merge remains user-controlled |
+| 2026-07-27 | PR merge and production release | GitHub PR #3 merge commit `ef97ff98facad2197cf3f10875b15883510d2835`; live smoke checks | User merged PR #3 after all checks passed; production `/healthz`, `/`, `/login`, and anonymous mutation rejection passed, with a user-confirmed reversible authorized add/delete check |
 
 ## Decisions
 
 Record decisions that affect scope here so future work does not reopen settled
 questions without new evidence.
 
-- Canonical deployment: Vercel; live verification remains open
+- Canonical deployment: Vercel; 2026-07-27 production smoke verification passed
 - Authentication model: hardened custom single-admin flow; Supabase Auth is
   out of scope unless the project becomes multi-user
 - Differentiator track: Track A, explainable content-based recommendations;
   it fits the existing watchlist and TMDB integration without introducing a
   second availability provider or unsupported historical-data claims
-- Usage measurement approach: _undecided_
+- Usage measurement approach: daily aggregate counters only; first summary recorded for 2026-07-27
 
 Track A is selected because it can be deterministic, explainable, and evaluated
 with the existing personal watchlist. Track B remains out of scope unless a
