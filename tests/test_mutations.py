@@ -36,7 +36,11 @@ def test_add_rejects_blank_title_before_external_calls(app, monkeypatch):
 def test_add_accepts_valid_input_with_mocked_tmdb_and_database(app, monkeypatch):
     calls = []
     monkeypatch.setattr(index, "search_tmdb", lambda title: None)
-    monkeypatch.setattr(index, "add_entry", lambda *args: calls.append(args))
+    monkeypatch.setattr(
+        index,
+        "add_entry",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
 
     response = authenticated_client(app).post(
         "/add",
