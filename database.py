@@ -32,9 +32,10 @@ def get_conn():
 
 @contextmanager
 def db_transaction(cursor_factory=None):
-    conn = get_conn()
+    conn = None
     cur = None
     try:
+        conn = get_conn()
         if cursor_factory is None:
             cur = conn.cursor()
         else:
@@ -42,7 +43,8 @@ def db_transaction(cursor_factory=None):
         yield cur
         conn.commit()
     except psycopg2.Error as exc:
-        conn.rollback()
+        if conn is not None:
+            conn.rollback()
         log_event(
             logger,
             logging.WARNING,
@@ -52,12 +54,14 @@ def db_transaction(cursor_factory=None):
         )
         raise DatabaseError("The watchlist database is temporarily unavailable.") from exc
     except Exception:
-        conn.rollback()
+        if conn is not None:
+            conn.rollback()
         raise
     finally:
         if cur is not None:
             cur.close()
-        conn.close()
+        if conn is not None:
+            conn.close()
 
 
 def add_entry(
