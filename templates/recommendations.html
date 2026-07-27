@@ -5,11 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recommendations — My Watch Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
 <main>
-    <a href="{{ url_for('index') }}" class="back-link">← Back to tracker</a>
+    <a href="{{ url_for('index') }}" class="back-link" data-loading-link>← Back to tracker</a>
     <h1 class="section-title">Recommendations</h1>
+
+    <div class="loading-skeleton" data-page-skeleton hidden aria-hidden="true">
+        <div class="skeleton-shell">
+            <div class="skeleton-block skeleton-heading"></div>
+            <div class="skeleton-grid">
+                {% for _ in range(6) %}
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skeleton-block skeleton-poster"></div>
+                    <div class="skeleton-card-body">
+                        <div class="skeleton-block skeleton-line skeleton-line-title"></div>
+                        <div class="skeleton-block skeleton-line skeleton-line-long"></div>
+                        <div class="skeleton-block skeleton-line skeleton-line-short"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
     {% if error %}
         <p class="flash-error" role="alert">{{ error }}</p>
