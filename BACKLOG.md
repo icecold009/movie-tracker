@@ -399,8 +399,9 @@ the project still has a clear product reason for the second.
       - [x] Added `docs/release-checklist.md` with explicit commands, evidence,
             and current blockers; automated checks are now complete, while
             deployment and browser review remain open.
-- [ ] Create a logical feature-branch commit history and open a reviewable PR;
-      do not merge directly to `main` without explicit approval.
+- [x] Create a logical feature-branch commit history and open a reviewable PR;
+      do not merge directly to `main` without explicit approval. Draft PR #3
+      contains the scoped commits from `project-backlog` and remains unmerged.
 
 ## Evidence log
 
@@ -458,6 +459,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, read-only SQL/advisor checks, and `git diff --check` | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; API roles are revoked and a deny policy protects the table; production measurement remains pending |
 | 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, pytest, and GitHub Actions run `30239984101` | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks pass with 40 tests and the pushed Python 3.10/3.12/3.14 matrix is green |
 | 2026-07-27 | Usage privacy documentation | `readme.md`, `docs/usage-measurement.md`, and `git diff --check` | Explicitly separated aggregate activity counters from registered-user counts and documented that no external analytics provider or user identifiers are collected |
+| 2026-07-27 | Draft PR handoff | GitHub draft PR #3, `project-backlog`, and clean worktree | Opened `https://github.com/icecold009/movie-tracker/pull/3` against `main`; merge remains user-controlled |
 
 ## Decisions
 
