@@ -453,6 +453,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Accessibility and responsive baseline | `templates/index.html`, `templates/login.html`, `static/style.css`, and `git diff --check` | Added form labels, alert roles, visible focus styles, modal semantics/focus return, and narrow-screen header wrapping; browser-based verification remains open because no browser is available |
 | 2026-07-27 | Release polish baseline | `observability.py`, `tests/test_observability.py`, `docs/operations.md`, `docs/release-checklist.md`, and `git diff --check` | Added safe JSON event logging, state coverage notes, Supabase backup/export guidance, and a release checklist with current blockers; runtime execution remains pending |
 | 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, read-only SQL/advisor checks, and `git diff --check` | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; API roles are revoked and a deny policy protects the table; production measurement remains pending |
+| 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, and pytest | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks now pass with 40 tests, while the pushed CI rerun remains pending |
 
 ## Decisions
 

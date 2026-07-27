@@ -96,7 +96,7 @@ def test_explain_recommendation_uses_strongest_deterministic_watchlist_match():
     )
 
 
-def test_explain_recommendation_has_safe_no-overlap_fallback():
+def test_explain_recommendation_has_safe_no_overlap_fallback():
     assert explain_recommendation({"genre_ids": [99]}, [{"title": "Known"}]) == (
         "Recommended as a content match from your watchlist."
     )
