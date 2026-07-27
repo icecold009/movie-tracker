@@ -6,6 +6,7 @@ import psycopg2
 import psycopg2.extras
 
 from config import DATABASE_URL
+from observability import log_event
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,13 @@ def db_transaction(cursor_factory=None):
         conn.commit()
     except psycopg2.Error as exc:
         conn.rollback()
-        logger.warning("Database operation failed: %s", type(exc).__name__)
+        log_event(
+            logger,
+            logging.WARNING,
+            "database.operation_failed",
+            exception_type=type(exc).__name__,
+            operation="transaction",
+        )
         raise DatabaseError("The watchlist database is temporarily unavailable.") from exc
     except Exception:
         conn.rollback()
@@ -53,12 +60,53 @@ def db_transaction(cursor_factory=None):
         conn.close()
 
 
-def add_entry(title, entry_type, status, rating, poster_url):
+def add_entry(
+    title,
+    entry_type,
+    status,
+    rating,
+    poster_url,
+    tmdb_id=None,
+    tmdb_media_type=None,
+    genre_ids=None,
+):
     with db_transaction() as cur:
         cur.execute(
-            "INSERT INTO entries (title, entry_type, status, rating, poster_url, added_on) VALUES (%s, %s, %s, %s, %s, %s)",
-            (title, entry_type, status, rating, poster_url, str(datetime.date.today()))
+            """
+            INSERT INTO entries (
+                title, entry_type, status, rating, poster_url, added_on,
+                tmdb_id, tmdb_media_type, genre_ids
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                title,
+                entry_type,
+                status,
+                rating,
+                poster_url,
+                str(datetime.date.today()),
+                tmdb_id,
+                tmdb_media_type,
+                genre_ids or [],
+            )
         )
+
+
+def record_usage_event(event_name):
+    """Increment an allowlisted daily aggregate usage counter."""
+    if event_name not in {"public_view", "successful_add", "recommendation_view"}:
+        raise ValueError("Unsupported usage event")
+    with db_transaction() as cur:
+        cur.execute(
+            """
+            INSERT INTO usage_daily (event_date, event_name, event_count)
+            VALUES (%s, %s, 1)
+            ON CONFLICT (event_date, event_name)
+            DO UPDATE SET event_count = usage_daily.event_count + 1
+            """,
+            (datetime.date.today(), event_name),
+        )
+
 
 def get_all():
     with db_transaction(cursor_factory=psycopg2.extras.RealDictCursor) as cur:

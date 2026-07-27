@@ -14,12 +14,13 @@
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="flash-error">{{ message }}</div>
+                        <div class="flash-error" role="alert">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
 
             <form method="POST" action="/login">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password"

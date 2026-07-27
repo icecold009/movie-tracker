@@ -8,7 +8,7 @@ Live deployment: https://movie-tracker-umber-sigma.vercel.app
 
 ## Deployment verification
 
-Last checked: **2026-07-26** against the Vercel production alias. The latest
+Full smoke check: **2026-07-26** against the Vercel production alias. The latest
 GitHub production deployment record points to commit `ac5f7633577c44e046fa605f7c3bf266525faa2c`
 (deployment `5112547143`, created 2026-06-18).
 
@@ -16,10 +16,12 @@ GitHub production deployment record points to commit `ac5f7633577c44e046fa605f7c
 - Anonymous `POST /add`: HTTP 302 to `/login`; no write was attempted without a
   session.
 - `/`: HTTP 500; the public database-backed view is not currently healthy.
-- `/healthz`: HTTP 404; the deployed version predates the health endpoint on the
-  current branch.
 - An authorized write was not attempted because the deployed public view is
   failing and there is no verified rollback fixture for production data.
+
+Latest live probe: **2026-07-27**. `/healthz` returned HTTP 200 with
+`{"status":"ok"}`, while `/` still returned HTTP 500. This confirms liveness
+but does not establish database-backed production health.
 
 The deployment is therefore **not release-ready**. Repeat the full smoke test
 after redeploying the repaired application, including a reversible authorized
@@ -37,6 +39,10 @@ smoke test can pass.
 
 ## Features
 
+The implementation also includes an explainable content-based recommendation
+baseline; focused tests and code review are tracked, while runtime execution
+and production usage remain unverified.
+
 - 🎨 Rate 1–10 with a colour-coded bar (red → yellow → green)
 - 📋 Track status: **Watched** or **Want to Watch**
 - 🎬 Movies and 📺 TV Shows displayed in separate sections
@@ -44,7 +50,26 @@ smoke test can pass.
 - ✕ Delete any entry
 - 🌐 Public view - anyone can see the watchlist
 - 🔐 Password-protected admin - only the owner can add, edit, or delete
-- 🛡️ **Row Level Security (RLS)** - Database-level protection ensuring only authenticated requests can modify data
+- Database-level authorization is not currently claimed; the Flask server is
+  the only documented mutation boundary until a matching RLS policy is tested.
+
+The current known limitations are:
+
+- Authentication is a single-admin Flask session, not a multi-user account
+  system; Supabase Auth and RLS are not integrated.
+- Recommendations are a deterministic content-based baseline. They depend on
+  TMDB and stored genre metadata, use a sparse-history popular fallback, and
+  have no real production precision metric yet.
+- TMDB caching and rate limiting are per warm serverless instance, not global.
+- The Vercel database-backed routes remain blocked by the unresolved Supavisor
+  tenant mapping; `/healthz` liveness does not prove the watchlist works.
+
+See the [backlog](BACKLOG.md), [verification record](docs/verification.md),
+[architecture](docs/architecture.md), [local development guide](docs/local-development.md),
+[operations runbook](docs/operations.md), and [usage measurement decision](docs/usage-measurement.md)
+for current procedures and limits.
+The [live deployment](https://movie-tracker-umber-sigma.vercel.app) is the
+canonical demo, subject to the limitations in the verification record.
 
 ## Tech Stack
 
@@ -52,7 +77,7 @@ smoke test can pass.
 |---|---|
 | Language | Python 3.10+ |
 | Framework | Flask |
-| Database | PostgreSQL (Supabase) + **Row Level Security (RLS)** |
+| Database | PostgreSQL (Supabase) |
 | Cover Art | TMDB API (free) |
 | Hosting | Vercel (Python function) |
 | Runtime | Vercel Python runtime |
@@ -69,9 +94,34 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Run the automated checks with:
+
+```bash
+python -m pytest
+```
+
+Direct dependencies are pinned in `requirements.txt`; the update workflow is
+documented in `docs/dependency-update.md`.
+
 Copy `.env.example` to `.env` and replace every placeholder with a local
 secret or service credential. Keep `.env` untracked; production values belong
 in Vercel's encrypted environment variables.
+
+`ADMIN_PASSWORD_HASH` must contain a Werkzeug password hash rather than the
+plaintext admin password. Generate one interactively with:
+
+```bash
+python -c "from getpass import getpass; from werkzeug.security import generate_password_hash; print(generate_password_hash(getpass('Admin password: ')))"
+```
+
+For credential rotation, generate a new hash, replace `ADMIN_PASSWORD_HASH` in
+the local or Vercel environment, and redeploy. Do not retain or document the
+old plaintext password.
+
+The Flask session cookie is HTTP-only and `SameSite=Lax`; Vercel and other
+production environments also set the cookie `Secure` flag. Rotating
+`SECRET_KEY` invalidates existing signed sessions and requires administrators
+to log in again.
 
 For Vercel, `DATABASE_URL` should use the Supabase Shared Pooler
 transaction-mode connection (port `6543`) from the project's Connect settings.
@@ -83,22 +133,20 @@ TMDB searches use a five-minute in-process cache and limit uncached searches to
 single instance; a shared cache/rate-limit store would be required for global
 enforcement across scaled serverless instances.
 
-## 🛡️ Database Security (RLS)
+### TMDB attribution and data boundaries
 
-I recently implemented **Row Level Security** on the PostgreSQL database to add an extra layer of protection. This ensures that even if the API keys were exposed, the database itself restricts who can modify the records.
+This product uses the [TMDB API](https://www.themoviedb.org/) but is not
+endorsed or certified by TMDB. TMDB supplies title metadata and poster images;
+the application does not expose `TMDB_API_KEY` to browsers. Search and discovery
+responses are cached for five minutes per warm application instance, and newly
+added entries persist the selected TMDB ID, media type, and genre IDs for the
+recommendation baseline. Existing entries are not silently refreshed, so stale
+or missing metadata can leave recommendations in the documented cold-start
+state. See TMDB's [API FAQ](https://developer.themoviedb.org/docs/faq) for the
+current attribution and API-use requirements.
 
-I used the following SQL logic to manage access:
-* **SELECT:** Allowed for everyone (public access).
-* **INSERT/UPDATE/DELETE:** Restricted to the `authenticated` role only.
+## Database Security
 
-```sql
--- Example of the policy used
-ALTER TABLE items ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow public read-only" 
-ON items FOR SELECT USING (true);
-
-CREATE POLICY "Allow admin to edit" 
-ON items FOR ALL 
-TO authenticated 
-USING (auth.role() = 'authenticated');
+RLS is not currently claimed for this Flask session and direct-Postgres access
+path. Add and test a policy that matches the actual identity boundary before
+documenting database-level row authorization.

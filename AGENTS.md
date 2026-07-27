@@ -35,8 +35,8 @@ Current application locations:
   `api/index.py`.
 - The stale Render `Procfile` has been removed. Do not reintroduce a second
   deployment target without updating the canonical-deployment decision.
-- The current application uses `ADMIN_PASSWORD` and a Flask signed session. It
-  does not currently integrate Supabase Auth.
+- The current application uses `ADMIN_PASSWORD_HASH` and a Flask signed
+  session. It does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections with a five-second
   connect timeout. Vercel is intended to use the Supabase Shared Pooler
   transaction-mode URL; Supabase RLS is documented but not yet reproducibly
@@ -58,12 +58,13 @@ Current application locations:
   `postgres.<project-ref>` tenant used by Vercel. Treat this as a provider-side
   connection configuration blocker until the current Connect-string identity is
   verified.
-- There is currently no automated test suite. New behavior should include tests
-  before being described as verified.
+- A pytest suite and CI workflow are tracked. New behavior should include tests,
+  but do not describe runtime execution as verified until the local interpreter
+  or CI provides current evidence.
 
 ## Environment and security
 
-Expected environment variables are `SECRET_KEY`, `ADMIN_PASSWORD`,
+Expected environment variables are `SECRET_KEY`, `ADMIN_PASSWORD_HASH`,
 `DATABASE_URL`, and `TMDB_API_KEY`. Keep real values in the local ignored `.env`
 or deployment secret store; never commit them or copy them into documentation.
 
