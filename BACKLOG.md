@@ -325,15 +325,18 @@ the project still has a clear product reason for the second.
       additions, recommendation views, or availability-history views. The Flask
       routes increment the three selected daily counters; production summary
       evidence remains pending until the database-backed deployment is healthy.
-- [ ] Do not call a single-admin watchlist “N registered users”; implement
-      multi-user accounts first if registered-user counts are desired.
+- [x] Do not call a single-admin watchlist “N registered users”; implement
+      multi-user accounts first if registered-user counts are desired. README
+      and usage-measurement documentation explicitly define counters as
+      aggregate activity, not registered-user counts.
 - [ ] Recruit 5–10 real testers and record structured feedback about the core
       flow and differentiating feature.
 - [ ] Fix the highest-value usability issues found by testers.
 - [ ] Publish a dated usage summary in the README with exact numbers and a
       short explanation of how they were measured.
-- [ ] Add a privacy note and opt-out or consent behavior if analytics are
-      externally hosted.
+- [x] Add a privacy note and opt-out or consent behavior if analytics are
+      externally hosted. No external analytics provider is used; README now
+      documents the aggregate-only, identifier-free measurement boundary.
 - [ ] Keep screenshots or a short demo recording that matches the verified
       deployed commit.
 
@@ -454,6 +457,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Release polish baseline | `observability.py`, `tests/test_observability.py`, `docs/operations.md`, `docs/release-checklist.md`, and `git diff --check` | Added safe JSON event logging, state coverage notes, Supabase backup/export guidance, and a release checklist with current blockers; runtime execution remains pending |
 | 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, read-only SQL/advisor checks, and `git diff --check` | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; API roles are revoked and a deny policy protects the table; production measurement remains pending |
 | 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, pytest, and GitHub Actions run `30239984101` | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks pass with 40 tests and the pushed Python 3.10/3.12/3.14 matrix is green |
+| 2026-07-27 | Usage privacy documentation | `readme.md`, `docs/usage-measurement.md`, and `git diff --check` | Explicitly separated aggregate activity counters from registered-user counts and documented that no external analytics provider or user identifiers are collected |
 
 ## Decisions
 

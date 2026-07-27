@@ -63,6 +63,8 @@ The current known limitations are:
 - TMDB caching and rate limiting are per warm serverless instance, not global.
 - The Vercel database-backed routes remain blocked by the unresolved Supavisor
   tenant mapping; `/healthz` liveness does not prove the watchlist works.
+- Usage counters are aggregate first-party events, not registered-user counts;
+  this remains a single-admin application.
 
 See the [backlog](BACKLOG.md), [verification record](docs/verification.md),
 [architecture](docs/architecture.md), [local development guide](docs/local-development.md),
@@ -70,6 +72,13 @@ See the [backlog](BACKLOG.md), [verification record](docs/verification.md),
 for current procedures and limits.
 The [live deployment](https://movie-tracker-umber-sigma.vercel.app) is the
 canonical demo, subject to the limitations in the verification record.
+
+### Privacy and measurement
+
+The application does not use an external analytics provider. It stores only
+daily aggregate counts for successful public views, adds, and recommendation
+views; it does not store IP addresses, user agents, referrers, account IDs, or
+browser identifiers. These counters describe activity, not registered users.
 
 ## Tech Stack
 
