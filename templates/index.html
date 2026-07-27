@@ -10,7 +10,7 @@
 <body>
 
 <header class="site-header">
-    <span class="site-title">🎬 My Watch Tracker</span>
+    <span class="site-title">My Watch Tracker</span>
     <div class="header-right">
         {% if logged_in %}
             <form method="POST" action="/logout" style="margin:0" data-loading-form>
@@ -126,10 +126,10 @@
                     <button class="edit-btn"
                             data-id="{{ entry.id }}"
                             data-status="{{ entry.status }}"
-                            data-rating="{{ entry.rating }}">✎ Edit</button>
+                            data-rating="{{ entry.rating }}">Edit</button>
                     <form method="POST" action="/delete/{{ entry.id }}" style="margin:0" data-loading-form>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="delete-btn">✕ Delete</button>
+                        <button type="submit" class="delete-btn">Delete</button>
                     </form>
                 </div>
                 {% endif %}
@@ -157,10 +157,22 @@
 
 </main>
 
-<footer class="tmdb-attribution">
-    <a href="https://www.themoviedb.org/" rel="noopener noreferrer">TMDB</a>
-    provides title metadata and poster images. This product uses the TMDB API
-    but is not endorsed or certified by TMDB.
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="footer-identity">
+            <span class="footer-monogram">SW</span>
+            <div><strong>Shaurya</strong><span>Personal watchlist</span></div>
+        </div>
+        <div class="footer-links">
+            <a href="https://github.com/icecold009/movie-tracker" target="_blank" rel="noopener noreferrer">Source</a>
+            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>
+            <a href="https://movie-tracker-umber-sigma.vercel.app" target="_blank" rel="noopener noreferrer">Live</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 Shaurya</span>
+        <span>Flask · PostgreSQL · Vercel · TMDB metadata</span>
+    </div>
 </footer>
 
 {% if logged_in %}

@@ -23,3 +23,17 @@ def test_recommendations_includes_progressive_loading_skeleton(app, monkeypatch)
     assert response.status_code == 200
     assert b"data-page-skeleton" in response.data
     assert b"/static/app.js" in response.data
+
+
+def test_pages_include_professional_footer(app, monkeypatch):
+    monkeypatch.setattr(index, "get_all", lambda: [])
+    monkeypatch.setattr(index, "discover_tmdb", lambda media_type: [])
+    monkeypatch.setattr(index, "_record_usage_event", lambda event_name: None)
+
+    client = app.test_client()
+    for path in ("/", "/recommendations", "/login"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert b"site-footer" in response.data
+        assert b"Shaurya" in response.data
+        assert b"Flask" in response.data
