@@ -10,7 +10,12 @@
 <body>
 <main>
     <a href="{{ url_for('index') }}" class="back-link" data-loading-link>← Back to tracker</a>
-    <h1 class="section-title">Recommendations</h1>
+    <section class="recommendation-hero" data-reveal>
+        <p class="eyebrow"><span class="status-dot status-dot-accent"></span> Discovery engine / beta</p>
+        <h1>Next up,<br><em>with a reason.</em></h1>
+        <p class="hero-description">A transparent mix of genre affinity, your history, and TMDB discovery signals.</p>
+        <span class="engine-chip">TMDB + genre affinity <b>↗</b></span>
+    </section>
 
     <div class="loading-skeleton" data-page-skeleton hidden aria-hidden="true">
         <div class="skeleton-shell">
@@ -33,15 +38,19 @@
     {% if error %}
         <p class="flash-error" role="alert">{{ error }}</p>
     {% elif recommendations %}
-        <div class="card-grid" aria-live="polite">
+        <div class="card-grid" aria-live="polite" data-reveal>
             {% for recommendation in recommendations %}
-                <article class="card">
-                    {% if recommendation.poster_url %}
-                        <img src="{{ recommendation.poster_url }}" alt="{{ recommendation.title }}" loading="lazy">
-                    {% else %}
-                        <div class="poster-placeholder">No Image</div>
-                    {% endif %}
+                <article class="card recommendation-card" data-reveal data-pointer-glow>
+                    <div class="card-media">
+                        {% if recommendation.poster_url %}
+                            <img src="{{ recommendation.poster_url }}" alt="{{ recommendation.title }}" loading="lazy">
+                        {% else %}
+                            <div class="poster-placeholder">No Image</div>
+                        {% endif %}
+                        <span class="media-index">{{ "%02d" | format(loop.index) }}</span>
+                    </div>
                     <div class="card-body">
+                        <div class="card-topline"><span>Recommended</span><span class="card-arrow">↗</span></div>
                         <h2>{{ recommendation.title }}</h2>
                         <p>{{ recommendation.reason }}</p>
                     </div>

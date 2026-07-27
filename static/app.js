@@ -1,6 +1,8 @@
 (function () {
     "use strict";
 
+    document.documentElement.classList.add("js-ready");
+
     const skeleton = document.querySelector("[data-page-skeleton]");
     if (!skeleton) {
         return;
@@ -46,5 +48,43 @@
         if (form && !event.defaultPrevented) {
             showLoadingState();
         }
+    });
+
+    const revealItems = document.querySelectorAll("[data-reveal]");
+    if ("IntersectionObserver" in window) {
+        const revealObserver = new IntersectionObserver(function (items, observer) {
+            items.forEach(function (item) {
+                if (item.isIntersecting) {
+                    item.target.classList.add("is-visible");
+                    observer.unobserve(item.target);
+                }
+            });
+        }, { threshold: 0.08 });
+
+        revealItems.forEach(function (item, index) {
+            item.style.setProperty("--reveal-delay", `${Math.min(index * 55, 440)}ms`);
+            revealObserver.observe(item);
+        });
+    } else {
+        revealItems.forEach(function (item) {
+            item.classList.add("is-visible");
+        });
+    }
+
+    document.querySelectorAll("[data-pointer-glow]").forEach(function (card) {
+        card.addEventListener("pointermove", function (event) {
+            if (event.pointerType === "touch") {
+                return;
+            }
+            const bounds = card.getBoundingClientRect();
+            const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+            const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+            card.style.setProperty("--pointer-x", `${x}%`);
+            card.style.setProperty("--pointer-y", `${y}%`);
+        });
+        card.addEventListener("pointerleave", function () {
+            card.style.removeProperty("--pointer-x");
+            card.style.removeProperty("--pointer-y");
+        });
     });
 }());

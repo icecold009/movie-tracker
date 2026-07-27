@@ -45,6 +45,23 @@
         </div>
     </div>
 
+    {% set movies = entries | selectattr("entry_type", "equalto", "Movie") | list %}
+    {% set shows  = entries | selectattr("entry_type", "equalto", "TV Show") | list %}
+    {% set watched = entries | selectattr("status", "equalto", "Watched") | list %}
+
+    <section class="hero-panel" data-reveal>
+        <div class="hero-copy">
+            <p class="eyebrow"><span class="status-dot"></span> Personal archive / live</p>
+            <h1>Your watchlist,<br><em>curated in motion.</em></h1>
+            <p class="hero-description">A considered collection of movies and shows worth returning to, one title at a time.</p>
+        </div>
+        <div class="hero-stats" aria-label="Watchlist summary">
+            <div class="stat-block"><strong>{{ entries | length }}</strong><span>titles tracked</span></div>
+            <div class="stat-block"><strong>{{ watched | length }}</strong><span>watched</span></div>
+            <div class="stat-block"><strong>{{ movies | length }}/{{ shows | length }}</strong><span>movies / shows</span></div>
+        </div>
+    </section>
+
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}
@@ -54,7 +71,7 @@
     {% endwith %}
 
     {% if logged_in %}
-    <form method="POST" action="/add" class="add-form" data-loading-form>
+    <form method="POST" action="/add" class="add-form" data-loading-form data-reveal>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="sr-only" for="title">Movie or show title</label>
         <input type="text" id="title" name="title" placeholder="Search movie or show title..." maxlength="200" required>
@@ -79,14 +96,18 @@
 
     {% macro render_card(entry) %}
         {% set rc = 'rating-red' if entry.rating <= 3 else 'rating-orange' if entry.rating <= 5 else 'rating-yellow' if entry.rating <= 7 else 'rating-lightgreen' if entry.rating <= 9 else 'rating-green' %}
-        <div class="card">
-            {% if entry.poster_url %}
-                <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
-            {% else %}
-                <div class="poster-placeholder">No Image</div>
-            {% endif %}
+        <article class="card" data-reveal data-pointer-glow>
+            <div class="card-media">
+                {% if entry.poster_url %}
+                    <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
+                {% else %}
+                    <div class="poster-placeholder">No Image</div>
+                {% endif %}
+                <span class="media-index">{{ "%02d" | format(entry.id) }}</span>
+            </div>
 
             <div class="card-body">
+                <div class="card-topline"><span>{{ entry.entry_type }}</span><span class="card-arrow">↗</span></div>
                 <h3>{{ entry.title }}</h3>
 
                 {% if entry.status == "Watched" %}
@@ -97,7 +118,7 @@
 
                 <div class="rating-label">{{ entry.rating }}/10</div>
                 <div class="rating-bar">
-                    <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}"></div>
+                    <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}" style="width: {{ entry.rating * 10 }}%"></div>
                 </div>
 
                 {% if logged_in %}
@@ -113,24 +134,21 @@
                 </div>
                 {% endif %}
             </div>
-        </div>
+        </article>
     {% endmacro %}
 
-    {% set movies = entries | selectattr("entry_type", "equalto", "Movie") | list %}
-    {% set shows  = entries | selectattr("entry_type", "equalto", "TV Show") | list %}
-
-    <h2 class="section-title">🎬 Movies</h2>
+    <h2 class="section-title" data-reveal><span>01</span> 🎬 Movies</h2>
     {% if movies %}
-        <div class="card-grid">
+        <div class="card-grid" data-reveal>
             {% for entry in movies %}{{ render_card(entry) }}{% endfor %}
         </div>
     {% else %}
         <p class="empty-section">No movies added yet.</p>
     {% endif %}
 
-    <h2 class="section-title">📺 TV Shows</h2>
+    <h2 class="section-title" data-reveal><span>02</span> 📺 TV Shows</h2>
     {% if shows %}
-        <div class="card-grid">
+        <div class="card-grid" data-reveal>
             {% for entry in shows %}{{ render_card(entry) }}{% endfor %}
         </div>
     {% else %}
