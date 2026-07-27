@@ -8,13 +8,14 @@ Last recorded live probe: 2026-07-27.
 - `/login`: HTTP 200.
 - `/recommendations`: HTTP 200.
 - Anonymous `POST /add`: HTTP 302 to `/login`.
-- Authorized production add/delete: user-confirmed reversible smoke check
-  passed.
+- Authorized production add/delete: reversible smoke fixture on 2026-07-27
+  returned login 200, add 200, delete 200 for temporary entry ID 12; a
+  follow-up public read confirmed the marker was removed.
 - Production `DATABASE_URL` uses the current Supabase transaction pooler and
   `ADMIN_PASSWORD_HASH` is configured without recording either secret.
 
 Local verification on 2026-07-27 passed the focused accessibility tests and
-the full 46-test pytest suite using the pinned environment. The follow-up UI
+the full 47-test pytest suite using the pinned environment. The follow-up UI
 change adds explicit dialog state, keyboard focus trapping, focus return, and
 polite live announcements for rating changes. Browser accessibility,
 responsive visual review, and recommender-quality measurement remain open

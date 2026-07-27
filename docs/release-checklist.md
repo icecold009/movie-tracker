@@ -16,10 +16,10 @@ the result in `BACKLOG.md` or `docs/verification.md`.
 - [ ] Keyboard, screen-reader, and narrow-screen behavior are reviewed in a
       browser.
 
-Current status for this checkout: the focused accessibility tests and full 46-test
+Current status for this checkout: the focused accessibility tests and full 47-test
 pytest suite pass locally. Production `/healthz`, `/`, `/login`, and
 `/recommendations` return 200; anonymous mutation rejection returns 302 to
-`/login`; the authorized reversible add/delete check remains the user-confirmed
-evidence recorded in `docs/verification.md`. Browser keyboard, screen-reader,
+`/login`; the authorized reversible add/delete fixture passed and was removed,
+as recorded in `docs/verification.md`. Browser keyboard, screen-reader,
 and responsive visual review remain open because no browser surface is
 available, as does recommender-quality measurement.
