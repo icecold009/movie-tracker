@@ -29,21 +29,22 @@ capability and evidence that people actually use it.
 - The Flask application is defined in `api/index.py`; `vercel.json` routes to
   that file and the stale Render `Procfile` has been removed.
 - The README now identifies Vercel as canonical and marks the live deployment
-  URL and dated verification status; the current production smoke test found a
-  500 public view and a missing `/healthz` route.
-- The application uses `ADMIN_PASSWORD` and a Flask signed session. It does
-  not currently integrate Supabase Auth.
+  URL and dated verification status; the latest live probe found a healthy
+  `/healthz` route but a 500 public view.
+- The application uses `ADMIN_PASSWORD_HASH` and a Flask signed session. It
+  does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections. There is no tracked
-  migration establishing the claimed RLS policies, and the README example
-  refers to `items` while the application table is `entries`. Tracked
-  migrations now define the `entries` table and validation constraints.
+  migration establishing RLS policies aligned with the Flask session; the
+  README now makes no RLS claim. Tracked migrations define the `entries` table
+  and validation constraints.
 - The Supabase `movie-tracker` project was restored from inactive status and is
   now healthy; its shared pooler still rejects the `postgres.<project-ref>`
   tenant used by Vercel, so database-backed production routes remain blocked.
 - Schema creation is owned by the tracked migrations; deployments must apply
   them or provision the schema explicitly before serving database-backed
   routes.
-- There is no automated test suite.
+- A pytest suite and CI workflow are tracked, but local execution remains
+  pending because the available Python interpreter is inaccessible.
 - TMDB requests now have bounded timeout, HTTP/JSON validation, safe error
   handling, five-minute caching, and per-warm-instance rate limiting.
 
@@ -100,12 +101,12 @@ capability and evidence that people actually use it.
 ### Configuration and database setup
 
 - [x] Add a documented `.env.example` covering `SECRET_KEY`,
-      `ADMIN_PASSWORD`, `DATABASE_URL`, and `TMDB_API_KEY` without real
+      `ADMIN_PASSWORD_HASH`, `DATABASE_URL`, and `TMDB_API_KEY` without real
       credentials. `.gitignore` explicitly allows the example, and the README
       explains copying it to the ignored local `.env` file.
 - [x] Fail fast when required production configuration is missing; remove the
       `dev-fallback-key` and `changeme` production fallbacks. `config.py` now
-      validates `SECRET_KEY`, `ADMIN_PASSWORD`, `DATABASE_URL`, and
+      validates `SECRET_KEY`, `ADMIN_PASSWORD_HASH`, `DATABASE_URL`, and
       `TMDB_API_KEY` before the application modules finish importing.
 - [x] Choose a reproducible schema workflow: tracked Supabase SQL migrations
       created with the Supabase CLI. Remote migration-history synchronization
@@ -171,40 +172,76 @@ capability and evidence that people actually use it.
       current five-minute cache and 30-uncached-requests-per-minute limiter are
       in-process protections; a shared store is still needed for global limits
       across scaled Vercel instances.
-- [ ] Store TMDB IDs and relevant metadata needed by the chosen differentiating
-      feature, not only the display title and poster URL.
-- [ ] Document TMDB attribution, API-key boundaries, and data-refresh behavior.
+- [x] Store TMDB IDs and relevant metadata needed by the chosen differentiating
+      feature, not only the display title and poster URL. The recommendation
+      migration and add flow now persist TMDB ID, media type, and genre IDs;
+      existing rows without metadata remain a documented cold-start limitation.
+- [x] Document TMDB attribution, API-key boundaries, and data-refresh behavior.
+      README and the rendered pages identify TMDB as the source, keep the key
+      server-side, and document caching, discovery, and refresh limitations.
 
 ### Authentication and security baseline
 
-- [ ] Decide between Supabase Auth and a deliberately hardened single-admin
-      authentication flow.
+- [x] Decide between Supabase Auth and a deliberately hardened single-admin
+      authentication flow. Retain the custom single-admin flow for this
+      single-owner application; its Flask session and direct database access
+      are already the active boundary, while Supabase Auth would require a
+      broader identity/session and database-policy migration.
 - [ ] If using Supabase Auth, integrate identity/session verification with the
       Flask routes and make database policies use the same identity boundary.
-- [ ] If retaining custom auth, store a password hash rather than a plaintext
+- [x] If retaining custom auth, store a password hash rather than a plaintext
       environment password and add secure credential rotation guidance.
-- [ ] Add CSRF protection to login, logout, add, edit, and delete forms.
-- [ ] Set secure, HTTP-only, and appropriate SameSite session-cookie settings in
-      production; rotate the Flask secret when required.
-- [ ] Add login throttling or rate limiting and avoid revealing unnecessary
-      authentication details in responses.
-- [ ] Add authorization tests proving public reads, rejected anonymous writes,
-      and accepted authenticated writes.
-- [ ] Either implement and test actual RLS policies for the chosen access path,
-      or remove the RLS claim from the README until it is reproducible.
-- [ ] Check dependency versions and add a repeatable dependency/update process.
+      `config.py` rejects values that are not Werkzeug-style hashes, and the
+      README documents interactive generation and replacement during rotation.
+- [x] Add CSRF protection to login, logout, add, edit, and delete forms.
+      State-changing routes require a session-bound token, and successful login
+      rotates the session and token. Focused runtime coverage remains part of
+      the separate authentication-test task.
+- [x] Set secure, HTTP-only, and appropriate SameSite session-cookie settings in
+      production; rotate the Flask secret when required. `api/index.py` sets
+      `HttpOnly` and `SameSite=Lax` everywhere and enables `Secure` for Vercel
+      or `FLASK_ENV=production`; the README records secret rotation behavior.
+- [x] Add login throttling or rate limiting and avoid revealing unnecessary
+      authentication details in responses. Failed logins are limited to five
+      attempts per client address per 60-second window on each warm instance;
+      the response remains generic and includes `Retry-After` when limited.
+- [x] Add authorization tests proving public reads, rejected anonymous writes,
+      accepted authenticated writes, and CSRF rejection. The focused tests
+      mock TMDB/database calls and keep production data untouched; execution is
+      pending in an environment with Python dependencies installed.
+- [x] Remove the unverified RLS claim from the README until policies are
+      implemented and tested against the chosen direct-Postgres access path.
+- [x] Check dependency versions and add a repeatable dependency/update process.
+      Direct pins were reviewed against PyPI on 2026-07-27; the update and
+      fresh-environment verification workflow is documented in
+      `docs/dependency-update.md`.
 
 ### Automated verification
 
-- [ ] Add a test runner and test layout.
-- [ ] Test application import and route registration without requiring a live
-      database or TMDB key.
-- [ ] Test login success/failure, session logout, and authorization guards.
-- [ ] Test add/edit/delete with mocked database calls and valid/invalid input.
-- [ ] Test TMDB success, no-result, timeout, non-2xx, and malformed-response
-      behavior.
-- [ ] Add a CI job for tests, linting/format checks, and dependency failure
-      visibility.
+- [x] Add a test runner and test layout. `pytest.ini`, `tests/conftest.py`, and
+      an app-import/route-registration smoke test now provide the foundation
+      for focused behavior tests; execution is still pending in an environment
+      with Python dependencies installed.
+- [x] Test application import and route registration without requiring a live
+      database or TMDB key. `tests/test_app.py` exercises import, route
+      registration, and `/healthz`; execution remains pending in an environment
+      with Python dependencies installed.
+- [x] Test login success/failure, session logout, and authorization guards.
+      `tests/test_auth.py` covers the password-hash flow, CSRF-backed logout,
+      session clearing, and anonymous edit/delete rejection; execution remains
+      pending in an environment with Python dependencies installed.
+- [x] Test add/edit/delete with mocked database calls and valid/invalid input.
+      `tests/test_mutations.py` covers validation short-circuiting, valid add and
+      edit/delete requests, and database-call isolation; execution remains
+      pending in an environment with Python dependencies installed.
+- [x] Test TMDB success, no-result, timeout, non-2xx, and malformed-response
+      behavior. `tests/test_tmdb.py` isolates cache/rate-limit state and mocks
+      requests; execution remains pending in an environment with Python
+      dependencies installed.
+- [x] Add a CI job for tests, linting/format checks, and dependency failure
+      visibility. `.github/workflows/tests.yml` installs pinned dependencies,
+      runs `pip check`, compiles sources, runs Ruff, and executes pytest across
+      Python 3.10, 3.12, and 3.14; remote CI execution remains pending.
 
 ## P1 — Add one real differentiator
 
@@ -213,23 +250,54 @@ the project still has a clear product reason for the second.
 
 ### Track A: explainable content-based recommendations
 
-- [ ] Decide the recommendation contract: recommended unseen titles, a reason
-      for each recommendation, and a cold-start fallback.
-- [ ] Extend the schema to retain TMDB IDs, media type, genres, keywords or
-      other reproducible features, and the user's interaction/status data.
-- [ ] Build a deterministic feature-extraction and normalization pipeline.
-- [ ] Implement cosine similarity or an equivalent transparent baseline.
-- [ ] Exclude titles already watched or already on the watchlist.
-- [ ] Add an explanation such as “recommended because it shares genres with…”.
-- [ ] Expose recommendations through a tested Flask route and a focused UI
-      section with loading, empty, and error states.
-- [ ] Add a cold-start strategy for a new or sparse watch history.
+- [x] Decide the recommendation contract: return up to 10 recommended unseen
+      titles, a human-readable reason for every result, and a deterministic
+      cold-start fallback of popular TMDB search results when the watchlist has
+      no usable feature data. Recommendations never include titles already in
+      the watchlist or marked `Watched`.
+- [x] Extend the schema to retain TMDB IDs, media type, genre IDs, and the
+      user's interaction/status data. Migration
+      `20260727043725_add_recommendation_features.sql` adds nullable TMDB
+      identity fields, a constrained media type, genre-ID arrays, and a partial
+      unique identity index. Supabase project `vgirgwxehcsxloclanhf` applied
+      migration version `20260727043725`, and read-only verification confirmed
+      all three columns and the index.
+- [x] Build a deterministic feature-extraction and normalization pipeline.
+      `recommendations.py` normalizes positive genre IDs, accepts only TMDB
+      movie/TV media types, and emits stable binary feature tokens; focused
+      unit tests cover invalid values and deterministic output.
+- [x] Implement cosine similarity or an equivalent transparent baseline.
+      `recommendations.py` uses binary feature-token vectors and deterministic
+      score/title/ID tie-breaking; focused tests cover empty and partial vectors.
+- [x] Exclude titles already watched or already on the watchlist. Candidate
+      filtering removes matching TMDB identity pairs and normalized titles,
+      covering rows with and without stored TMDB metadata.
+- [x] Add a deterministic explanation such as “recommended because it shares
+      genres with…”. `explain_recommendation()` selects the strongest overlap,
+      uses stable title tie-breaking, and returns a safe no-overlap fallback.
+- [x] Expose recommendations through a tested Flask route and focused UI page
+      with empty and error states. `/recommendations` uses the database,
+      discovery provider, deterministic ranking, and escaped Jinja output;
+      focused route tests cover empty, success, and provider-error states.
+- [x] Add a cold-start strategy for a new or sparse watch history. When no
+      usable feature profile exists, the service preserves the discovery
+      provider's popularity order, filters seen titles, and explains the
+      fallback as a popular pick.
 - [ ] Evaluate the recommender with a small offline holdout, precision@k, or a
       similarly stated metric; document the limitations of the evaluation.
-- [ ] Add tests for feature extraction, ranking, filtering, explanations, and
-      deterministic output.
-- [ ] Document that this is a content-based baseline, not a claimed deep-learning
-      system.
+      `recommendations.py` now provides a precision@k holdout evaluator and
+      `docs/recommendations.md` defines the protocol, but a real dated holdout
+      is blocked until production entries accumulate feature metadata.
+- [x] Add tests for feature extraction, ranking, filtering, explanations, and
+      deterministic output. `tests/test_recommendations.py` covers normalization,
+      feature extraction, similarity, stable ranking, seen-title filtering,
+      cold-start output, precision@k validation, and explanation selection;
+      runtime execution remains pending because the local Python interpreter is
+      unavailable.
+- [x] Document that this is a content-based baseline, not a claimed deep-learning
+      system. `docs/recommendations.md` describes the binary-feature approach,
+      chronological holdout protocol, and the absence of a real production
+      precision claim.
 
 ### Track B: streaming-availability history pipeline
 
@@ -250,10 +318,14 @@ the project still has a clear product reason for the second.
 
 ## P2 — Prove real usage
 
-- [ ] Decide which privacy-conscious usage events are necessary; do not collect
-      more personal data than the project needs.
-- [ ] Add measurement for meaningful events such as public visits, successful
-      additions, recommendation views, or availability-history views.
+- [x] Decide which privacy-conscious usage events are necessary; do not collect
+      more personal data than the project needs. `docs/usage-measurement.md`
+      selects three aggregate counters only: public views, successful adds, and
+      recommendation views; no identifiers or external analytics are collected.
+- [x] Add measurement for meaningful events such as public visits, successful
+      additions, recommendation views, or availability-history views. The Flask
+      routes increment the three selected daily counters; production summary
+      evidence remains pending until the database-backed deployment is healthy.
 - [ ] Do not call a single-admin watchlist “N registered users”; implement
       multi-user accounts first if registered-user counts are desired.
 - [ ] Recruit 5–10 real testers and record structured feedback about the core
@@ -268,39 +340,62 @@ the project still has a clear product reason for the second.
 
 ## P3 — Architecture, documentation, and operational evidence
 
-- [ ] Create `docs/architecture.md` with a diagram of the actual request,
+- [x] Create `docs/architecture.md` with a diagram of the actual request,
       authentication, database, and TMDB flows.
-- [ ] Explain why the chosen database/auth approach fits this project and name
-      one accepted tradeoff with its scaling consequence.
-- [ ] Document trust boundaries: browser, Flask server, database, auth system,
-      and TMDB credentials.
-- [ ] Document the chosen differentiating feature's data model, algorithm or
-      scheduled pipeline, and failure modes.
-- [ ] Add a local setup guide that includes environment variables, schema setup,
-      development start command, and test command.
-- [ ] Update README features only after each feature is verified in code.
-- [ ] Replace example RLS SQL with the actual tracked migration and table names,
-      or remove the section until that migration exists.
-- [ ] Add a known-limitations section covering single-admin versus multi-user
+- [x] Explain why the chosen database/auth approach fits this project and name
+      one accepted tradeoff with its scaling consequence. The architecture
+      document records the single-admin and direct-connection tradeoffs.
+- [x] Document trust boundaries: browser, Flask server, database, auth system,
+      and TMDB credentials. The architecture document records each boundary and
+      the current no-RLS claim.
+- [x] Document the chosen differentiating feature's data model, algorithm or
+      scheduled pipeline, and failure modes. The architecture document covers
+      recommendation metadata, binary features, fallback behavior, and errors.
+- [x] Add a local setup guide that includes environment variables, schema setup,
+      development start command, and test command. `docs/local-development.md`
+      records the pinned-dependency, migration, Flask, and check commands.
+- [x] Update README features only after each feature is verified in code. The
+      recommendation feature is described as an implemented baseline with
+      runtime and production usage verification still explicitly pending.
+- [x] Remove the unsupported example RLS SQL until a tracked policy matches the
+      actual Flask session and direct-Postgres access path.
+- [x] Add a known-limitations section covering single-admin versus multi-user
       scope, recommendation/data-source limits, TMDB dependency, and deployment
-      constraints.
-- [ ] Add a small operations/runbook section for migrations, secret rotation,
-      scheduled jobs, logs, and rollback.
-- [ ] Link the backlog, architecture document, verification evidence, and live
-      demo from the README.
+      constraints. The README now links the dated verification record.
+- [x] Add a small operations/runbook section for migrations, secret rotation,
+      scheduled jobs, logs, and rollback. `docs/operations.md` records the
+      current procedures and the fact that no scheduled jobs exist.
+- [x] Link the backlog, architecture document, verification evidence, and live
+      demo from the README. The README links the architecture, local setup,
+      operations, and verification documents; the live URL is recorded there.
 
 ## P4 — Quality and release polish
 
 - [ ] Check keyboard navigation, visible focus, form labels, modal behavior, and
       error announcements.
+      - [x] Added explicit labels, focus-visible outlines, alert roles, modal
+            dialog semantics, Escape-to-close, and focus return behavior.
+      - [ ] Manual keyboard and screen-reader verification remains open because
+            the in-app browser is unavailable in this environment.
 - [ ] Verify responsive behavior at narrow mobile and desktop widths.
-- [ ] Add useful empty/loading/error states for the core and differentiating
-      feature flows.
-- [ ] Add structured logging that excludes passwords, API keys, and session
-      contents.
-- [ ] Add database backup/export guidance appropriate to the chosen provider.
+      - [x] Added narrow-screen header wrapping and attribution styling; visual
+            responsive verification remains open.
+- [x] Add useful empty/loading/error states for the core and differentiating
+      feature flows. The core page has per-section empty states and safe database
+      errors; recommendations has empty, provider/database error, and escaped
+      result states. Loading is not a separate state because these are
+      synchronous server-rendered requests.
+- [x] Add structured logging that excludes passwords, API keys, and session
+      contents. `observability.py` emits JSON events with an allowlisted field
+      set, with focused redaction coverage; runtime execution remains pending.
+- [x] Add database backup/export guidance appropriate to the chosen provider.
+      `docs/operations.md` covers Supabase plan-aware backups, CLI logical
+      exports, secret handling, disposable restore validation, and limitations.
 - [ ] Run a release checklist: tests, dependency audit, secret scan, deployment
       smoke test, README accuracy, and accessibility review.
+      - [x] Added `docs/release-checklist.md` with explicit commands, evidence,
+            and current blockers; the full checklist remains open until those
+            checks can run.
 - [ ] Create a logical feature-branch commit history and open a reviewable PR;
       do not merge directly to `main` without explicit approval.
 
@@ -326,6 +421,38 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | TMDB boundary handling | Mocked `requests.get` success, timeout, network, 401/403, 429, non-2xx, and malformed JSON cases; Flask add-route error check | Passed: requests use a five-second timeout, HTTP/JSON failures raise categorized safe errors, and the add flow flashes the user-safe message; caching/rate limiting remain open |
 | 2026-07-26 | Database error states and media classification | Fake `psycopg2.Error` plus Flask test-client checks for public read/add/edit/delete; mocked mixed TMDB result | Passed: database driver failures become safe 503/flash states, and the selected Movie/TV type is preserved independently of TMDB `media_type` |
 | 2026-07-26 | TMDB cache and rate limit | Mocked request counter with normalized repeated titles, uncached request window, and route-level rate-limit exception | Passed: repeated searches within five minutes reuse the in-process cache; uncached requests are limited to 30 per 60 seconds per warm instance; distributed enforcement remains a documented limitation |
+| 2026-07-27 | Live health recheck | Read-only request to `https://movie-tracker-umber-sigma.vercel.app/healthz` and `/` | `/healthz` returned HTTP 200 with `{"status":"ok"}`; `/` returned HTTP 500, so the database-backed smoke test remains blocked |
+| 2026-07-27 | Authentication model decision | Current Flask routes/session, direct `psycopg2` database path, and Supabase connection/auth boundary review | Chose a hardened custom single-admin flow; password hashing, CSRF, cookie settings, throttling, and tests remain separate implementation tasks |
+| 2026-07-27 | Password-hash authentication | `config.py`, `api/index.py`, `.env.example`, README rotation guidance, and `git diff --check` | Implemented hash-only configuration and `check_password_hash`; runtime login and authentication tests remain pending because the local Python environment is unavailable |
+| 2026-07-27 | CSRF protection | `api/index.py`, login/index templates, and `git diff --check` | Implemented session-bound tokens for login, logout, add, edit, and delete; successful login rotates the session; runtime tests remain pending because the local Python environment is unavailable |
+| 2026-07-27 | Session-cookie security | `api/index.py`, README cookie/rotation guidance, and `git diff --check` | Configured HTTP-only and `SameSite=Lax` cookies; `Secure` is enabled for Vercel or production mode; browser/runtime verification remains pending |
+| 2026-07-27 | Login throttling | `api/index.py` and `git diff --check` | Added a five-attempt/60-second per-warm-instance limiter keyed by client address with generic failure messaging; distributed enforcement and runtime tests remain pending |
+| 2026-07-27 | Test runner foundation | `requirements.txt`, `pytest.ini`, `tests/conftest.py`, `tests/test_app.py`, README test command, and `git diff --check` | Added pytest configuration and app-import/health-route smoke tests; execution is blocked because the local Python interpreter is unavailable |
+| 2026-07-27 | Authorization tests | `tests/test_authorization.py` with mocked TMDB/database calls and `git diff --check` | Added public-read, anonymous-write, authenticated-write, and CSRF-rejection coverage; execution remains blocked because the local Python interpreter is unavailable |
+| 2026-07-27 | RLS documentation correction | README, tracked migrations, Supabase security guidance, and `git diff --check` | Removed the unsupported RLS claim and stale `items`/`auth.role()` example; no RLS policy is claimed until it matches the Flask session boundary |
+| 2026-07-27 | Authentication tests | `tests/test_auth.py` with hash, CSRF, session, and anonymous-guard coverage plus `git diff --check` | Added login success/failure, logout, and anonymous edit/delete tests; execution remains blocked because the local Python interpreter is unavailable |
+| 2026-07-27 | Mutation tests | `tests/test_mutations.py` with mocked TMDB/database calls and `git diff --check` | Added valid/invalid add, edit, and delete coverage without production database access; execution remains blocked because the local Python interpreter is unavailable |
+| 2026-07-27 | TMDB tests | `tests/test_tmdb.py` with mocked responses/exceptions and `git diff --check` | Added search and discovery success/filtering, unsupported-type, no-result, timeout, non-2xx, and malformed-JSON coverage; execution remains blocked because the local Python interpreter is unavailable |
+| 2026-07-27 | Dependency process | PyPI release pages, pinned `requirements.txt`, `docs/dependency-update.md`, and `git diff --check` | Pinned Flask 3.1.3, Werkzeug 3.1.8, Requests 2.34.2, python-dotenv 1.2.2, psycopg2-binary 2.9.12, and pytest 9.1.1; fresh-install and test execution remain blocked by the unavailable local Python interpreter |
+| 2026-07-27 | CI verification | `.github/workflows/tests.yml`, `ruff.toml`, pinned Ruff 0.15.22, and `git diff --check` | Added matrix CI for dependency consistency, compilation, Ruff linting, and pytest on Python 3.10/3.12/3.14; remote execution remains pending |
+| 2026-07-27 | App import coverage | `tests/test_app.py` and `git diff --check` | Added import, route-registration, and health endpoint coverage without live database/TMDB calls; execution remains blocked by the unavailable local Python interpreter |
+| 2026-07-27 | Differentiator track decision | Existing watchlist/TMDB integration, backlog scope, and provider/data-source risk review | Selected Track A: deterministic content-based recommendations with explanations and offline evaluation; Track B is deferred |
+| 2026-07-27 | Recommendation contract | Track A scope review | Defined a top-10 unseen-title response, required explanation text, and deterministic cold-start fallback; implementation and evaluation remain open |
+| 2026-07-27 | Recommendation feature schema | Tracked migration `20260727043725_add_recommendation_features.sql`, `database.py`, `tmdb.py`, `api/index.py`, focused test updates, and Supabase project `vgirgwxehcsxloclanhf` | Added TMDB ID/media type/genre-ID persistence with a partial unique index; migration history and read-only column/index queries verified the remote schema, while application runtime tests remain pending |
+| 2026-07-27 | Recommendation feature normalization | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Added deterministic genre/media feature extraction with invalid-value filtering; runtime test execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | Recommendation similarity baseline | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Added binary-vector cosine similarity and stable candidate ranking with focused tests; runtime execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | Recommendation seen-title filtering | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Excluded candidates matching stored TMDB identity or normalized watchlist titles; runtime execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | Recommendation explanations | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Added deterministic shared-genre explanations and a no-overlap fallback; runtime execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | Recommendation route and UI | `api/index.py`, `tmdb.py`, `recommendations.py`, `templates/recommendations.html`, `templates/index.html`, `tests/test_recommendations_route.py`, and `git diff --check` | Added `/recommendations`, TMDB discovery, escaped result rendering, empty/error states, and navigation; runtime execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | Recommendation cold start | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Added popular-provider-order fallback for empty/sparse feature profiles with seen-title filtering and explicit explanation text; runtime execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | Recommendation evaluation harness | `recommendations.py`, `tests/test_recommendations.py`, `docs/recommendations.md`, and `git diff --check` | Added precision@k holdout computation and documented the real-data protocol; no metric is claimed because current production rows lack feature history |
+| 2026-07-27 | Recommendation test coverage | `tests/test_recommendations.py` and `git diff --check` | Added focused coverage for feature normalization, ranking, filtering, cold-start behavior, precision@k validation, explanations, and deterministic output; runtime execution remains pending because the local Python interpreter is unavailable |
+| 2026-07-27 | TMDB metadata and attribution | `tmdb.py`, `database.py`, `readme.md`, templates, and `git diff --check` | Documented server-side API-key handling, TMDB attribution, cache/discovery refresh behavior, and persisted recommendation metadata; direct runtime verification remains pending |
+| 2026-07-27 | Architecture and local setup | `docs/architecture.md`, `docs/local-development.md`, and `git diff --check` | Documented actual request flow, trust boundaries, auth/database tradeoffs, recommendation failure modes, migration workflow, development server, and local checks |
+| 2026-07-27 | Operational evidence and limitations | `docs/operations.md`, `docs/verification.md`, `readme.md`, and `git diff --check` | Added rollback/rotation/migration procedures, dated live limitations, cross-links, and an accurately qualified recommendation feature description |
+| 2026-07-27 | Accessibility and responsive baseline | `templates/index.html`, `templates/login.html`, `static/style.css`, and `git diff --check` | Added form labels, alert roles, visible focus styles, modal semantics/focus return, and narrow-screen header wrapping; browser-based verification remains open because no browser is available |
+| 2026-07-27 | Release polish baseline | `observability.py`, `tests/test_observability.py`, `docs/operations.md`, `docs/release-checklist.md`, and `git diff --check` | Added safe JSON event logging, state coverage notes, Supabase backup/export guidance, and a release checklist with current blockers; runtime execution remains pending |
+| 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, read-only SQL/advisor checks, and `git diff --check` | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; API roles are revoked and a deny policy protects the table; production measurement remains pending |
 
 ## Decisions
 
@@ -333,6 +460,13 @@ Record decisions that affect scope here so future work does not reopen settled
 questions without new evidence.
 
 - Canonical deployment: Vercel; live verification remains open
-- Authentication model: _undecided_
-- Differentiator track: _undecided_
+- Authentication model: hardened custom single-admin flow; Supabase Auth is
+  out of scope unless the project becomes multi-user
+- Differentiator track: Track A, explainable content-based recommendations;
+  it fits the existing watchlist and TMDB integration without introducing a
+  second availability provider or unsupported historical-data claims
 - Usage measurement approach: _undecided_
+
+Track A is selected because it can be deterministic, explainable, and evaluated
+with the existing personal watchlist. Track B remains out of scope unless a
+legitimate availability source and historical snapshot terms are established.

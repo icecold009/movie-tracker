@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommendations — My Watch Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main>
+    <a href="{{ url_for('index') }}" class="back-link">← Back to tracker</a>
+    <h1 class="section-title">Recommendations</h1>
+
+    {% if error %}
+        <p class="flash-error" role="alert">{{ error }}</p>
+    {% elif recommendations %}
+        <div class="card-grid" aria-live="polite">
+            {% for recommendation in recommendations %}
+                <article class="card">
+                    {% if recommendation.poster_url %}
+                        <img src="{{ recommendation.poster_url }}" alt="{{ recommendation.title }}" loading="lazy">
+                    {% else %}
+                        <div class="poster-placeholder">No Image</div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h2>{{ recommendation.title }}</h2>
+                        <p>{{ recommendation.reason }}</p>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-section" aria-live="polite">
+            Recommendations are not available yet. Add watchlist entries with TMDB metadata first.
+        </p>
+    {% endif %}
+</main>
+<footer class="tmdb-attribution">
+    <a href="https://www.themoviedb.org/" rel="noopener noreferrer">TMDB</a>
+    provides title metadata and poster images. This product uses the TMDB API
+    but is not endorsed or certified by TMDB.
+</footer>
+</body>
+</html>

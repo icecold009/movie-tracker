@@ -13,11 +13,13 @@
     <div class="header-right">
         {% if logged_in %}
             <form method="POST" action="/logout" style="margin:0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="logout-btn">Log Out</button>
             </form>
         {% else %}
             <a href="/login" class="login-link">Admin Login</a>
         {% endif %}
+        <a href="{{ url_for('recommendations') }}" class="login-link">Recommendations</a>
     </div>
 </header>
 
@@ -26,24 +28,28 @@
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             {% for message in messages %}
-                <div class="flash-error">{{ message }}</div>
+                <div class="flash-error" role="alert">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
     {% if logged_in %}
     <form method="POST" action="/add" class="add-form">
-        <input type="text" name="title" placeholder="Search movie or show title..." maxlength="200" required>
-        <select name="entry_type">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="sr-only" for="title">Movie or show title</label>
+        <input type="text" id="title" name="title" placeholder="Search movie or show title..." maxlength="200" required>
+        <label class="sr-only" for="entry-type">Entry type</label>
+        <select id="entry-type" name="entry_type">
             <option value="Movie">Movie</option>
             <option value="TV Show">TV Show</option>
         </select>
-        <select name="status">
+        <label class="sr-only" for="status">Watch status</label>
+        <select id="status" name="status">
             <option value="Watched">Watched</option>
             <option value="Want to Watch">Want to Watch</option>
         </select>
         <div class="rating-group">
-            <label>Rating</label>
+            <label for="rating">Rating</label>
             <input type="range" name="rating" id="rating" min="1" max="10" step="1" value="7">
             <span><span id="rating-val">7</span>/10</span>
         </div>
@@ -81,6 +87,7 @@
                             data-status="{{ entry.status }}"
                             data-rating="{{ entry.rating }}">✎ Edit</button>
                     <form method="POST" action="/delete/{{ entry.id }}" style="margin:0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="delete-btn">✕ Delete</button>
                     </form>
                 </div>
@@ -112,11 +119,18 @@
 
 </main>
 
+<footer class="tmdb-attribution">
+    <a href="https://www.themoviedb.org/" rel="noopener noreferrer">TMDB</a>
+    provides title metadata and poster images. This product uses the TMDB API
+    but is not endorsed or certified by TMDB.
+</footer>
+
 {% if logged_in %}
-<div id="edit-modal" class="modal-overlay">
+<div id="edit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" tabindex="-1">
     <div class="modal-card">
-        <h2>Edit Entry</h2>
+        <h2 id="edit-modal-title">Edit Entry</h2>
         <form id="edit-form" method="POST" action="">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-field">
                 <label for="modal-status">Status</label>
                 <select name="status" id="modal-status">
@@ -125,7 +139,7 @@
                 </select>
             </div>
             <div class="modal-field">
-                <label>Rating</label>
+                <label for="modal-rating">Rating</label>
                 <div class="modal-rating-row">
                     <input type="range" name="rating" id="modal-rating" min="1" max="10" step="1" value="7">
                     <span><span id="modal-rating-val">7</span>/10</span>
@@ -152,22 +166,33 @@
     // Edit modal
     const modal = document.getElementById('edit-modal');
     if (modal) {
+        let lastFocusedElement = null;
+        const closeModal = function () {
+            modal.classList.remove('active');
+            if (lastFocusedElement) lastFocusedElement.focus();
+        };
         document.querySelectorAll('.edit-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
+                lastFocusedElement = this;
                 document.getElementById('edit-form').action = '/edit/' + this.dataset.id;
                 document.getElementById('modal-status').value = this.dataset.status;
                 document.getElementById('modal-rating').value = this.dataset.rating;
                 document.getElementById('modal-rating-val').textContent = this.dataset.rating;
                 modal.classList.add('active');
+                document.getElementById('modal-status').focus();
             });
         });
 
         document.getElementById('modal-close').addEventListener('click', function () {
-            modal.classList.remove('active');
+            closeModal();
         });
 
         modal.addEventListener('click', function (e) {
-            if (e.target === modal) modal.classList.remove('active');
+            if (e.target === modal) closeModal();
+        });
+
+        modal.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal();
         });
 
         document.getElementById('modal-rating').addEventListener('input', function () {
