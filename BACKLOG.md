@@ -28,9 +28,9 @@ capability and evidence that people actually use it.
 
 - The Flask application is defined in `api/index.py`; `vercel.json` routes to
   that file and the stale Render `Procfile` has been removed.
-- The README now identifies Vercel as canonical and marks the live deployment
-  URL and dated verification status; the latest live probe found a healthy
-  `/healthz` route but a 500 public view.
+- The README now identifies Vercel as canonical and records the 2026-07-27 live
+  smoke check: `/healthz`, `/`, and `/login` return 200 and anonymous writes
+  redirect to `/login`.
 - The application uses `ADMIN_PASSWORD_HASH` and a Flask signed session. It
   does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections. There is no tracked
@@ -38,14 +38,14 @@ capability and evidence that people actually use it.
   README now makes no RLS claim. Tracked migrations define the `entries` table
   and validation constraints.
 - The Supabase `movie-tracker` project was restored from inactive status and is
-  now healthy; its shared pooler still rejects the `postgres.<project-ref>`
-  tenant used by Vercel, so database-backed production routes remain blocked.
+  now healthy; the current transaction-pooler configuration is working in the
+  Vercel production deployment.
 - Schema creation is owned by the tracked migrations; deployments must apply
   them or provision the schema explicitly before serving database-backed
   routes.
 - A pytest suite and CI workflow are tracked. Local `pip check`, compilation,
-  Ruff, and pytest now pass with 40 tests; GitHub Actions run `30239984101`
-  also passed across Python 3.10, 3.12, and 3.14.
+  Ruff, and pytest now pass with 41 tests; PR #3 checks also passed across
+  Python 3.10, 3.12, and 3.14.
 - TMDB requests now have bounded timeout, HTTP/JSON validation, safe error
   handling, five-minute caching, and per-warm-instance rate limiting.
 
@@ -65,18 +65,16 @@ capability and evidence that people actually use it.
 - [x] Add a lightweight `/healthz` endpoint that reports application liveness
       without exposing secrets or requiring a full watchlist query. The focused
       Flask test-client check passed with HTTP 200 and `{"status":"ok"}`.
-- [ ] Complete the deployed-URL smoke test covering public view, login, one
-      authorized write path, and unauthorized write rejection. Partial evidence
-      was collected on 2026-07-26: `/login` returned 200, invalid login showed
-      the expected error, anonymous `POST /add` returned 302 to `/login`, `/`
-      returned 500, and `/healthz` returned 404. The authorized write was not
-      attempted because production is not healthy and no rollback fixture is
-      verified.
+- [x] Complete the deployed-URL smoke test covering public view, login, one
+      authorized write path, and unauthorized write rejection. On 2026-07-27,
+      `/healthz`, `/`, and `/login` returned 200, anonymous `POST /add` returned
+      302 to `/login`, and the user confirmed a reversible authorized add/delete
+      check.
 - [x] Record deployment URL, production deployment commit SHA, verification
       date, and manual verification limits in the README. The current record is
       for `https://movie-tracker-umber-sigma.vercel.app`, source commit
       `ac5f7633577c44e046fa605f7c3bf266525faa2c`, and deployment `5112547143`.
-- [ ] Repair the production deployment/database configuration, redeploy the
+- [x] Repair the production deployment/database configuration, redeploy the
       repaired application, and repeat the complete smoke test with a
       reversible authorized-write fixture.
       - [x] Restored Supabase project `vgirgwxehcsxloclanhf` from inactive status.
@@ -87,16 +85,10 @@ capability and evidence that people actually use it.
       - [x] Added tracked migrations under `supabase/migrations/` and deployed
             the current branch as Vercel production deployment
             `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1`.
-      - [ ] Repair or refresh the Supavisor tenant mapping/connection string;
-            both local and Vercel attempts still receive
-            `ENOTFOUND tenant/user postgres.vgirgwxehcsxloclanhf`. A
-            read-only variant check on 2026-07-26 produced the same tenant
-            error for the project-qualified user on ports 6543 and 5432;
-            using plain `postgres` instead produced
-            `ENOIDENTIFIER no tenant identifier provided` on both ports.
-            The direct database host works locally but cannot be used by
-            Vercel because its IPv6 connection fails there.
-      - [ ] Repeat the public-view and reversible authorized-write checks after
+      - [x] Refresh the production environment with the current Supabase
+            transaction-pooler connection string and required
+            `ADMIN_PASSWORD_HASH`; the post-merge production smoke check passed.
+      - [x] Repeat the public-view and reversible authorized-write checks after
             the pooler connection is healthy.
 
 ### Configuration and database setup
@@ -121,7 +113,7 @@ capability and evidence that people actually use it.
       migrations. This prevents local or deployment code from creating a weaker
       competing `entries` schema; fresh environments must apply the migration
       files before serving database-backed routes.
-- [ ] Add indexes and a connection strategy appropriate for the deployment
+- [x] Add indexes and a connection strategy appropriate for the deployment
       environment; document whether direct Postgres connections or a Supabase
       API/pooler are used.
       - [x] Reviewed the current query shape: `get_all()` orders by the primary
@@ -129,8 +121,9 @@ capability and evidence that people actually use it.
             secondary index is justified yet.
       - [x] Added a five-second `psycopg2` connect timeout and documented the
             intended Supabase Shared Pooler transaction-mode URL for Vercel.
-      - [ ] Resolve the provider-side pooler tenant mapping before declaring
-            the deployed connection strategy complete.
+      - [x] Resolve the provider-side pooler tenant mapping before declaring
+            the deployed connection strategy complete; the current production
+            pooler configuration is verified by the live smoke check.
 - [x] Define failure behavior and transaction cleanup for database errors.
       All database operations now run through a shared context manager that
       commits on success, rolls back and re-raises on failure, and closes the
@@ -419,7 +412,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-26 | Environment template | `.env.example`, `.gitignore`, README local setup, `git diff --check` | Passed: all four runtime variables are documented with placeholders; the example is trackable while `.env` remains ignored |
 | 2026-07-26 | Configuration fail-fast | `venv\Scripts\python.exe` compile check; configured app import; import with all four variables intentionally empty | Passed: configured Flask import succeeds; missing configuration exits with `Missing required environment variable: SECRET_KEY`; no runtime fallback values remain |
 | 2026-07-26 | Schema bootstrap decision | `rg -n "init_db"` usage search; `database.py`; tracked files under `supabase/migrations/` | Passed: removed the unused weaker bootstrap; migrations are the only tracked schema-creation path |
-| 2026-07-26 | Database connection strategy | Query review, `database.py`, README, and AGENTS guidance | Partially complete: no redundant index is warranted for current queries; connection attempts now time out after 5 seconds and Vercel is documented for Supabase transaction pooling; provider tenant mapping remains blocked |
+| 2026-07-26 | Database connection strategy | Query review, `database.py`, README, and AGENTS guidance | At the time, no redundant index was warranted; connection attempts now time out after 5 seconds and Vercel is documented for Supabase transaction pooling. The provider mapping was later resolved through the production Connect-string update |
 | 2026-07-26 | Database transaction cleanup | `database.py` transaction context and fake-connection success/failure verification | Passed: successful operations commit and close resources; raised operation errors roll back, re-raise, and close resources |
 | 2026-07-26 | Request validation | Flask test-client checks with mocked TMDB/database functions; `api/index.py`, `database.py`, and index template | Passed: blank/overlong titles, invalid type/status, and malformed/out-of-range ratings are rejected with flash errors; unknown update/delete IDs report `Entry not found.` |
 | 2026-07-26 | TMDB boundary handling | Mocked `requests.get` success, timeout, network, 401/403, 429, non-2xx, and malformed JSON cases; Flask add-route error check | Passed: requests use a five-second timeout, HTTP/JSON failures raise categorized safe errors, and the add flow flashes the user-safe message; caching/rate limiting remain open |
@@ -439,7 +432,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Mutation tests | `tests/test_mutations.py` with mocked TMDB/database calls and `git diff --check` | Added valid/invalid add, edit, and delete coverage without production database access; execution remains blocked because the local Python interpreter is unavailable |
 | 2026-07-27 | TMDB tests | `tests/test_tmdb.py` with mocked responses/exceptions and `git diff --check` | Added search and discovery success/filtering, unsupported-type, no-result, timeout, non-2xx, and malformed-JSON coverage; execution remains blocked because the local Python interpreter is unavailable |
 | 2026-07-27 | Dependency process | PyPI release pages, pinned `requirements.txt`, `docs/dependency-update.md`, and `git diff --check` | Pinned Flask 3.1.3, Werkzeug 3.1.8, Requests 2.34.2, python-dotenv 1.2.2, psycopg2-binary 2.9.12, and pytest 9.1.1; fresh-install and test execution remain blocked by the unavailable local Python interpreter |
-| 2026-07-27 | CI verification | `.github/workflows/tests.yml`, `ruff.toml`, pinned Ruff 0.15.22, local `venv`, and GitHub Actions run `30239984101` | Passed: dependency consistency, compilation, Ruff linting, and 40 pytest tests locally; the Python 3.10/3.12/3.14 matrix also passed remotely |
+| 2026-07-27 | CI verification | `.github/workflows/tests.yml`, `ruff.toml`, pinned Ruff 0.15.22, local `venv`, and PR #3 checks | Passed: dependency consistency, compilation, Ruff linting, and 41 pytest tests locally; the Python 3.10/3.12/3.14 matrix also passed remotely |
 | 2026-07-27 | App import coverage | `tests/test_app.py` and `git diff --check` | Added import, route-registration, and health endpoint coverage without live database/TMDB calls; execution remains blocked by the unavailable local Python interpreter |
 | 2026-07-27 | Differentiator track decision | Existing watchlist/TMDB integration, backlog scope, and provider/data-source risk review | Selected Track A: deterministic content-based recommendations with explanations and offline evaluation; Track B is deferred |
 | 2026-07-27 | Recommendation contract | Track A scope review | Defined a top-10 unseen-title response, required explanation text, and deterministic cold-start fallback; implementation and evaluation remain open |

@@ -17,7 +17,8 @@ the result in `BACKLOG.md` or `docs/verification.md`.
       browser.
 
 Current status for this checkout: `git diff --check`, `pip check`, compilation,
-Ruff, and 40 pytest tests pass locally; GitHub Actions run `30239984101` also
-passes. Browser review, secret-scan evidence, and the full deployment smoke
-test remain open because the Vercel database route is blocked by Supavisor
-tenant mapping.
+Ruff, and 41 pytest tests pass locally. PR #3 passed its Python 3.10/3.12/3.14,
+Vercel, and GitGuardian checks. Production `/healthz`, `/`, `/login`, anonymous
+mutation rejection, and a user-confirmed reversible authorized add/delete
+smoke check all pass. Browser accessibility review and recommender-quality
+measurement remain open.
