@@ -96,7 +96,7 @@
 
     {% macro render_card(entry) %}
         {% set rc = 'rating-red' if entry.rating <= 3 else 'rating-orange' if entry.rating <= 5 else 'rating-yellow' if entry.rating <= 7 else 'rating-lightgreen' if entry.rating <= 9 else 'rating-green' %}
-        <article class="card" data-reveal data-pointer-glow>
+        <article class="card{% if entry.rating == 10 %} card-perfect{% endif %}" data-reveal data-pointer-glow>
             <div class="card-media">
                 {% if entry.poster_url %}
                     <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
@@ -116,8 +116,14 @@
                     <span class="badge badge-want">Want to Watch</span>
                 {% endif %}
 
-                <div class="rating-label">{{ entry.rating }}/10</div>
-                <div class="rating-bar">
+                <div class="rating-panel{% if entry.rating == 10 %} rating-perfect{% endif %}" aria-label="Personal rating: {{ entry.rating }} out of 10">
+                    <div class="rating-score"><span class="rating-value">{{ entry.rating }}</span><span class="rating-scale">/10</span></div>
+                    <div class="rating-detail">
+                        <span class="rating-kicker">Personal rating</span>
+                        <span class="rating-status">{% if entry.rating == 10 %}Top tier{% elif entry.rating >= 8 %}Highly rated{% elif entry.rating >= 6 %}Solid pick{% else %}Mixed score{% endif %}</span>
+                    </div>
+                </div>
+                <div class="rating-bar" role="progressbar" aria-label="Rating strength" aria-valuemin="1" aria-valuemax="10" aria-valuenow="{{ entry.rating }}">
                     <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}" style="width: {{ entry.rating * 10 }}%"></div>
                 </div>
 
