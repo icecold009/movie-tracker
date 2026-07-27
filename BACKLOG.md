@@ -43,8 +43,9 @@ capability and evidence that people actually use it.
 - Schema creation is owned by the tracked migrations; deployments must apply
   them or provision the schema explicitly before serving database-backed
   routes.
-- A pytest suite and CI workflow are tracked, but local execution remains
-  pending because the available Python interpreter is inaccessible.
+- A pytest suite and CI workflow are tracked. Local `pip check`, compilation,
+  Ruff, and pytest now pass with 40 tests; GitHub Actions run `30239984101`
+  also passed across Python 3.10, 3.12, and 3.14.
 - TMDB requests now have bounded timeout, HTTP/JSON validation, safe error
   handling, five-minute caching, and per-warm-instance rate limiting.
 
@@ -220,28 +221,26 @@ capability and evidence that people actually use it.
 
 - [x] Add a test runner and test layout. `pytest.ini`, `tests/conftest.py`, and
       an app-import/route-registration smoke test now provide the foundation
-      for focused behavior tests; execution is still pending in an environment
-      with Python dependencies installed.
+      for focused behavior tests; the local pinned environment passes the full
+      40-test suite.
 - [x] Test application import and route registration without requiring a live
       database or TMDB key. `tests/test_app.py` exercises import, route
-      registration, and `/healthz`; execution remains pending in an environment
-      with Python dependencies installed.
+      registration, and `/healthz`; included in the passing 40-test suite.
 - [x] Test login success/failure, session logout, and authorization guards.
       `tests/test_auth.py` covers the password-hash flow, CSRF-backed logout,
       session clearing, and anonymous edit/delete rejection; execution remains
-      pending in an environment with Python dependencies installed.
+      covered by the passing 40-test suite.
 - [x] Test add/edit/delete with mocked database calls and valid/invalid input.
       `tests/test_mutations.py` covers validation short-circuiting, valid add and
-      edit/delete requests, and database-call isolation; execution remains
-      pending in an environment with Python dependencies installed.
+      edit/delete requests, database-call isolation, and metadata keyword
+      handling; covered by the passing 40-test suite.
 - [x] Test TMDB success, no-result, timeout, non-2xx, and malformed-response
       behavior. `tests/test_tmdb.py` isolates cache/rate-limit state and mocks
-      requests; execution remains pending in an environment with Python
-      dependencies installed.
+      requests; covered by the passing 40-test suite.
 - [x] Add a CI job for tests, linting/format checks, and dependency failure
       visibility. `.github/workflows/tests.yml` installs pinned dependencies,
       runs `pip check`, compiles sources, runs Ruff, and executes pytest across
-      Python 3.10, 3.12, and 3.14; remote CI execution remains pending.
+      Python 3.10, 3.12, and 3.14; GitHub Actions run `30239984101` passed.
 
 ## P1 — Add one real differentiator
 
@@ -387,15 +386,16 @@ the project still has a clear product reason for the second.
       synchronous server-rendered requests.
 - [x] Add structured logging that excludes passwords, API keys, and session
       contents. `observability.py` emits JSON events with an allowlisted field
-      set, with focused redaction coverage; runtime execution remains pending.
+      set, with focused redaction coverage; included in the passing 40-test
+      suite.
 - [x] Add database backup/export guidance appropriate to the chosen provider.
       `docs/operations.md` covers Supabase plan-aware backups, CLI logical
       exports, secret handling, disposable restore validation, and limitations.
 - [ ] Run a release checklist: tests, dependency audit, secret scan, deployment
       smoke test, README accuracy, and accessibility review.
       - [x] Added `docs/release-checklist.md` with explicit commands, evidence,
-            and current blockers; the full checklist remains open until those
-            checks can run.
+            and current blockers; automated checks are now complete, while
+            deployment and browser review remain open.
 - [ ] Create a logical feature-branch commit history and open a reviewable PR;
       do not merge directly to `main` without explicit approval.
 
@@ -434,7 +434,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Mutation tests | `tests/test_mutations.py` with mocked TMDB/database calls and `git diff --check` | Added valid/invalid add, edit, and delete coverage without production database access; execution remains blocked because the local Python interpreter is unavailable |
 | 2026-07-27 | TMDB tests | `tests/test_tmdb.py` with mocked responses/exceptions and `git diff --check` | Added search and discovery success/filtering, unsupported-type, no-result, timeout, non-2xx, and malformed-JSON coverage; execution remains blocked because the local Python interpreter is unavailable |
 | 2026-07-27 | Dependency process | PyPI release pages, pinned `requirements.txt`, `docs/dependency-update.md`, and `git diff --check` | Pinned Flask 3.1.3, Werkzeug 3.1.8, Requests 2.34.2, python-dotenv 1.2.2, psycopg2-binary 2.9.12, and pytest 9.1.1; fresh-install and test execution remain blocked by the unavailable local Python interpreter |
-| 2026-07-27 | CI verification | `.github/workflows/tests.yml`, `ruff.toml`, pinned Ruff 0.15.22, and `git diff --check` | Added matrix CI for dependency consistency, compilation, Ruff linting, and pytest on Python 3.10/3.12/3.14; remote execution remains pending |
+| 2026-07-27 | CI verification | `.github/workflows/tests.yml`, `ruff.toml`, pinned Ruff 0.15.22, local `venv`, and GitHub Actions run `30239984101` | Passed: dependency consistency, compilation, Ruff linting, and 40 pytest tests locally; the Python 3.10/3.12/3.14 matrix also passed remotely |
 | 2026-07-27 | App import coverage | `tests/test_app.py` and `git diff --check` | Added import, route-registration, and health endpoint coverage without live database/TMDB calls; execution remains blocked by the unavailable local Python interpreter |
 | 2026-07-27 | Differentiator track decision | Existing watchlist/TMDB integration, backlog scope, and provider/data-source risk review | Selected Track A: deterministic content-based recommendations with explanations and offline evaluation; Track B is deferred |
 | 2026-07-27 | Recommendation contract | Track A scope review | Defined a top-10 unseen-title response, required explanation text, and deterministic cold-start fallback; implementation and evaluation remain open |
@@ -453,7 +453,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Accessibility and responsive baseline | `templates/index.html`, `templates/login.html`, `static/style.css`, and `git diff --check` | Added form labels, alert roles, visible focus styles, modal semantics/focus return, and narrow-screen header wrapping; browser-based verification remains open because no browser is available |
 | 2026-07-27 | Release polish baseline | `observability.py`, `tests/test_observability.py`, `docs/operations.md`, `docs/release-checklist.md`, and `git diff --check` | Added safe JSON event logging, state coverage notes, Supabase backup/export guidance, and a release checklist with current blockers; runtime execution remains pending |
 | 2026-07-27 | Privacy-conscious usage counters | `docs/usage-measurement.md`, `database.py`, `api/index.py`, Supabase migrations `20260727051707` and `20260727051928`, read-only SQL/advisor checks, and `git diff --check` | Added daily aggregate counters for public views, successful adds, and recommendation views with no identifiers; API roles are revoked and a deny policy protects the table; production measurement remains pending |
-| 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, and pytest | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks now pass with 40 tests, while the pushed CI rerun remains pending |
+| 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, pytest, and GitHub Actions run `30239984101` | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks pass with 40 tests and the pushed Python 3.10/3.12/3.14 matrix is green |
 
 ## Decisions
 

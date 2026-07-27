@@ -16,7 +16,8 @@ the result in `BACKLOG.md` or `docs/verification.md`.
 - [ ] Keyboard, screen-reader, and narrow-screen behavior are reviewed in a
       browser.
 
-Current status for this checkout: `git diff --check` passes, but runtime tests,
-browser review, secret-scan evidence, and the full deployment smoke test remain
-open because the local Python interpreter and browser are unavailable and the
-Vercel database route remains blocked by Supavisor tenant mapping.
+Current status for this checkout: `git diff --check`, `pip check`, compilation,
+Ruff, and 40 pytest tests pass locally; GitHub Actions run `30239984101` also
+passes. Browser review, secret-scan evidence, and the full deployment smoke
+test remain open because the Vercel database route is blocked by Supavisor
+tenant mapping.

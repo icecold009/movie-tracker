@@ -13,8 +13,9 @@ Last recorded live probe: 2026-07-27.
   that the provider rejects; the current Connect-string identity must be
   refreshed before a complete smoke test.
 
-Local focused tests and CI are tracked, but runtime execution has not been
-claimed from this checkout because its available Python interpreter is
-inaccessible. Supabase migration history and the recommendation columns/index
-were verified separately with read-only checks; that does not establish a
-healthy deployed application route.
+Local verification on 2026-07-27 passed `pip check`, compilation, Ruff, and 40
+pytest tests using the pinned environment. GitHub Actions run
+`30239984101` passed its Python 3.10, 3.12, and 3.14 matrix. Supabase migration
+history and the recommendation/usage schema were verified separately with
+read-only checks; this still does not establish a healthy deployed application
+route.
