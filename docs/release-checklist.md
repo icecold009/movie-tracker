@@ -20,7 +20,7 @@ the result in `BACKLOG.md` or `docs/verification.md`.
 - [ ] Keyboard, screen-reader, and narrow-screen behavior are reviewed in a
       browser.
 
-Current status for branch tip `4ef1e5f`: `git diff --check`, 47 pytest tests,
+Current status for branch tip `6b2f4bb`: `git diff --check`, 47 pytest tests,
 Ruff, compilation, pip dependency validation, and JavaScript syntax checks pass.
 Production `/healthz`, `/`, `/login`, and
 `/recommendations` return 200; anonymous mutation rejection returns 302 to
