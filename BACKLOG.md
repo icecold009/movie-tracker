@@ -372,7 +372,8 @@ the project still has a clear product reason for the second.
 - [ ] Check keyboard navigation, visible focus, form labels, modal behavior, and
       error announcements.
       - [x] Added explicit labels, focus-visible outlines, alert roles, modal
-            dialog semantics, Escape-to-close, and focus return behavior.
+            dialog semantics, Escape-to-close, focus return, and a keyboard
+            focus boundary.
       - [ ] Manual keyboard and screen-reader verification remains open because
             the in-app browser is unavailable in this environment.
 - [ ] Verify responsive behavior at narrow mobile and desktop widths.
@@ -462,8 +463,12 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Password and section-heading polish | `templates/login.html`, `templates/index.html`, `static/app.js`, `static/style.css`, `tests/test_auth.py`, and 44 passing tests | Added a clean password panel with show/hide control and more restrained numbered Movies/TV Shows headings with title counts |
 | 2026-07-27 | Section and footer polish | `templates/index.html`, `templates/recommendations.html`, `templates/login.html`, `static/style.css`, `tests/test_loading_ui.py`, and `git diff --check` | Enlarged and centered the 01 Movies / 02 TV Shows labels, removed decorative emojis, and added a consistent Shaurya footer with source, live, stack, and TMDB references |
 | 2026-07-27 | Rating system polish | `templates/index.html`, `static/style.css`, `tests/test_loading_ui.py`, and `git diff --check` | Replaced the bland score line with a structured personal-rating panel and progress bar; exact 10/10 entries receive a gold card outline, gold score panel, and Top tier label |
-| 2026-07-27 | Draft PR handoff | GitHub draft PR #3, `project-backlog`, and clean worktree | Opened `https://github.com/icecold009/movie-tracker/pull/3` against `main`; merge remains user-controlled |
+| 2026-07-27 | Draft PR handoff | GitHub draft PR #5, `project-backlog`, and clean worktree | PR #5 at `https://github.com/icecold009/movie-tracker/pull/5` contains the loading, visual, accessibility, footer, and rating UI slices; all current checks pass and merge remains user-controlled |
 | 2026-07-27 | PR merge and production release | GitHub PR #3 merge commit `ef97ff98facad2197cf3f10875b15883510d2835`; live smoke checks | User merged PR #3 after all checks passed; production `/healthz`, `/`, `/login`, and anonymous mutation rejection passed, with a user-confirmed reversible authorized add/delete check |
+| 2026-07-27 | Professional README update | `readme.md`, commit `3670555`, and `git diff --check` | Removed decorative emojis, documented the structured rating UI and gold 10/10 treatment, and corrected the production pooler status wording |
+| 2026-07-27 | Production smoke and accessibility follow-up | `https://movie-tracker-umber-sigma.vercel.app`; read-only HTTP probes; reversible authenticated fixture; `venv\Scripts\python.exe -m pytest -q` (47 passed); `templates/index.html`; `tests/test_loading_ui.py`; browser availability check | Passed: `/healthz`, `/`, `/login`, and `/recommendations` returned HTTP 200; anonymous `POST /add` returned 302 to `/login`; authenticated add/delete returned 200 for new entry ID 12 and post-delete verification found no marker; modal focus trapping and live rating announcements are covered by 47 local tests. Browser visual, keyboard, and screen-reader verification remains open because no browser surface is available. |
+| 2026-07-27 | Recommender precision recheck | Read-only `database.get_all()` metadata query against production | Still blocked honestly: 10 total entries and 10 watched entries exist, but only 1 watched entry has both `tmdb_id` and `genre_ids`; no precision@k metric is claimed. |
+| 2026-07-27 | Tester feedback and release artifacts | Repository review, GitHub PR comments, and browser availability check | No human tester feedback is present; available comments are Vercel deployment notices only. No verified screenshot or demo recording was captured because no browser surface is available. Both backlog items remain open rather than being fabricated as complete. |
 
 ## Decisions
 

@@ -6,8 +6,9 @@ entries, rank an external candidate pool, and measure `precision@k` against
 later held-out entries using the `(tmdb_id, media_type)` identity.
 
 `recommendations.evaluate_holdout()` implements the metric without making a
-network request. The current production rows predate TMDB feature persistence,
-and the repository has no historical holdout or candidate snapshot, so no
-real precision value is claimed yet. A future evaluation must record its dated
-dataset, candidate source, `k`, result, and limitations; synthetic fixtures are
-for unit tests only.
+network request. A read-only production metadata recheck on 2026-07-27 found
+10 total entries, all watched, but only 1 watched entry with both `tmdb_id` and
+`genre_ids`. That is still insufficient for a meaningful chronological
+holdout, so no real precision value is claimed. A future evaluation must record
+its dated dataset, candidate source, `k`, result, and limitations; synthetic
+fixtures are for unit tests only.

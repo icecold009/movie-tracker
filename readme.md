@@ -1,4 +1,4 @@
-# 🎬 My Watch Tracker
+# My Watch Tracker
 
 A personal web app to track movies and TV shows I've watched or want to watch.
 Movies and TV Shows are displayed in separate sections. Cover art is auto-fetched from TMDB using an API.
@@ -31,16 +31,18 @@ the smoke check above.
 ## Features
 
 The implementation also includes an explainable content-based recommendation
-baseline; focused tests and code review are tracked, while runtime execution
-and production usage remain unverified.
+baseline. Focused tests and code review are tracked, while production usage
+and recommender-quality evaluation remain limited by the small watchlist.
 
-- 🎨 Rate 1–10 with a colour-coded bar (red → yellow → green)
-- 📋 Track status: **Watched** or **Want to Watch**
-- 🎬 Movies and 📺 TV Shows displayed in separate sections
-- ✎ Edit rating and status on any entry
-- ✕ Delete any entry
-- 🌐 Public view - anyone can see the watchlist
-- 🔐 Password-protected admin - only the owner can add, edit, or delete
+- Rate entries from 1 to 10 with a structured score panel and strength bar.
+- Give exact 10/10 entries a gold card outline, gold score panel, and Top tier label.
+- Track status as **Watched** or **Want to Watch**.
+- Display Movies and TV Shows in separate sections with numbered editorial headings.
+- Edit the rating and status on any entry.
+- Delete any entry from the authenticated admin view.
+- Provide a public watchlist view and a password-protected admin area.
+- Use progressive loading skeletons, responsive layout rules, and reduced-motion support.
+- Provide deterministic, explainable recommendations based on stored TMDB genre metadata.
 - Database-level authorization is not currently claimed; the Flask server is
   the only documented mutation boundary until a matching RLS policy is tested.
 
@@ -130,8 +132,9 @@ to log in again.
 
 For Vercel, `DATABASE_URL` should use the Supabase Shared Pooler
 transaction-mode connection (port `6543`) from the project's Connect settings.
-The Flask database client uses a five-second connection timeout; the current
-production pooler tenant-mapping issue is recorded above and in `BACKLOG.md`.
+The Flask database client uses a five-second connection timeout, and the
+current production pooler configuration has passed the live database-backed
+smoke check.
 
 TMDB searches use a five-minute in-process cache and limit uncached searches to
 30 requests per minute per warm application instance. This protects quota on a
