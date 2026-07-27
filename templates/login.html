@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login — My Watch Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
     <div class="login-page">
         <div class="login-card">
-            <h1>🔐 Admin Login</h1>
+            <div class="login-heading">
+                <p class="eyebrow"><span class="status-dot status-dot-accent"></span> Private access / admin</p>
+                <h1>Welcome back.</h1>
+                <p>Sign in to curate your personal watchlist.</p>
+            </div>
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
@@ -21,10 +26,13 @@
 
             <form method="POST" action="/login">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="form-group">
+                <div class="form-group password-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password"
-                           placeholder="Enter admin password" autofocus>
+                    <div class="password-field">
+                        <input type="password" id="password" name="password"
+                               placeholder="Enter your password" autocomplete="current-password" data-password-input autofocus>
+                        <button type="button" class="password-toggle" data-password-toggle aria-label="Show password">Show</button>
+                    </div>
                 </div>
                 <button type="submit" class="login-btn">Log In</button>
             </form>
@@ -32,5 +40,21 @@
             <a href="/" class="back-link">← Back to tracker</a>
         </div>
     </div>
+    <footer class="site-footer login-footer">
+        <div class="footer-top">
+            <div class="footer-identity">
+                <span class="footer-monogram">SW</span>
+                <div><strong>Shaurya</strong><span>Personal watchlist</span></div>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/icecold009/movie-tracker" target="_blank" rel="noopener noreferrer">Source</a>
+                <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 Shaurya</span>
+            <span>Flask · PostgreSQL · Vercel</span>
+        </div>
+    </footer>
 </body>
 </html>

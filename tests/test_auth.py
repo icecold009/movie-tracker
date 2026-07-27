@@ -13,6 +13,16 @@ def login_csrf_token(client):
     return match.group(1)
 
 
+def test_login_uses_clean_password_panel(app):
+    response = app.test_client().get("/login")
+
+    assert response.status_code == 200
+    assert b"Welcome back." in response.data
+    assert b"data-password-input" in response.data
+    assert b"data-password-toggle" in response.data
+    assert b'autocomplete="current-password"' in response.data
+
+
 def test_login_success_sets_authenticated_session(app, monkeypatch):
     monkeypatch.setattr(index, "get_all", lambda: [])
     client = app.test_client()

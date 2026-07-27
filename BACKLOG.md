@@ -381,8 +381,8 @@ the project still has a clear product reason for the second.
 - [x] Add useful empty/loading/error states for the core and differentiating
       feature flows. The core page has per-section empty states and safe database
       errors; recommendations has empty, provider/database error, and escaped
-      result states. Loading is not a separate state because these are
-      synchronous server-rendered requests.
+      result states. Progressive skeleton screens now appear during same-origin
+      navigation and form submissions, with reduced-motion support.
 - [x] Add structured logging that excludes passwords, API keys, and session
       contents. `observability.py` emits JSON events with an allowlisted field
       set, with focused redaction coverage; included in the passing 40-test
@@ -457,6 +457,11 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Dated usage summary | `readme.md`, `docs/usage-measurement.md`, and Supabase project `vgirgwxehcsxloclanhf` read-only query | Published the first exact production summary; counts represent aggregate event activity, not unique users |
 | 2026-07-27 | CI failure repair | `tests/test_recommendations.py`, `tests/test_mutations.py`, local `pip check`, `compileall`, Ruff, pytest, and GitHub Actions run `30239984101` | Fixed the invalid hyphen in a test function name and updated a stale mock for metadata keyword arguments; local checks pass with 40 tests and the pushed Python 3.10/3.12/3.14 matrix is green |
 | 2026-07-27 | Usage privacy documentation | `readme.md`, `docs/usage-measurement.md`, and `git diff --check` | Explicitly separated aggregate activity counters from registered-user counts and documented that no external analytics provider or user identifiers are collected |
+| 2026-07-27 | Loading skeleton screens | `templates/index.html`, `templates/recommendations.html`, `static/app.js`, `static/style.css`, `tests/test_loading_ui.py`, and 43 passing tests | Added progressive watchlist/recommendation skeletons for navigations and form submissions, preserving server-rendered behavior when JavaScript is unavailable and disabling shimmer under reduced-motion preferences |
+| 2026-07-27 | Reference-led UI refresh | `templates/index.html`, `templates/recommendations.html`, `static/app.js`, `static/style.css`, and the Anime.js, Motion, Kokonut UI, and Bklit UI references | Added an editorial hero, glass controls, lime accent system, staggered reveals, pointer-follow card highlights, stronger card metadata, and recommendation-specific discovery treatment; browser visual inspection remains open because no browser was available |
+| 2026-07-27 | Password and section-heading polish | `templates/login.html`, `templates/index.html`, `static/app.js`, `static/style.css`, `tests/test_auth.py`, and 44 passing tests | Added a clean password panel with show/hide control and more restrained numbered Movies/TV Shows headings with title counts |
+| 2026-07-27 | Section and footer polish | `templates/index.html`, `templates/recommendations.html`, `templates/login.html`, `static/style.css`, `tests/test_loading_ui.py`, and `git diff --check` | Enlarged and centered the 01 Movies / 02 TV Shows labels, removed decorative emojis, and added a consistent Shaurya footer with source, live, stack, and TMDB references |
+| 2026-07-27 | Rating system polish | `templates/index.html`, `static/style.css`, `tests/test_loading_ui.py`, and `git diff --check` | Replaced the bland score line with a structured personal-rating panel and progress bar; exact 10/10 entries receive a gold card outline, gold score panel, and Top tier label |
 | 2026-07-27 | Draft PR handoff | GitHub draft PR #3, `project-backlog`, and clean worktree | Opened `https://github.com/icecold009/movie-tracker/pull/3` against `main`; merge remains user-controlled |
 | 2026-07-27 | PR merge and production release | GitHub PR #3 merge commit `ef97ff98facad2197cf3f10875b15883510d2835`; live smoke checks | User merged PR #3 after all checks passed; production `/healthz`, `/`, `/login`, and anonymous mutation rejection passed, with a user-confirmed reversible authorized add/delete check |
 

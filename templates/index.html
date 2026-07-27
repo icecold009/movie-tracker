@@ -5,25 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Watch Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
 
 <header class="site-header">
-    <span class="site-title">🎬 My Watch Tracker</span>
+    <span class="site-title">My Watch Tracker</span>
     <div class="header-right">
         {% if logged_in %}
-            <form method="POST" action="/logout" style="margin:0">
+            <form method="POST" action="/logout" style="margin:0" data-loading-form>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="logout-btn">Log Out</button>
             </form>
         {% else %}
-            <a href="/login" class="login-link">Admin Login</a>
+            <a href="/login" class="login-link" data-loading-link>Admin Login</a>
         {% endif %}
-        <a href="{{ url_for('recommendations') }}" class="login-link">Recommendations</a>
+        <a href="{{ url_for('recommendations') }}" class="login-link" data-loading-link>Recommendations</a>
     </div>
 </header>
 
 <main>
+
+    <div class="loading-skeleton" data-page-skeleton hidden aria-hidden="true">
+        <div class="skeleton-shell">
+            <div class="skeleton-block skeleton-toolbar"></div>
+            <div class="skeleton-block skeleton-heading"></div>
+            <div class="skeleton-grid">
+                {% for _ in range(6) %}
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skeleton-block skeleton-poster"></div>
+                    <div class="skeleton-card-body">
+                        <div class="skeleton-block skeleton-line skeleton-line-title"></div>
+                        <div class="skeleton-block skeleton-line skeleton-line-short"></div>
+                        <div class="skeleton-block skeleton-rating"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% set movies = entries | selectattr("entry_type", "equalto", "Movie") | list %}
+    {% set shows  = entries | selectattr("entry_type", "equalto", "TV Show") | list %}
+    {% set watched = entries | selectattr("status", "equalto", "Watched") | list %}
+
+    <section class="hero-panel" data-reveal>
+        <div class="hero-copy">
+            <p class="eyebrow"><span class="status-dot"></span> Personal archive / live</p>
+            <h1>Shaurya's watchlist,<br><em>curated in motion.</em></h1>
+            <p class="hero-description">A considered collection of movies and shows worth returning to, one title at a time.</p>
+        </div>
+        <div class="hero-stats" aria-label="Watchlist summary">
+            <div class="stat-block"><strong>{{ entries | length }}</strong><span>titles tracked</span></div>
+            <div class="stat-block"><strong>{{ watched | length }}</strong><span>watched</span></div>
+            <div class="stat-block"><strong>{{ movies | length }}/{{ shows | length }}</strong><span>movies / shows</span></div>
+        </div>
+    </section>
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -34,7 +71,7 @@
     {% endwith %}
 
     {% if logged_in %}
-    <form method="POST" action="/add" class="add-form">
+    <form method="POST" action="/add" class="add-form" data-loading-form data-reveal>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="sr-only" for="title">Movie or show title</label>
         <input type="text" id="title" name="title" placeholder="Search movie or show title..." maxlength="200" required>
@@ -59,14 +96,18 @@
 
     {% macro render_card(entry) %}
         {% set rc = 'rating-red' if entry.rating <= 3 else 'rating-orange' if entry.rating <= 5 else 'rating-yellow' if entry.rating <= 7 else 'rating-lightgreen' if entry.rating <= 9 else 'rating-green' %}
-        <div class="card">
-            {% if entry.poster_url %}
-                <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
-            {% else %}
-                <div class="poster-placeholder">No Image</div>
-            {% endif %}
+        <article class="card{% if entry.rating == 10 %} card-perfect{% endif %}" data-reveal data-pointer-glow>
+            <div class="card-media">
+                {% if entry.poster_url %}
+                    <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
+                {% else %}
+                    <div class="poster-placeholder">No Image</div>
+                {% endif %}
+                <span class="media-index">{{ "%02d" | format(entry.id) }}</span>
+            </div>
 
             <div class="card-body">
+                <div class="card-topline"><span>{{ entry.entry_type }}</span><span class="card-arrow">↗</span></div>
                 <h3>{{ entry.title }}</h3>
 
                 {% if entry.status == "Watched" %}
@@ -75,9 +116,15 @@
                     <span class="badge badge-want">Want to Watch</span>
                 {% endif %}
 
-                <div class="rating-label">{{ entry.rating }}/10</div>
-                <div class="rating-bar">
-                    <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}"></div>
+                <div class="rating-panel{% if entry.rating == 10 %} rating-perfect{% endif %}" aria-label="Personal rating: {{ entry.rating }} out of 10">
+                    <div class="rating-score"><span class="rating-value">{{ entry.rating }}</span><span class="rating-scale">/10</span></div>
+                    <div class="rating-detail">
+                        <span class="rating-kicker">Personal rating</span>
+                        <span class="rating-status">{% if entry.rating == 10 %}Top tier{% elif entry.rating >= 8 %}Highly rated{% elif entry.rating >= 6 %}Solid pick{% else %}Mixed score{% endif %}</span>
+                    </div>
+                </div>
+                <div class="rating-bar" role="progressbar" aria-label="Rating strength" aria-valuemin="1" aria-valuemax="10" aria-valuenow="{{ entry.rating }}">
+                    <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}" style="width: {{ entry.rating * 10 }}%"></div>
                 </div>
 
                 {% if logged_in %}
@@ -85,32 +132,29 @@
                     <button class="edit-btn"
                             data-id="{{ entry.id }}"
                             data-status="{{ entry.status }}"
-                            data-rating="{{ entry.rating }}">✎ Edit</button>
-                    <form method="POST" action="/delete/{{ entry.id }}" style="margin:0">
+                            data-rating="{{ entry.rating }}">Edit</button>
+                    <form method="POST" action="/delete/{{ entry.id }}" style="margin:0" data-loading-form>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="delete-btn">✕ Delete</button>
+                        <button type="submit" class="delete-btn">Delete</button>
                     </form>
                 </div>
                 {% endif %}
             </div>
-        </div>
+        </article>
     {% endmacro %}
 
-    {% set movies = entries | selectattr("entry_type", "equalto", "Movie") | list %}
-    {% set shows  = entries | selectattr("entry_type", "equalto", "TV Show") | list %}
-
-    <h2 class="section-title">🎬 Movies</h2>
+    <h2 class="section-title" data-reveal><span class="section-index">01</span><span class="section-name">Movies</span><span class="section-count">{{ movies | length }} titles</span></h2>
     {% if movies %}
-        <div class="card-grid">
+        <div class="card-grid" data-reveal>
             {% for entry in movies %}{{ render_card(entry) }}{% endfor %}
         </div>
     {% else %}
         <p class="empty-section">No movies added yet.</p>
     {% endif %}
 
-    <h2 class="section-title">📺 TV Shows</h2>
+    <h2 class="section-title" data-reveal><span class="section-index">02</span><span class="section-name">TV Shows</span><span class="section-count">{{ shows | length }} titles</span></h2>
     {% if shows %}
-        <div class="card-grid">
+        <div class="card-grid" data-reveal>
             {% for entry in shows %}{{ render_card(entry) }}{% endfor %}
         </div>
     {% else %}
@@ -119,17 +163,29 @@
 
 </main>
 
-<footer class="tmdb-attribution">
-    <a href="https://www.themoviedb.org/" rel="noopener noreferrer">TMDB</a>
-    provides title metadata and poster images. This product uses the TMDB API
-    but is not endorsed or certified by TMDB.
+<footer class="site-footer">
+    <div class="footer-top">
+        <div class="footer-identity">
+            <span class="footer-monogram">SW</span>
+            <div><strong>Shaurya</strong><span>Personal watchlist</span></div>
+        </div>
+        <div class="footer-links">
+            <a href="https://github.com/icecold009/movie-tracker" target="_blank" rel="noopener noreferrer">Source</a>
+            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>
+            <a href="https://movie-tracker-umber-sigma.vercel.app" target="_blank" rel="noopener noreferrer">Live</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 Shaurya</span>
+        <span>Flask · PostgreSQL · Vercel · TMDB metadata</span>
+    </div>
 </footer>
 
 {% if logged_in %}
 <div id="edit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" tabindex="-1">
     <div class="modal-card">
         <h2 id="edit-modal-title">Edit Entry</h2>
-        <form id="edit-form" method="POST" action="">
+        <form id="edit-form" method="POST" action="" data-loading-form>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-field">
                 <label for="modal-status">Status</label>
