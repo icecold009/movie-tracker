@@ -137,7 +137,7 @@
         </article>
     {% endmacro %}
 
-    <h2 class="section-title" data-reveal><span>01</span> 🎬 Movies</h2>
+    <h2 class="section-title" data-reveal><span class="section-index">01</span><span class="section-name">Movies</span><span class="section-count">{{ movies | length }} titles</span></h2>
     {% if movies %}
         <div class="card-grid" data-reveal>
             {% for entry in movies %}{{ render_card(entry) }}{% endfor %}
@@ -146,7 +146,7 @@
         <p class="empty-section">No movies added yet.</p>
     {% endif %}
 
-    <h2 class="section-title" data-reveal><span>02</span> 📺 TV Shows</h2>
+    <h2 class="section-title" data-reveal><span class="section-index">02</span><span class="section-name">TV Shows</span><span class="section-count">{{ shows | length }} titles</span></h2>
     {% if shows %}
         <div class="card-grid" data-reveal>
             {% for entry in shows %}{{ render_card(entry) }}{% endfor %}

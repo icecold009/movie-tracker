@@ -3,6 +3,17 @@
 
     document.documentElement.classList.add("js-ready");
 
+    const passwordInput = document.querySelector("[data-password-input]");
+    const passwordToggle = document.querySelector("[data-password-toggle]");
+    if (passwordInput && passwordToggle) {
+        passwordToggle.addEventListener("click", function () {
+            const isPassword = passwordInput.type === "password";
+            passwordInput.type = isPassword ? "text" : "password";
+            passwordToggle.textContent = isPassword ? "Hide" : "Show";
+            passwordToggle.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+        });
+    }
+
     const skeleton = document.querySelector("[data-page-skeleton]");
     if (!skeleton) {
         return;
