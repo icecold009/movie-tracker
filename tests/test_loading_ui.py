@@ -57,3 +57,20 @@ def test_perfect_ratings_get_distinct_gold_treatment(app, monkeypatch):
     assert b"rating-perfect" in response.data
     assert b"Top tier" in response.data
     assert b"Personal rating" in response.data
+
+
+def test_authenticated_edit_modal_exposes_accessible_focus_boundary(app, monkeypatch):
+    monkeypatch.setattr(index, "get_all", lambda: [])
+    client = app.test_client()
+    with client.session_transaction() as session:
+        session["logged_in"] = True
+        session["_csrf_token"] = "test-csrf-token"
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b'role="dialog"' in response.data
+    assert b'aria-hidden="true"' in response.data
+    assert b'aria-live="polite"' in response.data
+    assert b"if (e.key !== 'Tab') return;" in response.data
+    assert b"e.preventDefault();" in response.data

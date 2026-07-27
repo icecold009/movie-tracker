@@ -16,9 +16,10 @@ the result in `BACKLOG.md` or `docs/verification.md`.
 - [ ] Keyboard, screen-reader, and narrow-screen behavior are reviewed in a
       browser.
 
-Current status for this checkout: `git diff --check`, `pip check`, compilation,
-Ruff, and 41 pytest tests pass locally. PR #3 passed its Python 3.10/3.12/3.14,
-Vercel, and GitGuardian checks. Production `/healthz`, `/`, `/login`, anonymous
-mutation rejection, and a user-confirmed reversible authorized add/delete
-smoke check all pass. Browser accessibility review and recommender-quality
-measurement remain open.
+Current status for this checkout: the focused accessibility tests and full 46-test
+pytest suite pass locally. Production `/healthz`, `/`, `/login`, and
+`/recommendations` return 200; anonymous mutation rejection returns 302 to
+`/login`; the authorized reversible add/delete check remains the user-confirmed
+evidence recorded in `docs/verification.md`. Browser keyboard, screen-reader,
+and responsive visual review remain open because no browser surface is
+available, as does recommender-quality measurement.

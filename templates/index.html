@@ -55,7 +55,7 @@
             <h1>Shaurya's watchlist,<br><em>curated in motion.</em></h1>
             <p class="hero-description">A considered collection of movies and shows worth returning to, one title at a time.</p>
         </div>
-        <div class="hero-stats" aria-label="Watchlist summary">
+        <div class="hero-stats" role="group" aria-label="Watchlist summary">
             <div class="stat-block"><strong>{{ entries | length }}</strong><span>titles tracked</span></div>
             <div class="stat-block"><strong>{{ watched | length }}</strong><span>watched</span></div>
             <div class="stat-block"><strong>{{ movies | length }}/{{ shows | length }}</strong><span>movies / shows</span></div>
@@ -88,7 +88,7 @@
         <div class="rating-group">
             <label for="rating">Rating</label>
             <input type="range" name="rating" id="rating" min="1" max="10" step="1" value="7">
-            <span><span id="rating-val">7</span>/10</span>
+            <span><span id="rating-val" aria-live="polite">7</span>/10</span>
         </div>
         <button type="submit" class="add-btn">+ Add</button>
     </form>
@@ -103,7 +103,7 @@
                 {% else %}
                     <div class="poster-placeholder">No Image</div>
                 {% endif %}
-                <span class="media-index">{{ "%02d" | format(entry.id) }}</span>
+                <span class="media-index" aria-hidden="true">{{ "%02d" | format(entry.id) }}</span>
             </div>
 
             <div class="card-body">
@@ -116,7 +116,7 @@
                     <span class="badge badge-want">Want to Watch</span>
                 {% endif %}
 
-                <div class="rating-panel{% if entry.rating == 10 %} rating-perfect{% endif %}" aria-label="Personal rating: {{ entry.rating }} out of 10">
+                <div class="rating-panel{% if entry.rating == 10 %} rating-perfect{% endif %}" role="group" aria-label="Personal rating: {{ entry.rating }} out of 10">
                     <div class="rating-score"><span class="rating-value">{{ entry.rating }}</span><span class="rating-scale">/10</span></div>
                     <div class="rating-detail">
                         <span class="rating-kicker">Personal rating</span>
@@ -129,7 +129,7 @@
 
                 {% if logged_in %}
                 <div class="card-actions">
-                    <button class="edit-btn"
+                    <button type="button" class="edit-btn"
                             data-id="{{ entry.id }}"
                             data-status="{{ entry.status }}"
                             data-rating="{{ entry.rating }}">Edit</button>
@@ -182,7 +182,7 @@
 </footer>
 
 {% if logged_in %}
-<div id="edit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" tabindex="-1">
+<div id="edit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="edit-modal-title" tabindex="-1">
     <div class="modal-card">
         <h2 id="edit-modal-title">Edit Entry</h2>
         <form id="edit-form" method="POST" action="" data-loading-form>
@@ -198,7 +198,7 @@
                 <label for="modal-rating">Rating</label>
                 <div class="modal-rating-row">
                     <input type="range" name="rating" id="modal-rating" min="1" max="10" step="1" value="7">
-                    <span><span id="modal-rating-val">7</span>/10</span>
+                    <span><span id="modal-rating-val" aria-live="polite">7</span>/10</span>
                 </div>
             </div>
             <div class="modal-actions">
@@ -225,6 +225,7 @@
         let lastFocusedElement = null;
         const closeModal = function () {
             modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
             if (lastFocusedElement) lastFocusedElement.focus();
         };
         document.querySelectorAll('.edit-btn').forEach(function (btn) {
@@ -235,6 +236,7 @@
                 document.getElementById('modal-rating').value = this.dataset.rating;
                 document.getElementById('modal-rating-val').textContent = this.dataset.rating;
                 modal.classList.add('active');
+                modal.setAttribute('aria-hidden', 'false');
                 document.getElementById('modal-status').focus();
             });
         });
@@ -249,6 +251,22 @@
 
         modal.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') closeModal();
+            if (e.key !== 'Tab') return;
+
+            const focusable = modal.querySelectorAll(
+                'button:not([disabled]), select:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+            );
+            if (!focusable.length) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
         });
 
         document.getElementById('modal-rating').addEventListener('input', function () {
