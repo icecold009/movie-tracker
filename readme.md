@@ -8,34 +8,25 @@ Live deployment: https://movie-tracker-umber-sigma.vercel.app
 
 ## Deployment verification
 
-Full smoke check: **2026-07-26** against the Vercel production alias. The latest
-GitHub production deployment record points to commit `ac5f7633577c44e046fa605f7c3bf266525faa2c`
-(deployment `5112547143`, created 2026-06-18).
+Latest production smoke check: **2026-07-27** after PR #3 merged at commit
+`ef97ff98facad2197cf3f10875b15883510d2835`.
 
-- `/login`: HTTP 200; invalid-password handling returned the expected error.
-- Anonymous `POST /add`: HTTP 302 to `/login`; no write was attempted without a
-  session.
-- `/`: HTTP 500; the public database-backed view is not currently healthy.
-- An authorized write was not attempted because the deployed public view is
-  failing and there is no verified rollback fixture for production data.
+- `/healthz`: HTTP 200 with `{"status":"ok"}`.
+- `/`: HTTP 200.
+- `/login`: HTTP 200.
+- Anonymous `POST /add`: HTTP 302 to `/login`.
+- The user confirmed a reversible authorized add/delete smoke check succeeded.
 
-Latest live probe: **2026-07-27**. `/healthz` returned HTTP 200 with
-`{"status":"ok"}`, while `/` still returned HTTP 500. This confirms liveness
-but does not establish database-backed production health.
+The deployed application passes the current HTTP and authorization smoke checks.
+Browser accessibility review and a real recommender-quality metric remain
+separate limitations.
 
-The deployment is therefore **not release-ready**. Repeat the full smoke test
-after redeploying the repaired application, including a reversible authorized
-write check.
+### Latest production repair — 2026-07-27
 
-### Latest repair attempt — 2026-07-26
-
-The Supabase project was restored from inactive status, and the `entries` table
-plus rating/type/status constraints were provisioned. The current branch was
-deployed as Vercel production deployment `dpl_CtQEiNgpFMwVewmvKMWpVTZkacy1`;
-`/healthz` now returns HTTP 200. Database-backed routes still return HTTP 500
-because Supavisor rejects tenant/user `postgres.vgirgwxehcsxloclanhf`. The
-provider connection identity must be refreshed or repaired before the full
-smoke test can pass.
+The production environment was updated with the current Supabase transaction
+pooler URL and the required `ADMIN_PASSWORD_HASH`. The merged application now
+handles connection failures safely, and the live database-backed routes pass
+the smoke check above.
 
 ## Features
 
@@ -61,8 +52,8 @@ The current known limitations are:
   TMDB and stored genre metadata, use a sparse-history popular fallback, and
   have no real production precision metric yet.
 - TMDB caching and rate limiting are per warm serverless instance, not global.
-- The Vercel database-backed routes remain blocked by the unresolved Supavisor
-  tenant mapping; `/healthz` liveness does not prove the watchlist works.
+- The current Vercel/Supabase pooler configuration is verified by the live
+  database-backed smoke check; credential values are intentionally not tracked.
 - Usage counters are aggregate first-party events, not registered-user counts;
   this remains a single-admin application.
 
@@ -79,6 +70,11 @@ The application does not use an external analytics provider. It stores only
 daily aggregate counts for successful public views, adds, and recommendation
 views; it does not store IP addresses, user agents, referrers, account IDs, or
 browser identifiers. These counters describe activity, not registered users.
+
+Usage summary for **2026-07-27**: 22 public views, 1 successful add, and 1
+recommendation view. These counts were read from the production
+`public.usage_daily` table with a read-only aggregate query and represent
+activity events, not unique people or registered users.
 
 ## Tech Stack
 
