@@ -721,3 +721,51 @@ main { position: relative; max-width: 1180px; margin: 0 auto; padding: 0 0 56px;
     .card img, .poster-placeholder { height: 235px; }
     .back-link { margin-left: 20px; }
 }
+
+/* â”€â”€ PROMINENT ACTIONS â”€â”€ */
+.add-btn,
+.login-btn,
+.logout-btn,
+.edit-btn,
+.delete-btn {
+    min-height: 42px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+.add-btn,
+.login-btn {
+    padding: 12px 26px;
+    box-shadow: 0 8px 20px rgba(230,255,91,0.16);
+}
+.add-btn:hover,
+.login-btn:hover {
+    box-shadow: 0 12px 28px rgba(230,255,91,0.28);
+}
+.add-btn:active,
+.login-btn:active,
+.logout-btn:active,
+.edit-btn:active,
+.delete-btn:active { transform: translateY(1px) scale(0.98); }
+.logout-btn {
+    min-height: 38px;
+    padding: 8px 16px;
+    border-color: rgba(230,255,91,0.35);
+    color: var(--accent);
+}
+.logout-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.edit-btn {
+    border-color: rgba(230,255,91,0.35);
+    color: var(--accent);
+}
+.edit-btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.delete-btn {
+    border-color: rgba(255,107,107,0.42);
+    color: #ff8585;
+}
+.delete-btn:hover { background: rgba(229,9,20,0.18); border-color: #ff6b6b; color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+    .add-btn, .login-btn, .logout-btn, .edit-btn, .delete-btn { transition: none; }
+}
