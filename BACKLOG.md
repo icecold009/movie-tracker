@@ -278,8 +278,9 @@ the project still has a clear product reason for the second.
 - [ ] Evaluate the recommender with a small offline holdout, precision@k, or a
       similarly stated metric; document the limitations of the evaluation.
       `recommendations.py` now provides a precision@k holdout evaluator and
-      `docs/recommendations.md` defines the protocol, but a real dated holdout
-      is blocked until production entries accumulate feature metadata.
+      `docs/recommendations.md` defines the protocol. A real dated holdout is
+      still blocked: the 2026-07-27 production query found 10 total entries,
+      but only 1 feature-ready watched entry.
 - [x] Add tests for feature extraction, ranking, filtering, explanations, and
       deterministic output. `tests/test_recommendations.py` covers normalization,
       feature extraction, similarity, stable ranking, seen-title filtering,
@@ -445,7 +446,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Recommendation explanations | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Added deterministic shared-genre explanations and a no-overlap fallback; runtime execution remains pending because the local Python interpreter is unavailable |
 | 2026-07-27 | Recommendation route and UI | `api/index.py`, `tmdb.py`, `recommendations.py`, `templates/recommendations.html`, `templates/index.html`, `tests/test_recommendations_route.py`, and `git diff --check` | Added `/recommendations`, TMDB discovery, escaped result rendering, empty/error states, and navigation; runtime execution remains pending because the local Python interpreter is unavailable |
 | 2026-07-27 | Recommendation cold start | `recommendations.py`, `tests/test_recommendations.py`, and `git diff --check` | Added popular-provider-order fallback for empty/sparse feature profiles with seen-title filtering and explicit explanation text; runtime execution remains pending because the local Python interpreter is unavailable |
-| 2026-07-27 | Recommendation evaluation harness | `recommendations.py`, `tests/test_recommendations.py`, `docs/recommendations.md`, and `git diff --check` | Added precision@k holdout computation and documented the real-data protocol; no metric is claimed because current production rows lack feature history |
+| 2026-07-27 | Recommendation evaluation harness | `recommendations.py`, `tests/test_recommendations.py`, `docs/recommendations.md`, and read-only production metadata query | Added precision@k holdout computation and documented the real-data protocol; no metric is claimed because production has 10 entries but only 1 feature-ready watched entry |
 | 2026-07-27 | Recommendation test coverage | `tests/test_recommendations.py` and `git diff --check` | Added focused coverage for feature normalization, ranking, filtering, cold-start behavior, precision@k validation, explanations, and deterministic output; runtime execution remains pending because the local Python interpreter is unavailable |
 | 2026-07-27 | TMDB metadata and attribution | `tmdb.py`, `database.py`, `readme.md`, templates, and `git diff --check` | Documented server-side API-key handling, TMDB attribution, cache/discovery refresh behavior, and persisted recommendation metadata; direct runtime verification remains pending |
 | 2026-07-27 | Architecture and local setup | `docs/architecture.md`, `docs/local-development.md`, and `git diff --check` | Documented actual request flow, trust boundaries, auth/database tradeoffs, recommendation failure modes, migration workflow, development server, and local checks |
