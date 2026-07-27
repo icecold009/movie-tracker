@@ -462,8 +462,9 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Password and section-heading polish | `templates/login.html`, `templates/index.html`, `static/app.js`, `static/style.css`, `tests/test_auth.py`, and 44 passing tests | Added a clean password panel with show/hide control and more restrained numbered Movies/TV Shows headings with title counts |
 | 2026-07-27 | Section and footer polish | `templates/index.html`, `templates/recommendations.html`, `templates/login.html`, `static/style.css`, `tests/test_loading_ui.py`, and `git diff --check` | Enlarged and centered the 01 Movies / 02 TV Shows labels, removed decorative emojis, and added a consistent Shaurya footer with source, live, stack, and TMDB references |
 | 2026-07-27 | Rating system polish | `templates/index.html`, `static/style.css`, `tests/test_loading_ui.py`, and `git diff --check` | Replaced the bland score line with a structured personal-rating panel and progress bar; exact 10/10 entries receive a gold card outline, gold score panel, and Top tier label |
-| 2026-07-27 | Draft PR handoff | GitHub draft PR #3, `project-backlog`, and clean worktree | Opened `https://github.com/icecold009/movie-tracker/pull/3` against `main`; merge remains user-controlled |
+| 2026-07-27 | Draft PR handoff | GitHub draft PR #5, `project-backlog`, and clean worktree | PR #5 at `https://github.com/icecold009/movie-tracker/pull/5` contains the loading, visual, accessibility, footer, and rating UI slices; all current checks pass and merge remains user-controlled |
 | 2026-07-27 | PR merge and production release | GitHub PR #3 merge commit `ef97ff98facad2197cf3f10875b15883510d2835`; live smoke checks | User merged PR #3 after all checks passed; production `/healthz`, `/`, `/login`, and anonymous mutation rejection passed, with a user-confirmed reversible authorized add/delete check |
+| 2026-07-27 | Professional README update | `readme.md`, commit `3670555`, and `git diff --check` | Removed decorative emojis, documented the structured rating UI and gold 10/10 treatment, and corrected the production pooler status wording |
 
 ## Decisions
 
