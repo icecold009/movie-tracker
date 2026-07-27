@@ -3,21 +3,26 @@
 Run this checklist against the exact commit intended for deployment and record
 the result in `BACKLOG.md` or `docs/verification.md`.
 
-- [ ] `git diff --check` is clean.
-- [ ] Focused pytest suite passes, followed by Ruff, `compileall`, and
+- [x] `git diff --check` is clean.
+- [x] Focused pytest suite passes, followed by Ruff, `compileall`, and
       `pip check`.
-- [ ] Dependency pins and a secret scan are reviewed.
+- [x] Dependency pins and a tracked-file secret scan are reviewed. The scan
+      found only documented placeholders and test fixtures; no external secret
+      scanner is installed locally.
 - [ ] Supabase migrations are applied and the deployed connection identity is
-      verified from current Connect settings.
-- [ ] Vercel `/healthz`, public `/`, `/login`, anonymous mutation rejection,
+      verified from current Connect settings. Production database-backed routes
+      are healthy, but the provider Connect identity was not re-read in this
+      run.
+- [x] Vercel `/healthz`, public `/`, `/login`, anonymous mutation rejection,
       and a reversible authorized write are smoke-tested.
 - [ ] README, backlog, architecture, operations, and known limitations match
       the deployed commit.
 - [ ] Keyboard, screen-reader, and narrow-screen behavior are reviewed in a
       browser.
 
-Current status for this checkout: the focused accessibility tests and full 47-test
-pytest suite pass locally. Production `/healthz`, `/`, `/login`, and
+Current status for branch tip `4ef1e5f`: `git diff --check`, 47 pytest tests,
+Ruff, compilation, pip dependency validation, and JavaScript syntax checks pass.
+Production `/healthz`, `/`, `/login`, and
 `/recommendations` return 200; anonymous mutation rejection returns 302 to
 `/login`; the authorized reversible add/delete fixture passed and was removed,
 as recorded in `docs/verification.md`. Browser keyboard, screen-reader,
