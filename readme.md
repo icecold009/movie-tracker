@@ -82,6 +82,25 @@ public views, 1 successful add, and 1 recommendation view. I read those values
 with a read-only aggregate query. They describe activity events, not unique
 people or registered users.
 
+### Offline recommendation benchmark
+
+On **2026-08-08**, I ran a reproducible offline benchmark using 585 real TMDB
+records: a synthetic 200-entry watchlist, a chronological 160/40 train/holdout
+split, and a 400-item candidate pool containing 40 held-out positives and 360
+unseen benchmark negatives.
+
+| Metric | Result |
+|---|---:|
+| `precision@1` | `0.000` |
+| `precision@5` | `0.000` |
+| `precision@10` | `0.000` |
+
+This is a synthetic offline baseline, not a production or user-satisfaction
+metric. The benchmark negatives are unseen titles rather than verified
+dislikes, and TMDB popularity pages overrepresent visible and recent titles.
+The result is still useful: this simple feature-union recommender did not
+recover any held-out titles in the top 10 for this split.
+
 ## Tech stack
 
 | Layer | Tool |

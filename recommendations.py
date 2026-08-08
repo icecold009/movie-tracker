@@ -166,7 +166,12 @@ def evaluate_holdout(training_entries, heldout_entries, candidate_pool, k=10):
         for item in recommendations
     ]
     relevant_ids = {
-        (item.get("tmdb_id"), normalize_media_type(item.get("tmdb_media_type")))
+        (
+            item.get("tmdb_id"),
+            normalize_media_type(
+                item.get("tmdb_media_type") or item.get("media_type")
+            ),
+        )
         for item in heldout_entries
     }
     return {
