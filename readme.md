@@ -1,95 +1,99 @@
 # My Watch Tracker
 
-A personal web app to track movies and TV shows I've watched or want to watch.
-Movies and TV Shows are displayed in separate sections. Cover art is auto-fetched from TMDB using an API.
-Built with Flask + PostgreSQL, with Vercel as the canonical deployment target. Only the admin session can add, edit, or delete entries.
+I built this as a small personal watchlist for movies and TV shows. I wanted
+one place to mark what I had watched, keep a list of things I still wanted to
+see, and get poster art without entering it by hand. It runs on Flask and
+PostgreSQL, uses TMDB for title and poster data, and is deployed as a Python
+function on Vercel.
+
+The public watchlist is open to anyone. Only my admin session can add, edit, or
+delete entries.
 
 Live deployment: https://movie-tracker-umber-sigma.vercel.app
 
-## Deployment verification
+## Why I built it
 
-Latest production smoke check: **2026-07-27** after PR #3 merged at commit
-`ef97ff98facad2197cf3f10875b15883510d2835`.
+The first version was a straightforward CRUD app. The interesting work came
+after that: making failed database connections safe, keeping the TMDB API from
+being hit without limits, protecting every write route, and making the
+recommendations explainable instead of pretending I had enough data for a
+serious machine-learning system.
+
+I found the production database connection especially easy to get wrong. The
+Vercel deployment needs the Supabase Shared Pooler transaction-mode URL on port
+`6543`, with the project-qualified connection identity from Supabase's Connect
+settings. The Flask database client uses a five-second connection timeout and
+turns database failures into safe responses instead of exposing driver errors.
+
+The other awkward part was the recommendation cold start. My watchlist is too
+small for a meaningful production-quality metric, so I store TMDB IDs, media
+types, and genre IDs and use a deterministic content-based baseline. It is
+useful and inspectable, but I do not describe it as an evaluated ML system.
+
+If I started again, I would settle the migration and production connection
+workflow earlier, before spending as much time on UI polish. If this grew
+beyond a personal app, I would also move authentication and row permissions to
+a real multi-user identity system, and use shared infrastructure for TMDB
+caching and rate limiting instead of relying on one warm serverless instance.
+
+## What it does
+
+- I can rate entries from 1 to 10 with a structured score panel and strength bar.
+- Exact 10/10 entries get a gold card outline, gold score panel, and `Top tier` label.
+- I can mark an entry as **Watched** or **Want to Watch**.
+- Movies and TV shows appear in separate sections with numbered editorial headings.
+- I can edit ratings and status, or delete entries from the authenticated admin view.
+- Anyone can browse the public watchlist; the admin area is password-protected.
+- The UI includes progressive loading skeletons, responsive layout rules, and reduced-motion support.
+- The recommendations page uses stored TMDB genre metadata to produce deterministic, explainable suggestions.
+
+## What I have checked in production
+
+My last recorded live probe was on **2026-07-27**. It covered:
 
 - `/healthz`: HTTP 200 with `{"status":"ok"}`.
 - `/`: HTTP 200.
 - `/login`: HTTP 200.
+- `/recommendations`: HTTP 200.
 - Anonymous `POST /add`: HTTP 302 to `/login`.
-- The user confirmed a reversible authorized add/delete smoke check succeeded.
+- A reversible authorized add/delete smoke test using a temporary entry, followed by a public read confirming that the marker was gone.
 
-The deployed application passes the current HTTP and authorization smoke checks.
-Browser accessibility review and a real recommender-quality metric remain
-separate limitations.
+The production database uses the current Supabase transaction pooler, and the
+admin password is stored as `ADMIN_PASSWORD_HASH`; neither secret is tracked
+in this repository. The full probe is recorded in
+[`docs/verification.md`](docs/verification.md).
 
-### Latest production repair — 2026-07-27
+## Current limits
 
-The production environment was updated with the current Supabase transaction
-pooler URL and the required `ADMIN_PASSWORD_HASH`. The merged application now
-handles connection failures safely, and the live database-backed routes pass
-the smoke check above.
+- This is a single-admin Flask session, not a multi-user account system. I have not integrated Supabase Auth or RLS.
+- The recommender is a deterministic content-based baseline. It uses TMDB and stored genre metadata, falls back to popular picks when the history is sparse, and does not yet have a real production precision metric.
+- TMDB caching and rate limiting are limited to each warm serverless instance. Global enforcement would need shared state.
+- My usage counters record aggregate successful public views, adds, and recommendation views. They do not count registered users or identify visitors.
+- Browser keyboard, screen-reader, and responsive visual review still need a proper browser pass.
 
-## Features
+## Privacy and measurement
 
-The implementation also includes an explainable content-based recommendation
-baseline. Focused tests and code review are tracked, while production usage
-and recommender-quality evaluation remain limited by the small watchlist.
+I do not use an external analytics provider. The app stores only daily counts
+for successful public views, adds, and recommendation views. It does not store
+IP addresses, user agents, referrers, account IDs, or browser identifiers.
 
-- Rate entries from 1 to 10 with a structured score panel and strength bar.
-- Give exact 10/10 entries a gold card outline, gold score panel, and Top tier label.
-- Track status as **Watched** or **Want to Watch**.
-- Display Movies and TV Shows in separate sections with numbered editorial headings.
-- Edit the rating and status on any entry.
-- Delete any entry from the authenticated admin view.
-- Provide a public watchlist view and a password-protected admin area.
-- Use progressive loading skeletons, responsive layout rules, and reduced-motion support.
-- Provide deterministic, explainable recommendations based on stored TMDB genre metadata.
-- Database-level authorization is not currently claimed; the Flask server is
-  the only documented mutation boundary until a matching RLS policy is tested.
+For **2026-07-27**, the production `public.usage_daily` table contained 22
+public views, 1 successful add, and 1 recommendation view. I read those values
+with a read-only aggregate query. They describe activity events, not unique
+people or registered users.
 
-The current known limitations are:
-
-- Authentication is a single-admin Flask session, not a multi-user account
-  system; Supabase Auth and RLS are not integrated.
-- Recommendations are a deterministic content-based baseline. They depend on
-  TMDB and stored genre metadata, use a sparse-history popular fallback, and
-  have no real production precision metric yet.
-- TMDB caching and rate limiting are per warm serverless instance, not global.
-- The current Vercel/Supabase pooler configuration is verified by the live
-  database-backed smoke check; credential values are intentionally not tracked.
-- Usage counters are aggregate first-party events, not registered-user counts;
-  this remains a single-admin application.
-
-See the [backlog](BACKLOG.md), [verification record](docs/verification.md),
-[architecture](docs/architecture.md), [local development guide](docs/local-development.md),
-[operations runbook](docs/operations.md), and [usage measurement decision](docs/usage-measurement.md)
-for current procedures and limits.
-The [live deployment](https://movie-tracker-umber-sigma.vercel.app) is the
-canonical demo, subject to the limitations in the verification record.
-
-### Privacy and measurement
-
-The application does not use an external analytics provider. It stores only
-daily aggregate counts for successful public views, adds, and recommendation
-views; it does not store IP addresses, user agents, referrers, account IDs, or
-browser identifiers. These counters describe activity, not registered users.
-
-Usage summary for **2026-07-27**: 22 public views, 1 successful add, and 1
-recommendation view. These counts were read from the production
-`public.usage_daily` table with a read-only aggregate query and represent
-activity events, not unique people or registered users.
-
-## Tech Stack
+## Tech stack
 
 | Layer | Tool |
 |---|---|
 | Language | Python 3.10+ |
 | Framework | Flask |
 | Database | PostgreSQL (Supabase) |
-| Cover Art | TMDB API (free) |
+| Cover art | TMDB API (free) |
 | Hosting | Vercel (Python function) |
 | Runtime | Vercel Python runtime |
 
-## Local Setup
+## Local setup
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/movie-tracker.git
@@ -107,54 +111,60 @@ Run the automated checks with:
 python -m pytest
 ```
 
-Direct dependencies are pinned in `requirements.txt`; the update workflow is
-documented in `docs/dependency-update.md`.
+I pin the direct dependencies in `requirements.txt`; the update process is in
+[`docs/dependency-update.md`](docs/dependency-update.md).
 
-Copy `.env.example` to `.env` and replace every placeholder with a local
-secret or service credential. Keep `.env` untracked; production values belong
-in Vercel's encrypted environment variables.
+Copy `.env.example` to `.env` and replace the placeholders with local secrets
+or service credentials. I keep `.env` untracked; production values belong in
+Vercel's encrypted environment variables.
 
-`ADMIN_PASSWORD_HASH` must contain a Werkzeug password hash rather than the
-plaintext admin password. Generate one interactively with:
+`ADMIN_PASSWORD_HASH` must contain a Werkzeug password hash, not the plaintext
+admin password. Generate one interactively with:
 
 ```bash
 python -c "from getpass import getpass; from werkzeug.security import generate_password_hash; print(generate_password_hash(getpass('Admin password: ')))"
 ```
 
-For credential rotation, generate a new hash, replace `ADMIN_PASSWORD_HASH` in
-the local or Vercel environment, and redeploy. Do not retain or document the
+To rotate credentials, generate a new hash, replace `ADMIN_PASSWORD_HASH` in
+the local or Vercel environment, and redeploy. I do not retain or document the
 old plaintext password.
 
-The Flask session cookie is HTTP-only and `SameSite=Lax`; Vercel and other
-production environments also set the cookie `Secure` flag. Rotating
-`SECRET_KEY` invalidates existing signed sessions and requires administrators
-to log in again.
+The Flask session cookie is HTTP-only and `SameSite=Lax`. Vercel and other
+production environments also set the cookie's `Secure` flag. Rotating
+`SECRET_KEY` invalidates signed sessions and makes administrators log in again.
 
 For Vercel, `DATABASE_URL` should use the Supabase Shared Pooler
-transaction-mode connection (port `6543`) from the project's Connect settings.
-The Flask database client uses a five-second connection timeout, and the
-current production pooler configuration has passed the live database-backed
-smoke check.
+transaction-mode connection on port `6543`. The five-second connection timeout
+is deliberate because a serverless request should fail promptly when the
+database is unavailable.
 
 TMDB searches use a five-minute in-process cache and limit uncached searches to
-30 requests per minute per warm application instance. This protects quota on a
-single instance; a shared cache/rate-limit store would be required for global
-enforcement across scaled serverless instances.
+30 requests per minute per warm application instance. That protects the quota
+on one instance; a shared cache and rate-limit store would be needed for a
+scaled deployment.
 
-### TMDB attribution and data boundaries
+## TMDB attribution and data boundaries
 
-This product uses the [TMDB API](https://www.themoviedb.org/) but is not
+This project uses the [TMDB API](https://www.themoviedb.org/) but is not
 endorsed or certified by TMDB. TMDB supplies title metadata and poster images;
-the application does not expose `TMDB_API_KEY` to browsers. Search and discovery
-responses are cached for five minutes per warm application instance, and newly
-added entries persist the selected TMDB ID, media type, and genre IDs for the
-recommendation baseline. Existing entries are not silently refreshed, so stale
-or missing metadata can leave recommendations in the documented cold-start
-state. See TMDB's [API FAQ](https://developer.themoviedb.org/docs/faq) for the
-current attribution and API-use requirements.
+I never expose `TMDB_API_KEY` to the browser.
 
-## Database Security
+Search and discovery responses are cached for five minutes per warm instance.
+When I add an entry, I persist the selected TMDB ID, media type, and genre IDs
+for recommendations. Existing entries are not silently refreshed, so stale or
+missing metadata can leave the recommender in its documented cold-start state.
+See TMDB's [API FAQ](https://developer.themoviedb.org/docs/faq) for the current
+attribution and API-use requirements.
 
-RLS is not currently claimed for this Flask session and direct-Postgres access
-path. Add and test a policy that matches the actual identity boundary before
-documenting database-level row authorization.
+## Database security
+
+The Flask server is currently the mutation boundary for this app. I have not
+added a tested RLS policy that matches the Flask session and direct-Postgres
+access path, so I do not present database-level row authorization as a feature.
+
+For the remaining work and the evidence behind these decisions, see the
+[`BACKLOG.md`](BACKLOG.md),
+[`docs/architecture.md`](docs/architecture.md),
+[`docs/local-development.md`](docs/local-development.md),
+[`docs/operations.md`](docs/operations.md), and
+[`docs/usage-measurement.md`](docs/usage-measurement.md).
