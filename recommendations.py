@@ -36,10 +36,16 @@ def normalize_media_type(value):
     return media_type if media_type in VALID_MEDIA_TYPES else None
 
 
+def _item_media_type(item):
+    return normalize_media_type(
+        item.get("tmdb_media_type") or item.get("media_type")
+    )
+
+
 def extract_features(item):
     """Return binary feature tokens for a watchlist or candidate record."""
     features = {f"genre:{genre_id}" for genre_id in normalize_genre_ids(item.get("genre_ids"))}
-    media_type = normalize_media_type(item.get("tmdb_media_type") or item.get("media_type"))
+    media_type = _item_media_type(item)
     if media_type:
         features.add(f"media:{media_type}")
     return frozenset(features)
@@ -74,7 +80,7 @@ def filter_unseen_candidates(candidates, entries):
     seen_titles = set()
     for entry in entries:
         tmdb_id = entry.get("tmdb_id")
-        media_type = normalize_media_type(entry.get("tmdb_media_type"))
+        media_type = _item_media_type(entry)
         if isinstance(tmdb_id, int) and not isinstance(tmdb_id, bool) and media_type:
             seen_ids.add((tmdb_id, media_type))
         title = normalize_title(entry.get("title"))
@@ -162,7 +168,7 @@ def evaluate_holdout(training_entries, heldout_entries, candidate_pool, k=10):
     """Evaluate a recommendation holdout without fetching external data."""
     recommendations = build_recommendations(training_entries, candidate_pool, limit=k)
     recommended_ids = [
-        (item.get("tmdb_id"), normalize_media_type(item.get("media_type")))
+        (item.get("tmdb_id"), _item_media_type(item))
         for item in recommendations
     ]
     relevant_ids = {

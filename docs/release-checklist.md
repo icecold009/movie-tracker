@@ -13,18 +13,18 @@ the result in `BACKLOG.md` or `docs/verification.md`.
       verified from current Connect settings. Production database-backed routes
       are healthy, but the provider Connect identity was not re-read in this
       run.
-- [x] Vercel `/healthz`, public `/`, `/login`, anonymous mutation rejection,
-      and a reversible authorized write are smoke-tested.
+- [ ] Vercel `/healthz`, public `/`, `/login`, anonymous mutation rejection,
+      and a reversible authorized write are smoke-tested for the exact current
+      branch. Historical evidence is recorded in `docs/verification.md`.
 - [ ] README, backlog, architecture, operations, and known limitations match
       the deployed commit.
 - [ ] Keyboard, screen-reader, and narrow-screen behavior are reviewed in a
       browser.
 
-Current status for branch tip `6b2f4bb`: `git diff --check`, 47 pytest tests,
-Ruff, compilation, pip dependency validation, and JavaScript syntax checks pass.
-Production `/healthz`, `/`, `/login`, and
-`/recommendations` return 200; anonymous mutation rejection returns 302 to
-`/login`; the authorized reversible add/delete fixture passed and was removed,
-as recorded in `docs/verification.md`. Browser keyboard, screen-reader,
-and responsive visual review remain open because no browser surface is
-available, as does recommender-quality measurement.
+Current local verification for branch `codex/review-fixes` on **2026-08-10**:
+`git diff --check`, 59 pytest tests, Ruff, compilation, pip dependency
+validation, and JavaScript syntax checks pass. These are local checks for this
+branch; the production routes, applied migrations, and browser keyboard,
+screen-reader, and responsive behavior still require separate current
+verification before release. Historical production evidence remains in
+`docs/verification.md` and must not be treated as evidence for this branch.

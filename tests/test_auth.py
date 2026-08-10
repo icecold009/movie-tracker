@@ -80,3 +80,16 @@ def test_anonymous_edit_and_delete_redirect_to_login(app):
     assert edit_response.headers["Location"].endswith("/login")
     assert delete_response.status_code == 302
     assert delete_response.headers["Location"].endswith("/login")
+
+
+def test_login_attempt_state_evicts_stale_clients(app):
+    index._login_attempts.clear()
+    index._login_attempts["stale-client"] = [0]
+
+    index._login_attempts_for(
+        "current-client",
+        index.LOGIN_ATTEMPT_WINDOW_SECONDS + 1,
+    )
+
+    assert "stale-client" not in index._login_attempts
+    index._login_attempts.clear()

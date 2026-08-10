@@ -12,6 +12,7 @@ from observability import log_event
 logger = logging.getLogger(__name__)
 TMDB_REQUEST_TIMEOUT_SECONDS = 5
 TMDB_CACHE_TTL_SECONDS = 300
+TMDB_CACHE_MAX_ENTRIES = 256
 TMDB_RATE_LIMIT_WINDOW_SECONDS = 60
 TMDB_RATE_LIMIT_MAX_REQUESTS = 30
 
@@ -54,7 +55,22 @@ def _get_cached(key, now):
 
 def _set_cached(key, result, now):
     with _state_lock:
+        expired_keys = [
+            cache_key
+            for cache_key, (expires_at, _) in _cache.items()
+            if expires_at <= now
+        ]
+        for cache_key in expired_keys:
+            del _cache[cache_key]
+
+        _cache.pop(key, None)
         _cache[key] = (now + TMDB_CACHE_TTL_SECONDS, result)
+        while len(_cache) > TMDB_CACHE_MAX_ENTRIES:
+            oldest_key = min(
+                _cache,
+                key=lambda cache_key: _cache[cache_key][0],
+            )
+            del _cache[oldest_key]
 
 
 def _enforce_rate_limit(now):

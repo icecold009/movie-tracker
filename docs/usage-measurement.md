@@ -6,7 +6,8 @@ analytics. The only events needed for the current product decision are:
 - `public_view`: a successful watchlist page read.
 - `successful_add`: an authorized add that commits an entry.
 - `recommendation_view`: a recommendation page request that reaches a rendered
-  result, empty state, or safe provider/database error state.
+  result, empty state, or safe TMDB provider error state. Database failures are
+  not counted because recording the counter uses that same unavailable database.
 
 Counters are stored by application date and event name in
 `public.usage_daily`. No IP address, user agent, referrer, title, account ID,

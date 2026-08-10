@@ -52,6 +52,19 @@ def test_search_success_filters_people_and_builds_poster_url(monkeypatch):
     assert request.call_args.kwargs["timeout"] == tmdb.TMDB_REQUEST_TIMEOUT_SECONDS
 
 
+def test_cache_evicts_expired_and_oldest_entries(monkeypatch):
+    monkeypatch.setattr(tmdb, "TMDB_CACHE_MAX_ENTRIES", 2)
+
+    tmdb._set_cached("old", "old", 0)
+    tmdb._set_cached("fresh", "fresh", 1)
+    tmdb._set_cached("new", "new", 2)
+
+    assert set(tmdb._cache) == {"fresh", "new"}
+
+    tmdb._set_cached("expired", "expired", tmdb.TMDB_CACHE_TTL_SECONDS + 3)
+    assert set(tmdb._cache) == {"expired"}
+
+
 def test_search_returns_none_for_no_usable_results(monkeypatch):
     monkeypatch.setattr(
         tmdb.requests,

@@ -1,4 +1,5 @@
 from api import index
+from database import DatabaseError
 from tmdb import TMDBRequestError
 
 
@@ -51,3 +52,18 @@ def test_recommendations_route_surfaces_tmdb_errors(app, monkeypatch):
 
     assert response.status_code == 503
     assert b"TMDB unavailable." in response.data
+
+
+def test_recommendations_database_error_does_not_retry_usage_write(app, monkeypatch):
+    usage_events = []
+
+    def raise_database_error():
+        raise DatabaseError("Database unavailable.")
+
+    monkeypatch.setattr(index, "get_all", raise_database_error)
+    monkeypatch.setattr(index, "_record_usage_event", usage_events.append)
+
+    response = app.test_client().get("/recommendations")
+
+    assert response.status_code == 503
+    assert usage_events == []
