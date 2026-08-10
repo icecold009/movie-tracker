@@ -1,3 +1,18 @@
+# Note on how this project was built
+
+I built a substantial part of this project myself, including the application
+structure, data-model decisions, deterministic content-based recommender, and
+the password-hash plus signed-session authentication model. I also use an AI
+coding agent for a significant share of implementation, but I set the rules
+below and review the resulting diffs, tests, and stated limitations myself.
+
+I wrote these rules after deciding that generated code must never be treated as
+verified without current evidence. That decision taught me to separate local
+tests, CI, browser checks, and live deployment claims, and to keep provider and
+security boundaries explicit. The `recommendations.py` rewrite in commit
+`a679899` was an AI-assisted verification and restructuring pass for the parts
+I was least sure I understood; it was not an independent no-AI exercise.
+
 # Repository guidance
 
 ## Project
