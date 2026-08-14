@@ -1,22 +1,35 @@
-"""Deterministic primitives for explainable content recommendations."""
+"""Small, deterministic primitives for explainable recommendations."""
 
 import math
 
 
-VALID_MEDIA_TYPES = {"movie", "tv"}
+VALID_MEDIA_TYPES = frozenset({"movie", "tv"})
+
+
+def _read(item, key, default=None):
+    """Read a field from a recommendation record without hiding bad records."""
+    if isinstance(item, dict):
+        return item.get(key, default)
+    return default
 
 
 def normalize_title(value):
+    """Collapse whitespace and normalize case for title comparisons."""
     return " ".join(str(value or "").split()).casefold()
 
 
 def normalize_genre_ids(values):
-    """Return sorted, unique positive TMDB genre IDs."""
+    """Return unique, positive TMDB genre IDs in stable order."""
     if values is None or isinstance(values, (str, bytes)):
         return ()
 
-    normalized = set()
-    for value in values:
+    try:
+        iterator = iter(values)
+    except TypeError:
+        return ()
+
+    genre_ids = set()
+    for value in iterator:
         if isinstance(value, bool):
             continue
         try:
@@ -24,27 +37,29 @@ def normalize_genre_ids(values):
         except (TypeError, ValueError):
             continue
         if genre_id > 0:
-            normalized.add(genre_id)
-    return tuple(sorted(normalized))
+            genre_ids.add(genre_id)
+    return tuple(sorted(genre_ids))
 
 
 def normalize_media_type(value):
-    """Normalize TMDB media types while rejecting unsupported values."""
+    """Normalize supported TMDB media types and reject everything else."""
     if not isinstance(value, str):
         return None
     media_type = value.strip().casefold()
-    return media_type if media_type in VALID_MEDIA_TYPES else None
+    if media_type not in VALID_MEDIA_TYPES:
+        return None
+    return media_type
 
 
 def _item_media_type(item):
-    return normalize_media_type(
-        item.get("tmdb_media_type") or item.get("media_type")
-    )
+    """Resolve the current and legacy media-type field names."""
+    raw_media_type = _read(item, "tmdb_media_type") or _read(item, "media_type")
+    return normalize_media_type(raw_media_type)
 
 
 def extract_features(item):
-    """Return binary feature tokens for a watchlist or candidate record."""
-    features = {f"genre:{genre_id}" for genre_id in normalize_genre_ids(item.get("genre_ids"))}
+    """Convert one record into binary genre and media-type feature tokens."""
+    features = {f"genre:{genre_id}" for genre_id in normalize_genre_ids(_read(item, "genre_ids"))}
     media_type = _item_media_type(item)
     if media_type:
         features.add(f"media:{media_type}")
@@ -57,67 +72,76 @@ def cosine_similarity(left_features, right_features):
     right = set(right_features)
     if not left or not right:
         return 0.0
-    return len(left & right) / math.sqrt(len(left) * len(right))
+    return len(left.intersection(right)) / math.sqrt(len(left) * len(right))
+
+
+def _candidate_sort_key(candidate, score):
+    tmdb_id = _read(candidate, "tmdb_id")
+    stable_id = tmdb_id if isinstance(tmdb_id, int) and not isinstance(tmdb_id, bool) else 0
+    return (-score, normalize_title(_read(candidate, "title")), stable_id)
 
 
 def rank_candidates(profile_features, candidates):
-    """Rank candidates by score, then title and TMDB ID for stable output."""
-    ranked = []
+    """Return candidates ordered by score, title, and TMDB ID."""
+    scored = []
     for candidate in candidates:
-        features = extract_features(candidate)
-        score = cosine_similarity(profile_features, features)
-        title = str(candidate.get("title", "")).casefold()
-        tmdb_id = candidate.get("tmdb_id")
-        ranked.append((score, title, tmdb_id if isinstance(tmdb_id, int) else 0, candidate))
+        score = cosine_similarity(profile_features, extract_features(candidate))
+        scored.append((score, candidate))
 
-    ranked.sort(key=lambda item: (-item[0], item[1], item[2]))
-    return [candidate for _, _, _, candidate in ranked]
+    scored.sort(key=lambda item: _candidate_sort_key(item[1], item[0]))
+    return [candidate for _, candidate in scored]
+
+
+def _record_identity(item):
+    """Return a usable TMDB identity, or ``None`` for incomplete records."""
+    tmdb_id = _read(item, "tmdb_id")
+    media_type = _item_media_type(item)
+    if not isinstance(tmdb_id, int) or isinstance(tmdb_id, bool) or not media_type:
+        return None
+    return tmdb_id, media_type
 
 
 def filter_unseen_candidates(candidates, entries):
-    """Exclude titles already on the watchlist using identity or title."""
+    """Exclude records already present by identity or normalized title."""
     seen_ids = set()
     seen_titles = set()
     for entry in entries:
-        tmdb_id = entry.get("tmdb_id")
-        media_type = _item_media_type(entry)
-        if isinstance(tmdb_id, int) and not isinstance(tmdb_id, bool) and media_type:
-            seen_ids.add((tmdb_id, media_type))
-        title = normalize_title(entry.get("title"))
+        identity = _record_identity(entry)
+        if identity is not None:
+            seen_ids.add(identity)
+        title = normalize_title(_read(entry, "title"))
         if title:
             seen_titles.add(title)
 
     unseen = []
     for candidate in candidates:
-        candidate_id = candidate.get("tmdb_id")
-        candidate_media_type = normalize_media_type(
-            candidate.get("tmdb_media_type") or candidate.get("media_type")
-        )
-        identity = (candidate_id, candidate_media_type)
-        if identity in seen_ids or normalize_title(candidate.get("title")) in seen_titles:
+        if _record_identity(candidate) in seen_ids:
+            continue
+        if normalize_title(_read(candidate, "title")) in seen_titles:
             continue
         unseen.append(candidate)
     return unseen
 
 
+def _genre_features(item):
+    return {token for token in extract_features(item) if token.startswith("genre:")}
+
+
 def explain_recommendation(candidate, source_entries):
-    """Explain the strongest watchlist overlap behind a recommendation."""
-    candidate_genres = {
-        token for token in extract_features(candidate) if token.startswith("genre:")
-    }
+    """Explain the strongest genre overlap behind a recommendation."""
+    candidate_genres = _genre_features(candidate)
     matches = []
     for entry in source_entries:
-        entry_genres = {
-            token for token in extract_features(entry) if token.startswith("genre:")
-        }
-        shared_count = len(candidate_genres & entry_genres)
+        shared_count = len(candidate_genres.intersection(_genre_features(entry)))
         if shared_count:
-            matches.append((
-                -shared_count,
-                normalize_title(entry.get("title")),
-                entry.get("title") or "your watchlist",
-                shared_count,
-            ))
+            matches.append(
+                (
+                    -shared_count,
+                    normalize_title(_read(entry, "title")),
+                    _read(entry, "title") or "your watchlist",
+                    shared_count,
+                )
+            )
 
     if not matches:
         return "Recommended as a content match from your watchlist."
@@ -144,9 +168,8 @@ def build_recommendations(entries, candidates, limit=10):
             for candidate in unseen[:limit]
         ]
 
-    ranked = rank_candidates(profile_features, unseen)
     recommendations = []
-    for candidate in ranked:
+    for candidate in rank_candidates(profile_features, unseen):
         if cosine_similarity(profile_features, extract_features(candidate)) <= 0:
             continue
         recommendation = dict(candidate)
@@ -156,28 +179,19 @@ def build_recommendations(entries, candidates, limit=10):
 
 
 def precision_at_k(recommended_ids, relevant_ids, k=10):
-    """Return binary precision@k with a fixed denominator of k."""
+    """Return binary precision@k with a fixed denominator of ``k``."""
     if k <= 0:
         raise ValueError("k must be positive")
     recommended = list(recommended_ids)[:k]
-    relevant = set(relevant_ids)
-    return len(set(recommended) & relevant) / k
+    return len(set(recommended).intersection(set(relevant_ids))) / k
 
 
 def evaluate_holdout(training_entries, heldout_entries, candidate_pool, k=10):
-    """Evaluate a recommendation holdout without fetching external data."""
+    """Evaluate recommendations against a held-out set without network access."""
     recommendations = build_recommendations(training_entries, candidate_pool, limit=k)
-    recommended_ids = [
-        (item.get("tmdb_id"), _item_media_type(item))
-        for item in recommendations
-    ]
+    recommended_ids = [(_read(item, "tmdb_id"), _item_media_type(item)) for item in recommendations]
     relevant_ids = {
-        (
-            item.get("tmdb_id"),
-            normalize_media_type(
-                item.get("tmdb_media_type") or item.get("media_type")
-            ),
-        )
+        (_read(item, "tmdb_id"), _item_media_type(item))
         for item in heldout_entries
     }
     return {
