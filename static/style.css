@@ -327,7 +327,7 @@ img { display: block; max-width: 100%; }
 .btn-save {
     flex: 1;
     background: var(--accent);
-    color: #fff;
+    color: #111;
     border: none;
     padding: 10px;
     border-radius: 6px;
@@ -407,7 +407,7 @@ img { display: block; max-width: 100%; }
 .login-btn {
     width: 100%;
     background: var(--accent);
-    color: #fff;
+    color: #111;
     border: none;
     padding: 11px;
     border-radius: 6px;

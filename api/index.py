@@ -45,6 +45,7 @@ MAX_TITLE_LENGTH = 200
 CSRF_SESSION_KEY = "_csrf_token"
 LOGIN_ATTEMPT_WINDOW_SECONDS = 60
 MAX_LOGIN_ATTEMPTS = 5
+MAX_TRACKED_LOGIN_CLIENTS = 4096
 _login_attempts = {}
 
 
@@ -77,6 +78,29 @@ def _require_csrf_token():
         abort(400)
 
 
+def _prune_login_attempts(now, preserve_key=None):
+    stale_keys = [
+        key
+        for key, attempts in _login_attempts.items()
+        if key != preserve_key
+        and (not attempts or now - attempts[-1] >= LOGIN_ATTEMPT_WINDOW_SECONDS)
+    ]
+    for key in stale_keys:
+        _login_attempts.pop(key, None)
+
+    overflow = len(_login_attempts) - MAX_TRACKED_LOGIN_CLIENTS
+    if overflow <= 0:
+        return
+
+    evictable = [
+        (key, attempts[-1] if attempts else float("-inf"))
+        for key, attempts in _login_attempts.items()
+        if key != preserve_key
+    ]
+    for key, _ in sorted(evictable, key=lambda item: item[1])[:overflow]:
+        _login_attempts.pop(key, None)
+
+
 def _login_attempts_for(client_key, now):
     recent = [
         attempt
@@ -84,6 +108,7 @@ def _login_attempts_for(client_key, now):
         if now - attempt < LOGIN_ATTEMPT_WINDOW_SECONDS
     ]
     _login_attempts[client_key] = recent
+    _prune_login_attempts(now, preserve_key=client_key)
     return recent
 
 
@@ -137,7 +162,6 @@ def recommendations():
     try:
         entries = get_all()
     except DatabaseError as error:
-        _record_usage_event("recommendation_view")
         return render_template(
             "recommendations.html",
             recommendations=[],

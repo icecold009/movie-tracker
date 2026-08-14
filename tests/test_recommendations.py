@@ -2,6 +2,7 @@ import pytest
 
 from recommendations import (
     cosine_similarity,
+    evaluate_holdout,
     explain_recommendation,
     extract_features,
     filter_unseen_candidates,
@@ -61,6 +62,13 @@ def test_filter_unseen_candidates_excludes_identity_and_normalized_title_matches
     assert filter_unseen_candidates(candidates, entries) == [candidates[2]]
 
 
+def test_filter_unseen_candidates_accepts_media_type_alias_for_seen_identity():
+    entries = [{"tmdb_id": 10, "media_type": "movie", "title": "Original"}]
+    candidates = [{"tmdb_id": 10, "media_type": "movie", "title": "Renamed"}]
+
+    assert filter_unseen_candidates(candidates, entries) == []
+
+
 def test_build_recommendations_uses_provider_order_for_cold_start():
     from recommendations import build_recommendations
 
@@ -82,6 +90,16 @@ def test_precision_at_k_uses_fixed_denominator():
 def test_precision_at_k_rejects_non_positive_k():
     with pytest.raises(ValueError):
         precision_at_k([], set(), k=0)
+
+
+def test_evaluate_holdout_accepts_tmdb_media_type_for_candidates():
+    training = [{"tmdb_id": 1, "tmdb_media_type": "movie", "title": "Known", "genre_ids": [28]}]
+    heldout = [{"tmdb_id": 2, "tmdb_media_type": "movie", "title": "New", "genre_ids": [28]}]
+    candidates = [{"tmdb_id": 2, "tmdb_media_type": "movie", "title": "New", "genre_ids": [28]}]
+
+    result = evaluate_holdout(training, heldout, candidates, k=1)
+
+    assert result["precision_at_k"] == 1.0
 
 
 def test_explain_recommendation_uses_strongest_deterministic_watchlist_match():
