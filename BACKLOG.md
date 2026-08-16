@@ -36,8 +36,9 @@ not been deployed. The older preview deployment for that baseline is not
 production evidence. The public routes `/healthz`, `/`,
 `/login`, and `/recommendations` returned 200, and anonymous `POST /add`
 returned 302 to `/login`. Authorized mutation, exact encrypted pooler identity,
-migration parity, backup restore, historical credential rotation, and manual
-admin browser review remain open. The Supabase GraphQL/Data API exposure
+backup restore, historical credential rotation, and manual admin browser review
+remain open. Migration parity and the live `entries` nullability/default drift
+were resolved through the reviewed Supabase migrations. The Supabase GraphQL/Data API exposure
 finding was fixed on the production database by migration
 `20260816060348`; the security advisor now reports no lints. The older
 checked-off release items below record historical work; they do not override
@@ -62,7 +63,9 @@ these current gates.
   trusted `postgres` path remains usable.
 - Schema creation is owned by the tracked migrations; deployments must apply
   them or provision the schema explicitly before serving database-backed
-  routes.
+  routes. The six tracked migration versions now match the six remote history
+  rows, and `20260816090126` aligned the live `entries` defaults and NOT NULL
+  constraints with the reproducible schema.
 - A pytest suite and CI workflow are tracked. The current audit branch passes
   61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff checks;
   older 41/47/59-test results remain historical.
@@ -489,7 +492,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Production smoke and accessibility follow-up | `https://movie-tracker-umber-sigma.vercel.app`; read-only HTTP probes; reversible authenticated fixture; `venv\Scripts\python.exe -m pytest -q` (47 passed); `templates/index.html`; `tests/test_loading_ui.py`; browser availability check | Passed: `/healthz`, `/`, `/login`, and `/recommendations` returned HTTP 200; anonymous `POST /add` returned 302 to `/login`; authenticated add/delete returned 200 for new entry ID 12 and post-delete verification found no marker; modal focus trapping and live rating announcements are covered by 47 local tests. Browser visual, keyboard, and screen-reader verification remains open because no browser surface is available. |
 | 2026-07-27 | Recommender precision recheck | Read-only `database.get_all()` metadata query against production | Still blocked honestly: 10 total entries and 10 watched entries exist, but only 1 watched entry has both `tmdb_id` and `genre_ids`; no precision@k metric is claimed. |
 | 2026-07-27 | Tester feedback and release artifacts | Repository review, GitHub PR comments, and browser availability check | No human tester feedback is present; available comments are Vercel deployment notices only. No verified screenshot or demo recording was captured because no browser surface is available. Both backlog items remain open rather than being fabricated as complete. |
-| 2026-08-16 | Current release audit | Audit branch `codex/release-audit-2026-08-16`; 61 pytest tests, Ruff, compilation, pip check, Node syntax, diff check; Vercel deployment `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge`; Supabase project `vgirgwxehcsxloclanhf`; live route probes; browser desktop/mobile inspection; migration `20260816060348_lock_down_entries_api_grants` | Local and public-route gates passed. Supabase security advisors are clean after the API-grant lockdown. Current blockers: tracked/remote migration parity, exact encrypted pooler identity, authorized mutation smoke, backup restore, historical credential rotation, real precision@k evaluation, tester feedback, and manual admin accessibility review. |
+| 2026-08-16 | Current release audit | Audit branch `codex/release-audit-2026-08-16`; 61 pytest tests, Ruff, compilation, pip check, Node syntax, diff check; Vercel deployment `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge`; Supabase project `vgirgwxehcsxloclanhf`; live route probes; browser desktop/mobile inspection; migrations `20260816060348_lock_down_entries_api_grants` and `20260816090126_align_entries_schema` | Local and public-route gates passed. Supabase security/performance advisors are clean. Migration versions now match remote history and the live schema has zero incomplete rows. Current blockers: exact encrypted pooler identity, authorized mutation smoke, backup restore, historical credential rotation, real precision@k evaluation, tester feedback, and manual admin accessibility review. |
 
 ## Decisions
 

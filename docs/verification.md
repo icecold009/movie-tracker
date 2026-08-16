@@ -30,10 +30,10 @@
   Vercel `DATABASE_URL` pooler identity; that identity still needs a current
   Connect-settings/Vercel environment check.
 - Remote migration history contains `20260726165817`, `20260727043725`,
-  `20260727051707`, `20260727051928`, and the newly applied
-  `20260816060348_lock_down_entries_api_grants`. The branch now tracks six
-  migration files, including `20260726165458` and `20260726165844`; the
-  initial/constraint timestamp mismatch remains unresolved.
+  `20260727051707`, `20260727051928`, `20260816060348`, and
+  `20260816090126`. The branch now tracks six migration files with those same
+  versions; the initial/constraint history was normalized to the remote
+  `20260726165817_add_entries_constraints` version.
 - `public.entries` has 10 rows, all 10 marked watched, but only 1 row has
   complete `tmdb_id`, `tmdb_media_type`, and `genre_ids`. A real chronological
   production-derived precision@k holdout is therefore not meaningful yet.
@@ -45,6 +45,8 @@
   The production grant fix leaves `postgres` able to SELECT `public.entries`
   while `PUBLIC`, `anon`, and `authenticated` cannot; Supabase security
   advisors returned no security lints after the fix.
+- The schema-alignment migration verified 10 entries with zero incomplete rows;
+  the live columns now match the tracked non-null/default expectations.
 - The live cookie flags are verified, and source plus local tests cover CSRF,
   session rotation, hash-only configuration, and five-attempt/60-second login
   throttling. A full live check of those behaviors still requires an admin

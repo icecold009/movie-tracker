@@ -9,12 +9,13 @@ the result in `BACKLOG.md` or `docs/verification.md`.
 - [x] Dependency pins and a tracked-file secret scan are reviewed. The scan
       found only documented placeholders and test fixtures; no external secret
       scanner is installed locally.
-- [ ] Supabase migrations are applied with parity to the tracked files and the
-      encrypted deployed connection identity is verified from current Connect
-      settings. The project is healthy, and the new
-      `20260816060348_lock_down_entries_api_grants` migration is applied; remote
-      history has five rows while this branch tracks six files because the
-      initial/constraint timestamp mismatch remains unresolved.
+- [x] Supabase migration versions now match the six tracked files and the six
+      remote history rows. The reviewed `20260816060348_lock_down_entries_api_grants`
+      and `20260816090126_align_entries_schema` migrations are applied; live
+      schema verification found 10 entries and zero incomplete rows.
+- [ ] The encrypted deployed connection identity is still not verified from
+      current Connect settings because no Vercel environment-variable connector
+      is exposed in this session.
 - [x] Supabase security advisors are clean after revoking `SELECT` on
       `public.entries` from `PUBLIC`, `anon`, and `authenticated`. The Flask
       application uses its trusted direct PostgreSQL connection and does not

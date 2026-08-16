@@ -11,12 +11,14 @@
 4. Record the migration version, verification date, and any provider limitation
    in `BACKLOG.md`.
 
-The 2026-08-16 connector audit found five remote migration-history rows and six
-tracked migration files, including a timestamp/name mismatch in the initial
-constraint history. The reviewed `20260816060348_lock_down_entries_api_grants`
-migration is applied and verified. Treat the remaining migration parity and
-pooler-identity differences as release blockers until reconciled through the
-reviewed Supabase workflow.
+The 2026-08-16 connector audit first found five remote migration-history rows
+and six tracked migration files, including a timestamp/name mismatch in the
+initial constraint history. The history was normalized to the remote
+`20260726165817_add_entries_constraints` version, and the reviewed
+`20260816060348_lock_down_entries_api_grants` plus
+`20260816090126_align_entries_schema` migrations are applied and verified.
+Migration parity is now resolved; the exact Vercel pooler identity remains a
+separate release gate.
 
 The application must not create or silently alter the schema during startup.
 

@@ -78,11 +78,11 @@ Current application locations:
   Supabase REST or GraphQL; production migration `20260816060348` revokes
   `SELECT` on `public.entries` from `PUBLIC`, `anon`, and `authenticated` while
   retaining the trusted `postgres` path.
-- The current remote migration history contains five rows, while the tracked
-  branch contains six migration files and uses a different timestamp for the
-  initial/constraint history. Do not mark migration parity complete until that
-  mismatch is explicitly reconciled. Supabase security advisors are clean
-  after the grant-revocation migration.
+- The current remote migration history contains six rows and the tracked branch
+  contains six matching migration versions. The live schema was normalized by
+  `20260816090126_align_entries_schema`; Supabase security and performance
+  advisors are clean. Keep the exact encrypted Vercel pooler identity as a
+  separate verification gate.
 - A pytest suite and CI workflow are tracked. The 2026-08-16 audit branch run
   passed 61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff
   checks; keep later claims tied to a current branch and commit.

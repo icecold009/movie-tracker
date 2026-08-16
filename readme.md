@@ -67,11 +67,11 @@ add/delete fixture remains historical evidence, not current proof.
 
 The Supabase project is healthy and the database-backed routes respond, but the
 exact encrypted Vercel pooler identity was not read during this audit. Remote
-migration history now includes the applied API-grant lockdown, but still needs
-reconciliation with the six tracked migration files because the initial and
-constraint timestamps differ. Supabase security advisors are clean after the
-lockdown. The admin password is stored as `ADMIN_PASSWORD_HASH`; neither secret
-is tracked in this repository. The full probe is recorded in
+migration history now matches the six tracked migration versions, including
+the API-grant lockdown and live-schema alignment migrations. Supabase security
+and performance advisors are clean. The admin password is stored as
+`ADMIN_PASSWORD_HASH`; neither secret is tracked in this repository. The full
+probe is recorded in
 [`docs/verification.md`](docs/verification.md).
 
 ## Current limits
