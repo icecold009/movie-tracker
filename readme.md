@@ -80,10 +80,10 @@ probe is recorded in
 - The recommender is a deterministic content-based baseline. It uses TMDB and stored genre metadata, falls back to popular picks when the history is sparse, and does not yet have a real production precision metric.
 - TMDB caching and rate limiting are limited to each warm serverless instance. Global enforcement would need shared state.
 - My usage counters record aggregate successful public views, adds, and recommendation views. They do not count registered users or identify visitors.
-- Public desktop/mobile rendering, labels, visible focus styling, and
-  recommendation live-region markup were checked in a browser. A manual
-  admin-session keyboard, screen-reader, modal Escape, and focus-return pass is
-  still open.
+- Public desktop/mobile rendering, labels, landmarks, visible focus styling,
+  and recommendation explanations were checked in a browser against the
+  current production deployment. A manual admin-session keyboard,
+  screen-reader, modal Escape, and focus-return pass is still open.
 
 ## Privacy and measurement
 

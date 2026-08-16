@@ -62,10 +62,12 @@
   11 passed, including timeout, malformed response, provider quota, and
   warm-instance rate-limit behavior.
 - The live public home and login pages were inspected at desktop and 390px
-  mobile widths. Labels, visible focus styling, modal markup in the source,
-  recommendation `aria-live`, and empty/skeleton/error states have automated
-  coverage. A manual admin-session keyboard/screen-reader/modal pass was not
-  completed; the browser keyboard driver did not reliably advance focus.
+  mobile widths. Public navigation was keyboard-checked; focus advanced to
+  `Admin Login` and exposed the visible focus outline. Labels, landmarks,
+  recommendation explanations, modal markup in the source, recommendation
+  `aria-live`, and empty/skeleton/error states have automated coverage. A
+  manual admin-session keyboard, screen-reader, modal Escape, and focus-return
+  pass remains open.
 
 ## Historical evidence
 

@@ -30,9 +30,11 @@ the result in `BACKLOG.md` or `docs/verification.md`.
       source/tests pass and the live cookie flags were observed.
 - [x] README, backlog, architecture, operations, and known limitations now
       distinguish the current deployment from historical evidence.
-- [ ] Manual keyboard, screen-reader, modal, Escape/focus-return, and full
-      responsive browser review remain open; public desktop/mobile screenshots
-      and label/live-region checks were captured.
+- [ ] Admin-session keyboard, screen-reader, modal, Escape/focus-return, and
+      full authenticated responsive browser review remain open. Public
+      production desktop and 390x844 mobile screenshots, labels, landmarks,
+      visible keyboard focus, and recommendation explanations were checked
+      against deployment commit `38d462dfd102000927a8b9f1d59aa7bc7810142c`.
 
 Current local verification for branch `codex/release-audit-2026-08-16` on
 **2026-08-16**: 61 pytest tests, Ruff, compilation, pip dependency validation,
