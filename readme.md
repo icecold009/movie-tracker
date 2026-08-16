@@ -49,19 +49,41 @@ caching and rate limiting instead of relying on one warm serverless instance.
 
 ## What I have checked in production
 
-My last recorded live probe was on **2026-07-27**. It covered:
+My current recorded live probe was on **2026-08-16** against production
+deployment `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge` at commit
+`38d462dfd102000927a8b9f1d59aa7bc7810142c` on `main`. It covered:
 
 - `/healthz`: HTTP 200 with `{"status":"ok"}`.
 - `/`: HTTP 200.
 - `/login`: HTTP 200.
 - `/recommendations`: HTTP 200.
 - Anonymous `POST /add`: HTTP 302 to `/login`.
-- A reversible authorized add/delete smoke test using a temporary entry, followed by a public read confirming that the marker was gone.
+- The live login response set a `Secure`, `HttpOnly`, `SameSite=Lax` session
+  cookie.
 
-The production database uses the current Supabase transaction pooler, and the
-admin password is stored as `ADMIN_PASSWORD_HASH`; neither secret is tracked
-in this repository. The full probe is recorded in
+The current audit did not run an authorized add/edit/delete fixture because no
+production admin credential was supplied. The older 2026-07-27 authorized
+add/delete fixture remains historical evidence, not current proof.
+
+The Supabase project is healthy and the database-backed routes respond, but the
+exact encrypted Vercel pooler identity was not read during this audit. Remote
+migration history now matches the six tracked migration versions, including
+the API-grant lockdown and live-schema alignment migrations. Supabase security
+and performance advisors are clean. The admin password is stored as
+`ADMIN_PASSWORD_HASH`; neither secret is tracked in this repository. The full
+probe is recorded in
 [`docs/verification.md`](docs/verification.md).
+
+## Production visuals
+
+These snapshots were captured from the canonical Vercel deployment on
+**2026-08-16**. They show the public watchlist at the recorded production
+commit `38d462dfd102000927a8b9f1d59aa7bc7810142c`; they are visual evidence of
+the deployed UI, not evidence that the local audit branch has been deployed.
+
+![Movie Tracker desktop watchlist](docs/assets/production/production-desktop-2026-08-16.png)
+
+![Movie Tracker mobile watchlist at 390px](docs/assets/production/production-mobile-390x844-2026-08-16.png)
 
 ## Current limits
 
@@ -69,7 +91,10 @@ in this repository. The full probe is recorded in
 - The recommender is a deterministic content-based baseline. It uses TMDB and stored genre metadata, falls back to popular picks when the history is sparse, and does not yet have a real production precision metric.
 - TMDB caching and rate limiting are limited to each warm serverless instance. Global enforcement would need shared state.
 - My usage counters record aggregate successful public views, adds, and recommendation views. They do not count registered users or identify visitors.
-- Browser keyboard, screen-reader, and responsive visual review still need a proper browser pass.
+- Public desktop/mobile rendering, labels, landmarks, visible focus styling,
+  and recommendation explanations were checked in a browser against the
+  current production deployment. A manual admin-session keyboard,
+  screen-reader, modal Escape, and focus-return pass is still open.
 
 ## Privacy and measurement
 

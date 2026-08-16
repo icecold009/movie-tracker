@@ -86,6 +86,21 @@ def test_search_wraps_timeout(monkeypatch):
         tmdb.search_tmdb("Timeout")
 
 
+def test_search_enforces_warm_instance_rate_limit(monkeypatch):
+    response = response_with({"results": []})
+    request = Mock(return_value=response)
+    monkeypatch.setattr(tmdb.requests, "get", request)
+    monkeypatch.setattr(tmdb.time, "monotonic", lambda: 100.0)
+
+    for index in range(tmdb.TMDB_RATE_LIMIT_MAX_REQUESTS):
+        assert tmdb.search_tmdb(f"Title {index}") is None
+
+    with pytest.raises(tmdb.TMDBRateLimitError, match="rate limit"):
+        tmdb.search_tmdb("Title over limit")
+
+    assert request.call_count == tmdb.TMDB_RATE_LIMIT_MAX_REQUESTS
+
+
 def test_search_wraps_non_success_status(monkeypatch):
     response = response_with({}, status_code=503)
     response.raise_for_status.side_effect = requests.HTTPError("503")
@@ -93,6 +108,15 @@ def test_search_wraps_non_success_status(monkeypatch):
 
     with pytest.raises(tmdb.TMDBResponseError, match="returned an error"):
         tmdb.search_tmdb("Unavailable")
+
+
+def test_search_wraps_provider_quota_status(monkeypatch):
+    response = response_with({}, status_code=429)
+    response.raise_for_status.side_effect = requests.HTTPError("429")
+    monkeypatch.setattr(tmdb.requests, "get", Mock(return_value=response))
+
+    with pytest.raises(tmdb.TMDBResponseError, match="rate limit"):
+        tmdb.search_tmdb("Quota")
 
 
 def test_search_wraps_malformed_json(monkeypatch):

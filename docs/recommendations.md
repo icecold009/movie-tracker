@@ -6,13 +6,14 @@ rank an external candidate pool, and measure `precision@k` against later
 held-out entries using the `(tmdb_id, media_type)` identity.
 
 `recommendations.evaluate_holdout()` implements the metric without making a
-network request. A read-only production metadata recheck on 2026-07-27 found
-10 total entries, all watched, but only 1 watched entry with both `tmdb_id` and
-`genre_ids`. That is still insufficient for a meaningful production holdout, so
-no real user-quality precision value is claimed. A synthetic benchmark is not
-production evidence, but it is still useful when the real watchlist is too
-small to support a holdout. The benchmark below uses real TMDB metadata to
-create a deterministic local dataset without writing to Supabase.
+network request. A read-only production metadata recheck on 2026-08-16 found
+10 total entries, all watched, but only 1 entry with complete `tmdb_id`,
+`media_type`, and `genre_ids`. That is still insufficient for a meaningful
+production-derived chronological holdout, so no real user-quality precision
+value is claimed. A synthetic benchmark is not production evidence, but it is
+still useful when the real watchlist is too small to support a holdout. The
+benchmark below uses real TMDB metadata to create a deterministic local dataset
+without writing to Supabase.
 
 ## Synthetic benchmark run
 

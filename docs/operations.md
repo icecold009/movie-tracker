@@ -11,6 +11,15 @@
 4. Record the migration version, verification date, and any provider limitation
    in `BACKLOG.md`.
 
+The 2026-08-16 connector audit first found five remote migration-history rows
+and six tracked migration files, including a timestamp/name mismatch in the
+initial constraint history. The history was normalized to the remote
+`20260726165817_add_entries_constraints` version, and the reviewed
+`20260816060348_lock_down_entries_api_grants` plus
+`20260816090126_align_entries_schema` migrations are applied and verified.
+Migration parity is now resolved; the exact Vercel pooler identity remains a
+separate release gate.
+
 The application must not create or silently alter the schema during startup.
 
 ## Secrets and credential rotation
@@ -40,7 +49,8 @@ tenant before changing application code.
    publishing a branch.
 3. Deploy the reviewed commit to the canonical Vercel target.
 4. Probe `/healthz`, public `/`, `/login`, an anonymous rejected mutation, and a
-   reversible authorized write only when a safe fixture is available.
+   reversible authorized write only when a safe fixture is available. A
+   successful build or Vercel READY state is not route/database evidence.
 5. If a release fails, use the previous Vercel deployment for application
    rollback and apply only reversible, reviewed database changes; never remove
    production rows as part of smoke testing.
