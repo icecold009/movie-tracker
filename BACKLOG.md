@@ -26,26 +26,39 @@ capability and evidence that people actually use it.
 
 ## Current state and known gaps
 
+### Current audit note — 2026-08-16
+
+The canonical Vercel production alias currently serves deployment
+`dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge` from `main` commit
+`38d462dfd102000927a8b9f1d59aa7bc7810142c`. The audit feature branch
+`codex/release-audit-2026-08-16` is local work based on `055aa8e`; its preview
+deployment is not production evidence. The public routes `/healthz`, `/`,
+`/login`, and `/recommendations` returned 200, and anonymous `POST /add`
+returned 302 to `/login`. Authorized mutation, exact encrypted pooler identity,
+migration parity, backup restore, historical credential rotation, and manual
+admin browser review remain open. The older checked-off release items below
+record historical work; they do not override these current gates.
+
 - The Flask application is defined in `api/index.py`; `vercel.json` routes to
   that file and the stale Render `Procfile` has been removed.
-- The README now identifies Vercel as canonical and records the 2026-07-27 live
-  smoke check: `/healthz`, `/`, and `/login` return 200 and anonymous writes
-  redirect to `/login`.
+- The README identifies Vercel as canonical and records the current 2026-08-16
+  public-route and anonymous-write probe, while keeping the older authorized
+  smoke test explicitly historical.
 - The application uses `ADMIN_PASSWORD_HASH` and a Flask signed session. It
   does not currently integrate Supabase Auth.
-- The database layer uses direct `psycopg2` connections. There is no tracked
-  migration establishing RLS policies aligned with the Flask session; the
-  README now makes no RLS claim. Tracked migrations define the `entries` table
-  and validation constraints.
-- The Supabase `movie-tracker` project was restored from inactive status and is
-  now healthy; the current transaction-pooler configuration is working in the
-  Vercel production deployment.
+- The database layer uses direct `psycopg2` connections. RLS is enabled on the
+  current public tables, but no tracked policy aligns row authorization with
+  the Flask session; the README makes no RLS authorization claim. Tracked
+  migrations define the `entries` table and validation constraints.
+- The Supabase `movie-tracker` project is healthy and the current production
+  database-backed routes are working; the exact encrypted transaction-pooler
+  identity still needs a current Connect-settings/Vercel environment check.
 - Schema creation is owned by the tracked migrations; deployments must apply
   them or provision the schema explicitly before serving database-backed
   routes.
-- A pytest suite and CI workflow are tracked. Local `pip check`, compilation,
-  Ruff, and pytest now pass with 41 tests; PR #3 checks also passed across
-  Python 3.10, 3.12, and 3.14.
+- A pytest suite and CI workflow are tracked. The current audit branch passes
+  61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff checks;
+  older 41/47/59-test results remain historical.
 - TMDB requests now have bounded timeout, HTTP/JSON validation, safe error
   handling, five-minute caching, and per-warm-instance rate limiting.
 
@@ -469,6 +482,7 @@ SHAs, URLs, dates, and screenshots over subjective claims.
 | 2026-07-27 | Production smoke and accessibility follow-up | `https://movie-tracker-umber-sigma.vercel.app`; read-only HTTP probes; reversible authenticated fixture; `venv\Scripts\python.exe -m pytest -q` (47 passed); `templates/index.html`; `tests/test_loading_ui.py`; browser availability check | Passed: `/healthz`, `/`, `/login`, and `/recommendations` returned HTTP 200; anonymous `POST /add` returned 302 to `/login`; authenticated add/delete returned 200 for new entry ID 12 and post-delete verification found no marker; modal focus trapping and live rating announcements are covered by 47 local tests. Browser visual, keyboard, and screen-reader verification remains open because no browser surface is available. |
 | 2026-07-27 | Recommender precision recheck | Read-only `database.get_all()` metadata query against production | Still blocked honestly: 10 total entries and 10 watched entries exist, but only 1 watched entry has both `tmdb_id` and `genre_ids`; no precision@k metric is claimed. |
 | 2026-07-27 | Tester feedback and release artifacts | Repository review, GitHub PR comments, and browser availability check | No human tester feedback is present; available comments are Vercel deployment notices only. No verified screenshot or demo recording was captured because no browser surface is available. Both backlog items remain open rather than being fabricated as complete. |
+| 2026-08-16 | Current release audit | Audit branch `codex/release-audit-2026-08-16`; 61 pytest tests, Ruff, compilation, pip check, Node syntax, diff check; Vercel deployment `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge`; Supabase project `vgirgwxehcsxloclanhf`; live route probes; browser desktop/mobile inspection | Local and public-route gates passed. Current blockers: tracked/remote migration parity, exact encrypted pooler identity, authorized mutation smoke, backup restore, historical credential rotation, real precision@k evaluation, tester feedback, and manual admin accessibility review. |
 
 ## Decisions
 

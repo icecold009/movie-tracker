@@ -27,7 +27,9 @@ stores the entry through the shared database transaction context. The key is
 never sent to the browser. Recommendation requests read stored entries, fetch
 cached popular movie and TV candidates from TMDB discovery, rank them with the
 content-based baseline in `recommendations.py`, and render escaped Jinja
-output.
+output. A current production read found only one entry with complete
+recommendation metadata, so a real chronological precision@k evaluation
+remains deferred.
 
 ## Trust boundaries
 
@@ -37,9 +39,10 @@ output.
 - The Flask/Vercel runtime is the application trust boundary. It holds the
   session signing key, password hash, database URL, and TMDB API key, and is
   responsible for authorization and safe error messages.
-- PostgreSQL is reached with a direct `psycopg2` connection over TLS. The
-  current design does not claim Supabase RLS because the database identity is
-  the server connection rather than the Flask session. Transactions commit on
+- PostgreSQL is reached with a direct `psycopg2` connection over TLS. RLS is
+  enabled on the current public tables, but the `entries` policy is public read
+  only and no policy maps the Flask session to a database identity. The current
+  design therefore does not claim RLS authorization. Transactions commit on
   success and roll back and close resources on failure.
 - TMDB is an external dependency. Requests have bounded timeouts, response
   validation, server-side key use, five-minute warm-instance caching, and

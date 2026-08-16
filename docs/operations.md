@@ -11,6 +11,11 @@
 4. Record the migration version, verification date, and any provider limitation
    in `BACKLOG.md`.
 
+The 2026-08-16 audit found four remote migration-history rows but five tracked
+migration files, including a timestamp/name mismatch in the initial constraint
+history. Treat migration parity as a release blocker until the difference is
+reconciled through the reviewed Supabase workflow.
+
 The application must not create or silently alter the schema during startup.
 
 ## Secrets and credential rotation
@@ -40,7 +45,8 @@ tenant before changing application code.
    publishing a branch.
 3. Deploy the reviewed commit to the canonical Vercel target.
 4. Probe `/healthz`, public `/`, `/login`, an anonymous rejected mutation, and a
-   reversible authorized write only when a safe fixture is available.
+   reversible authorized write only when a safe fixture is available. A
+   successful build or Vercel READY state is not route/database evidence.
 5. If a release fails, use the previous Vercel deployment for application
    rollback and apply only reversible, reviewed database changes; never remove
    production rows as part of smoke testing.

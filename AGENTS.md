@@ -54,10 +54,11 @@ Current application locations:
   session. It does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections with a five-second
   connect timeout. Vercel is intended to use the Supabase Shared Pooler
-  transaction-mode URL; Supabase RLS is documented but not yet reproducibly
-  established by a tracked migration or proven to align with the Flask
-  session. Database operations use a shared transaction context that commits
-  on success and rolls back/closes resources on failure.
+  transaction-mode URL. The current database has RLS enabled on public tables,
+  but no tracked migration or tested policy aligns row authorization with the
+  Flask session, so do not claim Flask-session-backed RLS. Database operations
+  use a shared transaction context that commits on success and rolls
+  back/closes resources on failure.
 - Database failures are converted to a safe `DatabaseError`; public reads use
   HTTP 503 with an empty-state message, while authorized mutations flash a
   retryable error without exposing driver details.
@@ -68,14 +69,19 @@ Current application locations:
   `supabase/migrations/`; the obsolete `init_db()` bootstrap was removed so it
   cannot create a weaker competing `entries` schema. Do not assume a fresh
   deployment has applied the migrations.
-- The Supabase `movie-tracker` project was restored from inactive status and its
-  database is healthy, but the shared pooler currently rejects the
-  `postgres.<project-ref>` tenant used by Vercel. Treat this as a provider-side
-  connection configuration blocker until the current Connect-string identity is
-  verified.
-- A pytest suite and CI workflow are tracked. New behavior should include tests,
-  but do not describe runtime execution as verified until the local interpreter
-  or CI provides current evidence.
+- The Supabase `movie-tracker` project is currently `ACTIVE_HEALTHY`, and the
+  canonical Vercel routes are database-backed and returning 200. A current
+  project SQL check reports the `postgres` database role on port 5432; that is
+  not proof of the encrypted Vercel `DATABASE_URL` pooler identity. Re-read the
+  current Connect string and reconcile it with Vercel before claiming the
+  connection configuration is fully verified.
+- The current remote migration history contains four rows, while the tracked
+  branch contains five migration files and uses a different timestamp for the
+  initial/constraint history. Do not mark migration parity complete until that
+  mismatch is explicitly reconciled.
+- A pytest suite and CI workflow are tracked. The 2026-08-16 audit branch run
+  passed 61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff
+  checks; keep later claims tied to a current branch and commit.
 
 ## Environment and security
 
