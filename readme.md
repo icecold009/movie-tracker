@@ -74,6 +74,17 @@ and performance advisors are clean. The admin password is stored as
 probe is recorded in
 [`docs/verification.md`](docs/verification.md).
 
+## Production visuals
+
+These snapshots were captured from the canonical Vercel deployment on
+**2026-08-16**. They show the public watchlist at the recorded production
+commit `38d462dfd102000927a8b9f1d59aa7bc7810142c`; they are visual evidence of
+the deployed UI, not evidence that the local audit branch has been deployed.
+
+![Movie Tracker desktop watchlist](docs/assets/production/production-desktop-2026-08-16.png)
+
+![Movie Tracker mobile watchlist at 390px](docs/assets/production/production-mobile-390x844-2026-08-16.png)
+
 ## Current limits
 
 - This is a single-admin Flask session, not a multi-user account system. I have not integrated Supabase Auth or RLS.
