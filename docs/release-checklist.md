@@ -37,6 +37,7 @@ Current local verification for branch `codex/release-audit-2026-08-16` on
 **2026-08-16**: 61 pytest tests, Ruff, compilation, pip dependency validation,
 JavaScript syntax checks, and `git diff --check` pass. These are local checks
 for the audit branch. The exact production deployment is `main` commit
-`38d462dfd102000927a8b9f1d59aa7bc7810142c`, while this branch is only a preview
-at `055aa8e8857f529f55a8e7f4a88929f2786168ac`; production evidence must not be
-treated as evidence that this branch has been deployed.
+`38d462dfd102000927a8b9f1d59aa7bc7810142c`. This audit branch is local-only;
+`055aa8e8857f529f55a8e7f4a88929f2786168ac` is its pre-audit baseline, not a
+deployment of the current branch. Production evidence must not be treated as
+evidence that this branch has been deployed.

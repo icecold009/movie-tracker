@@ -31,8 +31,9 @@ capability and evidence that people actually use it.
 The canonical Vercel production alias currently serves deployment
 `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge` from `main` commit
 `38d462dfd102000927a8b9f1d59aa7bc7810142c`. The audit feature branch
-`codex/release-audit-2026-08-16` is local work based on `055aa8e`; its preview
-deployment is not production evidence. The public routes `/healthz`, `/`,
+`codex/release-audit-2026-08-16` is local-only work based on `055aa8e` and has
+not been deployed. The older preview deployment for that baseline is not
+production evidence. The public routes `/healthz`, `/`,
 `/login`, and `/recommendations` returned 200, and anonymous `POST /add`
 returned 302 to `/login`. Authorized mutation, exact encrypted pooler identity,
 migration parity, backup restore, historical credential rotation, and manual

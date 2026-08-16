@@ -7,8 +7,9 @@
 - Canonical production commit: `38d462dfd102000927a8b9f1d59aa7bc7810142c`
   from `main`.
 - Audit branch: `codex/release-audit-2026-08-16`; local HEAD before the audit
-  edits was `055aa8e8857f529f55a8e7f4a88929f2786168ac`. Its Vercel deployment
-  is a preview, not the canonical production deployment.
+  edits was `055aa8e8857f529f55a8e7f4a88929f2786168ac`. This branch is
+  local-only and has not been deployed. The earlier preview deployment for
+  the baseline branch is not the canonical production deployment.
 - `/healthz`: HTTP 200 with `{"status":"ok"}`.
 - `/`: HTTP 200 and rendered 10 database-backed entries.
 - `/login`: HTTP 200; the live response cookie was `Secure; HttpOnly;
