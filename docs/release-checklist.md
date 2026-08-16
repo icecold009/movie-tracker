@@ -11,8 +11,14 @@ the result in `BACKLOG.md` or `docs/verification.md`.
       scanner is installed locally.
 - [ ] Supabase migrations are applied with parity to the tracked files and the
       encrypted deployed connection identity is verified from current Connect
-      settings. The project is healthy, but remote history has four rows while
-      this branch tracks five migration files.
+      settings. The project is healthy, and the new
+      `20260816060348_lock_down_entries_api_grants` migration is applied; remote
+      history has five rows while this branch tracks six files because the
+      initial/constraint timestamp mismatch remains unresolved.
+- [x] Supabase security advisors are clean after revoking `SELECT` on
+      `public.entries` from `PUBLIC`, `anon`, and `authenticated`. The Flask
+      application uses its trusted direct PostgreSQL connection and does not
+      depend on Supabase REST or GraphQL access.
 - [x] The canonical Vercel deployment currently returns 200 for `/healthz`,
       `/`, `/login`, and `/recommendations`; anonymous `POST /add` returns 302
       to `/login`.

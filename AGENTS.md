@@ -74,11 +74,15 @@ Current application locations:
   project SQL check reports the `postgres` database role on port 5432; that is
   not proof of the encrypted Vercel `DATABASE_URL` pooler identity. Re-read the
   current Connect string and reconcile it with Vercel before claiming the
-  connection configuration is fully verified.
-- The current remote migration history contains four rows, while the tracked
-  branch contains five migration files and uses a different timestamp for the
+  connection configuration is fully verified. The Flask app does not use
+  Supabase REST or GraphQL; production migration `20260816060348` revokes
+  `SELECT` on `public.entries` from `PUBLIC`, `anon`, and `authenticated` while
+  retaining the trusted `postgres` path.
+- The current remote migration history contains five rows, while the tracked
+  branch contains six migration files and uses a different timestamp for the
   initial/constraint history. Do not mark migration parity complete until that
-  mismatch is explicitly reconciled.
+  mismatch is explicitly reconciled. Supabase security advisors are clean
+  after the grant-revocation migration.
 - A pytest suite and CI workflow are tracked. The 2026-08-16 audit branch run
   passed 61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff
   checks; keep later claims tied to a current branch and commit.

@@ -11,10 +11,12 @@
 4. Record the migration version, verification date, and any provider limitation
    in `BACKLOG.md`.
 
-The 2026-08-16 audit found four remote migration-history rows but five tracked
-migration files, including a timestamp/name mismatch in the initial constraint
-history. Treat migration parity as a release blocker until the difference is
-reconciled through the reviewed Supabase workflow.
+The 2026-08-16 connector audit found five remote migration-history rows and six
+tracked migration files, including a timestamp/name mismatch in the initial
+constraint history. The reviewed `20260816060348_lock_down_entries_api_grants`
+migration is applied and verified. Treat the remaining migration parity and
+pooler-identity differences as release blockers until reconciled through the
+reviewed Supabase workflow.
 
 The application must not create or silently alter the schema during startup.
 

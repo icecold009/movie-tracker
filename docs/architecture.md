@@ -42,8 +42,11 @@ remains deferred.
 - PostgreSQL is reached with a direct `psycopg2` connection over TLS. RLS is
   enabled on the current public tables, but the `entries` policy is public read
   only and no policy maps the Flask session to a database identity. The current
-  design therefore does not claim RLS authorization. Transactions commit on
-  success and roll back and close resources on failure.
+  design therefore does not claim RLS authorization. The app does not use
+  Supabase REST or GraphQL; production grants for `PUBLIC`, `anon`, and
+  `authenticated` cannot SELECT `public.entries`, while the trusted server
+  connection remains able to read and write it. Transactions commit on success
+  and roll back and close resources on failure.
 - TMDB is an external dependency. Requests have bounded timeouts, response
   validation, server-side key use, five-minute warm-instance caching, and
   per-warm-instance rate limiting. TMDB data and availability are not treated
