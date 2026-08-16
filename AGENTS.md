@@ -1,3 +1,18 @@
+# Note on how this project was built
+
+I built a substantial part of this project myself, including the application
+structure, data-model decisions, deterministic content-based recommender, and
+the password-hash plus signed-session authentication model. I also use an AI
+coding agent for a significant share of implementation, but I set the rules
+below and review the resulting diffs, tests, and stated limitations myself.
+
+I wrote these rules after deciding that generated code must never be treated as
+verified without current evidence. That decision taught me to separate local
+tests, CI, browser checks, and live deployment claims, and to keep provider and
+security boundaries explicit. The `recommendations.py` rewrite in commit
+`a679899` was an AI-assisted verification and restructuring pass for the parts
+I was least sure I understood; it was not an independent no-AI exercise.
+
 # Repository guidance
 
 ## Project
@@ -39,10 +54,11 @@ Current application locations:
   session. It does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections with a five-second
   connect timeout. Vercel is intended to use the Supabase Shared Pooler
-  transaction-mode URL; Supabase RLS is documented but not yet reproducibly
-  established by a tracked migration or proven to align with the Flask
-  session. Database operations use a shared transaction context that commits
-  on success and rolls back/closes resources on failure.
+  transaction-mode URL. The current database has RLS enabled on public tables,
+  but no tracked migration or tested policy aligns row authorization with the
+  Flask session, so do not claim Flask-session-backed RLS. Database operations
+  use a shared transaction context that commits on success and rolls
+  back/closes resources on failure.
 - Database failures are converted to a safe `DatabaseError`; public reads use
   HTTP 503 with an empty-state message, while authorized mutations flash a
   retryable error without exposing driver details.
@@ -53,14 +69,23 @@ Current application locations:
   `supabase/migrations/`; the obsolete `init_db()` bootstrap was removed so it
   cannot create a weaker competing `entries` schema. Do not assume a fresh
   deployment has applied the migrations.
-- The Supabase `movie-tracker` project was restored from inactive status and its
-  database is healthy, but the shared pooler currently rejects the
-  `postgres.<project-ref>` tenant used by Vercel. Treat this as a provider-side
-  connection configuration blocker until the current Connect-string identity is
-  verified.
-- A pytest suite and CI workflow are tracked. New behavior should include tests,
-  but do not describe runtime execution as verified until the local interpreter
-  or CI provides current evidence.
+- The Supabase `movie-tracker` project is currently `ACTIVE_HEALTHY`, and the
+  canonical Vercel routes are database-backed and returning 200. A current
+  project SQL check reports the `postgres` database role on port 5432; that is
+  not proof of the encrypted Vercel `DATABASE_URL` pooler identity. Re-read the
+  current Connect string and reconcile it with Vercel before claiming the
+  connection configuration is fully verified. The Flask app does not use
+  Supabase REST or GraphQL; production migration `20260816060348` revokes
+  `SELECT` on `public.entries` from `PUBLIC`, `anon`, and `authenticated` while
+  retaining the trusted `postgres` path.
+- The current remote migration history contains six rows and the tracked branch
+  contains six matching migration versions. The live schema was normalized by
+  `20260816090126_align_entries_schema`; Supabase security and performance
+  advisors are clean. Keep the exact encrypted Vercel pooler identity as a
+  separate verification gate.
+- A pytest suite and CI workflow are tracked. The 2026-08-16 audit branch run
+  passed 61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff
+  checks; keep later claims tied to a current branch and commit.
 
 ## Environment and security
 
