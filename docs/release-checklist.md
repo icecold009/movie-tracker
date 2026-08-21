@@ -4,6 +4,9 @@ Run this checklist against the exact commit intended for deployment and record
 the result in `BACKLOG.md` or `docs/verification.md`.
 
 - [x] `git diff --check` is clean.
+- [ ] Run `python scripts/validate_release.py --manifest <manifest> --require-current-commit`
+      against the exact source state intended for deployment. This is a local
+      provenance check and does not replace Vercel, Supabase, or browser gates.
 - [x] The current audit branch passes 61 pytest tests, followed by Ruff,
       `compileall`, `pip check`, JavaScript syntax checks, and `git diff --check`.
 - [x] Dependency pins and a tracked-file secret scan are reviewed. The scan
