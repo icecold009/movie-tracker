@@ -194,6 +194,18 @@
                 <div class="card-topline"><span>{{ entry.entry_type }}</span><span class="card-arrow">↗</span></div>
                 <h3>{{ entry.title }}</h3>
 
+                <div class="metadata-indicator metadata-{{ (entry.metadata_state or 'Missing') | lower }}">
+                    {% if entry.metadata_state == "TMDB" %}
+                        TMDB metadata
+                    {% elif entry.metadata_state == "Stale" %}
+                        Stale metadata
+                    {% elif entry.metadata_state == "Manual" %}
+                        Manual entry
+                    {% else %}
+                        Metadata missing
+                    {% endif %}
+                </div>
+
                 {% if entry.status == "Watched" %}
                     <span class="badge badge-watched">Watched</span>
                 {% else %}
@@ -219,6 +231,7 @@
                             data-detail-rating="{{ entry.rating }}"
                             data-detail-added="{{ entry.added_on or 'Unknown' }}"
                             data-detail-source="{{ entry.metadata_source or 'Manual' }}"
+                            data-detail-metadata-state="{{ entry.metadata_state or 'Missing' }}"
                             data-detail-release="{{ entry.release_date or 'Unknown' }}"
                             data-detail-synopsis="{{ entry.synopsis or '' }}"
                             data-detail-poster="{{ entry.poster_url or '' }}">Details</button>
@@ -291,7 +304,7 @@
                     <div><dt>Rating</dt><dd id="detail-rating">—</dd></div>
                     <div><dt>Release</dt><dd id="detail-release">Unknown</dd></div>
                     <div><dt>Added</dt><dd id="detail-added">Unknown</dd></div>
-                    <div><dt>Metadata</dt><dd id="detail-source">Manual</dd></div>
+                    <div><dt>Metadata</dt><dd><span id="detail-source">Manual</span><span class="detail-metadata-state" id="detail-metadata-state">Missing</span></dd></div>
                 </dl>
             </div>
         </div>

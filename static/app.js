@@ -343,6 +343,7 @@
                 document.getElementById("detail-release").textContent = button.dataset.detailRelease;
                 document.getElementById("detail-added").textContent = button.dataset.detailAdded;
                 document.getElementById("detail-source").textContent = button.dataset.detailSource;
+                document.getElementById("detail-metadata-state").textContent = button.dataset.detailMetadataState;
                 document.getElementById("detail-synopsis").textContent = button.dataset.detailSynopsis || "No synopsis supplied.";
                 poster.replaceChildren();
                 if (button.dataset.detailPoster) {

@@ -4,7 +4,7 @@ import os
 import secrets
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from flask import Flask, abort, jsonify, render_template, request, redirect, url_for, session, flash
@@ -53,6 +53,7 @@ PENDING_ADD_SESSION_KEY = "_pending_add"
 ADD_RECOVERY_SESSION_KEY = "_add_recovery"
 UNDO_ENTRY_SESSION_KEY = "_undo_entry"
 UNDO_TTL_SECONDS = 30
+METADATA_STALE_AFTER_DAYS = 180
 
 
 def _record_usage_event(event_name):
@@ -191,6 +192,37 @@ def _get_undo_entry():
     return undo.get("entry")
 
 
+def _metadata_state(entry):
+    """Return a cautious display state for metadata provenance and freshness."""
+    has_metadata = any(
+        entry.get(key)
+        for key in ("poster_url", "synopsis", "release_date", "tmdb_id")
+    )
+    if not has_metadata:
+        return "Missing"
+
+    updated_at = entry.get("metadata_updated_at")
+    if updated_at:
+        if isinstance(updated_at, datetime):
+            parsed = updated_at
+        else:
+            try:
+                parsed = datetime.fromisoformat(str(updated_at).replace("Z", "+00:00"))
+            except ValueError:
+                parsed = None
+        if parsed is not None:
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) - parsed > timedelta(days=METADATA_STALE_AFTER_DAYS):
+                return "Stale"
+
+    return "TMDB" if entry.get("metadata_source") == "TMDB" else "Manual"
+
+
+def _annotate_metadata_state(entries):
+    return [{**entry, "metadata_state": _metadata_state(entry)} for entry in entries]
+
+
 @app.route("/healthz")
 def healthz():
     return jsonify(status="ok")
@@ -199,7 +231,7 @@ def healthz():
 @app.route("/recommendations")
 def recommendations():
     try:
-        entries = get_all()
+        entries = _annotate_metadata_state(get_all())
     except DatabaseError as error:
         _record_usage_event("recommendation_view")
         return render_template(
@@ -233,7 +265,7 @@ def recommendations():
 @app.route("/")
 def index():
     try:
-        entries = get_all()
+        entries = _annotate_metadata_state(get_all())
     except DatabaseError as error:
         flash(str(error))
         return render_template(
