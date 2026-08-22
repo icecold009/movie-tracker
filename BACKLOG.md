@@ -55,7 +55,8 @@ capability and evidence that people actually use it.
       controls. Counts and empty states update without navigation or scroll
       resets.
 - [x] Add a public detail modal with synopsis, rating, status, added date,
-      release date, metadata source, and branded poster fallback.
+      release date, metadata source/freshness state, and branded poster
+      fallback.
 - [x] Preserve add-form values after provider/database failure; expose TMDB
       search feedback, retry/manual-save paths, exact recovery messaging, and
       duplicate-submit loading protection.
@@ -67,7 +68,7 @@ capability and evidence that people actually use it.
 - [x] Add additive migration
       `20260822000000_add_display_metadata.sql` for synopsis, release date,
       metadata source, and metadata update time.
-- [x] Local evidence: 58 pytest tests, Ruff, Python compilation, Node syntax,
+- [x] Local evidence: 60 pytest tests, Ruff, Python compilation, Node syntax,
       diff check, 1280x720 browser captures, 390x844 no-overflow check, in-place
       filtering, detail Escape/focus return, authenticated edit, and delete
       confirmation. Browser mutation submission was intentionally not performed.
