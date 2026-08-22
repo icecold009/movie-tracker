@@ -32,6 +32,8 @@ def test_search_success_filters_people_and_builds_poster_url(monkeypatch):
                     "title": "Example Movie",
                     "poster_path": "/example.jpg",
                     "genre_ids": [28, "invalid"],
+                    "overview": "A short synopsis.",
+                    "release_date": "2026-01-02",
                 },
             ]
         }
@@ -47,6 +49,8 @@ def test_search_success_filters_people_and_builds_poster_url(monkeypatch):
         "media_type": "movie",
         "tmdb_id": 123,
         "genre_ids": [28],
+        "synopsis": "A short synopsis.",
+        "release_date": "2026-01-02",
     }
     request.assert_called_once()
     assert request.call_args.kwargs["timeout"] == tmdb.TMDB_REQUEST_TIMEOUT_SECONDS
@@ -100,6 +104,8 @@ def test_discover_normalizes_movie_candidates_and_genre_filter(monkeypatch):
                     "title": "Popular Movie",
                     "poster_path": "/popular.jpg",
                     "genre_ids": [28, "bad"],
+                    "overview": "Popular synopsis.",
+                    "release_date": "2025-04-05",
                 },
                 {"id": "invalid", "title": "Ignored"},
                 {"id": 322, "name": "TV-shaped result", "genre_ids": []},
@@ -118,6 +124,8 @@ def test_discover_normalizes_movie_candidates_and_genre_filter(monkeypatch):
             "media_type": "movie",
             "genre_ids": [28],
             "poster_url": "https://image.tmdb.org/t/p/w500/popular.jpg",
+            "synopsis": "Popular synopsis.",
+            "release_date": "2025-04-05",
         },
         {
             "title": "TV-shaped result",
@@ -125,6 +133,8 @@ def test_discover_normalizes_movie_candidates_and_genre_filter(monkeypatch):
             "media_type": "movie",
             "genre_ids": [],
             "poster_url": "",
+            "synopsis": "",
+            "release_date": None,
         },
     ]
     assert request.call_args.kwargs["params"]["with_genres"] == "12|28"

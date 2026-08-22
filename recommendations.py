@@ -121,6 +121,24 @@ def explain_recommendation(candidate, source_entries):
     return f"Recommended because it shares {shared_count} {noun} with {source_title}."
 
 
+def reason_tags(candidate, source_entries):
+    """Return restrained labels describing the evidence behind a result."""
+    candidate_genres = {
+        token for token in extract_features(candidate) if token.startswith("genre:")
+    }
+    has_genre_overlap = any(
+        candidate_genres & {
+            token for token in extract_features(entry) if token.startswith("genre:")
+        }
+        for entry in source_entries
+    )
+    if has_genre_overlap:
+        return ["Genre affinity", "Watch history"]
+    if source_entries:
+        return ["Discovery signal"]
+    return ["Discovery signal", "Fallback path"]
+
+
 def build_recommendations(entries, candidates, limit=10):
     """Build scored, unseen, explained recommendations from feature data."""
     source_entries = [entry for entry in entries if extract_features(entry)]
@@ -134,6 +152,7 @@ def build_recommendations(entries, candidates, limit=10):
             {
                 **candidate,
                 "reason": "Recommended as a popular pick while your watchlist profile is still sparse.",
+                "reason_tags": ["Discovery signal", "Fallback path"],
             }
             for candidate in unseen[:limit]
         ]
@@ -145,6 +164,7 @@ def build_recommendations(entries, candidates, limit=10):
             continue
         recommendation = dict(candidate)
         recommendation["reason"] = explain_recommendation(candidate, source_entries)
+        recommendation["reason_tags"] = reason_tags(candidate, source_entries)
         recommendations.append(recommendation)
     return recommendations[:limit]
 

@@ -73,14 +73,19 @@ def add_entry(
     tmdb_id=None,
     tmdb_media_type=None,
     genre_ids=None,
+    synopsis="",
+    release_date=None,
+    metadata_source="Manual",
+    metadata_updated_at=None,
 ):
     with db_transaction() as cur:
         cur.execute(
             """
             INSERT INTO entries (
                 title, entry_type, status, rating, poster_url, added_on,
-                tmdb_id, tmdb_media_type, genre_ids
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                tmdb_id, tmdb_media_type, genre_ids, synopsis, release_date,
+                metadata_source, metadata_updated_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 title,
@@ -92,6 +97,10 @@ def add_entry(
                 tmdb_id,
                 tmdb_media_type,
                 genre_ids or [],
+                synopsis or "",
+                release_date,
+                metadata_source or "Manual",
+                metadata_updated_at,
             )
         )
 
@@ -117,6 +126,41 @@ def get_all():
         cur.execute("SELECT * FROM entries ORDER BY id DESC")
         rows = cur.fetchall()
     return [dict(r) for r in rows]
+
+
+def get_entry(entry_id):
+    with db_transaction(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT * FROM entries WHERE id = %s", (entry_id,))
+        row = cur.fetchone()
+    return dict(row) if row else None
+
+
+def restore_entry(entry):
+    with db_transaction() as cur:
+        cur.execute(
+            """
+            INSERT INTO entries (
+                title, entry_type, status, rating, poster_url, added_on,
+                tmdb_id, tmdb_media_type, genre_ids, synopsis, release_date,
+                metadata_source, metadata_updated_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                entry.get("title", ""),
+                entry.get("entry_type", "Movie"),
+                entry.get("status", "Want to Watch"),
+                entry.get("rating", 7),
+                entry.get("poster_url", ""),
+                entry.get("added_on", str(datetime.date.today())),
+                entry.get("tmdb_id"),
+                entry.get("tmdb_media_type"),
+                entry.get("genre_ids") or [],
+                entry.get("synopsis", ""),
+                entry.get("release_date"),
+                entry.get("metadata_source", "Manual"),
+                entry.get("metadata_updated_at"),
+            ),
+        )
 
 def update_entry(entry_id, status, rating):
     with db_transaction() as cur:

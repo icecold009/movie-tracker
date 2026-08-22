@@ -9,7 +9,7 @@ def test_recommendations_route_renders_empty_state(app, monkeypatch):
     response = app.test_client().get("/recommendations")
 
     assert response.status_code == 200
-    assert b"Recommendations are not available yet" in response.data
+    assert b"No recommendation yet" in response.data
 
 
 def test_recommendations_route_renders_results(app, monkeypatch):
@@ -37,6 +37,7 @@ def test_recommendations_route_renders_results(app, monkeypatch):
     assert response.status_code == 200
     assert b"New" in response.data
     assert b"shares 1 genre with Known" in response.data
+    assert b"Genre affinity" in response.data
 
 
 def test_recommendations_route_surfaces_tmdb_errors(app, monkeypatch):

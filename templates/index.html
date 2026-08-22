@@ -62,46 +62,130 @@
         </div>
     </section>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="flash-error" role="alert">{{ message }}</div>
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}" role="{{ 'status' if category == 'success' else 'alert' }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
+    {% if undo_entry and logged_in %}
+    <div class="recovery-banner" role="status">
+        <span>Recently deleted: <strong>{{ undo_entry.title }}</strong></span>
+        <form method="POST" action="/undo" data-loading-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="recovery-btn" data-loading-label="Restoring...">Undo delete</button>
+        </form>
+    </div>
+    {% endif %}
+
     {% if logged_in %}
-    <form method="POST" action="/add" class="add-form" data-loading-form data-reveal>
+    <form id="add-form" method="POST" action="/add" class="add-form" data-loading-form data-reveal>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label class="sr-only" for="title">Movie or show title</label>
-        <input type="text" id="title" name="title" placeholder="Search movie or show title..." maxlength="200" required>
-        <label class="sr-only" for="entry-type">Entry type</label>
+        <div class="form-field form-field-title">
+            <label class="form-label sr-only" for="title">Movie or show title</label>
+            <input type="text" id="title" name="title" value="{{ pending_add.get('title', '') }}" placeholder="Search movie or show title..." maxlength="200" autocomplete="off" required>
+            <div id="title-search-feedback" class="search-feedback" role="status" aria-live="polite" hidden></div>
+            <div id="title-search-results" class="search-results" hidden></div>
+        </div>
+        <div class="form-field">
+        <label class="form-label sr-only" for="entry-type">Entry type</label>
         <select id="entry-type" name="entry_type">
-            <option value="Movie">Movie</option>
-            <option value="TV Show">TV Show</option>
+            <option value="Movie"{% if pending_add.get('entry_type', 'Movie') == 'Movie' %} selected{% endif %}>Movie</option>
+            <option value="TV Show"{% if pending_add.get('entry_type') == 'TV Show' %} selected{% endif %}>TV Show</option>
         </select>
-        <label class="sr-only" for="status">Watch status</label>
+        </div>
+        <div class="form-field">
+        <label class="form-label sr-only" for="status">Watch status</label>
         <select id="status" name="status">
-            <option value="Watched">Watched</option>
-            <option value="Want to Watch">Want to Watch</option>
+            <option value="Watched"{% if pending_add.get('status', 'Watched') == 'Watched' %} selected{% endif %}>Watched</option>
+            <option value="Want to Watch"{% if pending_add.get('status') == 'Want to Watch' %} selected{% endif %}>Want to Watch</option>
         </select>
+        </div>
         <div class="rating-group">
             <label for="rating">Rating</label>
-            <input type="range" name="rating" id="rating" min="1" max="10" step="1" value="7">
-            <span><span id="rating-val" aria-live="polite">7</span>/10</span>
+            <input type="range" name="rating" id="rating" min="1" max="10" step="1" value="{{ pending_add.get('rating', 7) }}">
+            <span><span id="rating-val" aria-live="polite">{{ pending_add.get('rating', 7) }}</span>/10</span>
         </div>
-        <button type="submit" class="add-btn">+ Add</button>
+        <div class="add-actions">
+            <button type="submit" name="lookup_mode" value="tmdb" class="add-btn" data-loading-label="Adding...">+ Add title</button>
+            <button type="submit" name="lookup_mode" value="manual" class="manual-add-btn" data-loading-label="Saving...">Save manually</button>
+        </div>
     </form>
+    {% if add_recovery %}
+    <div class="add-recovery" role="alert">
+        <div>
+            <strong>{{ 'Metadata lookup failed' if add_recovery.kind == 'provider' else 'Save failed' }}</strong>
+            <p>{{ add_recovery.message }}</p>
+        </div>
+        <span>Nothing was discarded. Retry the lookup or use “Save manually” to keep the title without TMDB metadata.</span>
+    </div>
     {% endif %}
+    {% endif %}
+
+    <section class="browse-toolbar" aria-labelledby="browse-title" data-reveal>
+        <div class="browse-toolbar-heading">
+            <div>
+                <p class="eyebrow"><span class="status-dot status-dot-accent"></span> Browse archive</p>
+                <h2 id="browse-title">Find your next rewatch.</h2>
+            </div>
+            <button type="button" class="filter-reset" id="filter-reset">Reset filters</button>
+        </div>
+        <div class="filter-grid" role="group" aria-label="Watchlist filters">
+            <label for="filter-type">Type
+                <select id="filter-type" data-filter="type">
+                    <option value="all">All types</option>
+                    <option value="Movie">Movies</option>
+                    <option value="TV Show">TV shows</option>
+                </select>
+            </label>
+            <label for="filter-status">Status
+                <select id="filter-status" data-filter="status">
+                    <option value="all">All statuses</option>
+                    <option value="Watched">Watched</option>
+                    <option value="Want to Watch">Want to watch</option>
+                </select>
+            </label>
+            <label for="filter-rating">Rating
+                <select id="filter-rating" data-filter="rating">
+                    <option value="all">Any rating</option>
+                    <option value="8">8–10</option>
+                    <option value="6">6–10</option>
+                    <option value="4">4–10</option>
+                </select>
+            </label>
+            <label for="sort-library">Order
+                <select id="sort-library" data-filter="sort">
+                    <option value="added-desc">Recently added</option>
+                    <option value="added-asc">Oldest added</option>
+                    <option value="title-asc">Title A–Z</option>
+                    <option value="title-desc">Title Z–A</option>
+                    <option value="rating-desc">Rating high–low</option>
+                    <option value="rating-asc">Rating low–high</option>
+                </select>
+            </label>
+        </div>
+        <p class="filter-summary" id="filter-summary" aria-live="polite"></p>
+    </section>
 
     {% macro render_card(entry) %}
         {% set rc = 'rating-red' if entry.rating <= 3 else 'rating-orange' if entry.rating <= 5 else 'rating-yellow' if entry.rating <= 7 else 'rating-lightgreen' if entry.rating <= 9 else 'rating-green' %}
-        <article class="card{% if entry.rating == 10 %} card-perfect{% endif %}" data-reveal data-pointer-glow>
+        <article class="card{% if entry.rating == 10 %} card-perfect{% endif %}"
+                 data-entry-card
+                 data-entry-type="{{ entry.entry_type }}"
+                 data-entry-status="{{ entry.status }}"
+                 data-entry-rating="{{ entry.rating }}"
+                 data-entry-added="{{ entry.added_on or '' }}"
+                 data-entry-title="{{ entry.title }}"
+                 data-reveal data-pointer-glow>
             <div class="card-media">
                 {% if entry.poster_url %}
                     <img src="{{ entry.poster_url }}" alt="{{ entry.title }}" loading="lazy">
+                    <div class="poster-placeholder" hidden aria-hidden="true"><span class="poster-mark">SW</span><span>Artwork unavailable</span></div>
                 {% else %}
-                    <div class="poster-placeholder">No Image</div>
+                    <img src="" alt="" hidden>
+                    <div class="poster-placeholder"><span class="poster-mark">SW</span><span>Artwork unavailable</span></div>
                 {% endif %}
                 <span class="media-index" aria-hidden="true">{{ "%02d" | format(entry.id) }}</span>
             </div>
@@ -127,39 +211,48 @@
                     <div class="rating-fill {{ rc }}" data-width="{{ entry.rating * 10 }}" style="width: {{ entry.rating * 10 }}%"></div>
                 </div>
 
-                {% if logged_in %}
                 <div class="card-actions">
+                    <button type="button" class="detail-btn" data-detail-trigger
+                            data-detail-title="{{ entry.title }}"
+                            data-detail-type="{{ entry.entry_type }}"
+                            data-detail-status="{{ entry.status }}"
+                            data-detail-rating="{{ entry.rating }}"
+                            data-detail-added="{{ entry.added_on or 'Unknown' }}"
+                            data-detail-source="{{ entry.metadata_source or 'Manual' }}"
+                            data-detail-release="{{ entry.release_date or 'Unknown' }}"
+                            data-detail-synopsis="{{ entry.synopsis or '' }}"
+                            data-detail-poster="{{ entry.poster_url or '' }}">Details</button>
+                {% if logged_in %}
                     <button type="button" class="edit-btn"
                             data-id="{{ entry.id }}"
                             data-status="{{ entry.status }}"
-                            data-rating="{{ entry.rating }}">Edit</button>
-                    <form method="POST" action="/delete/{{ entry.id }}" style="margin:0" data-loading-form>
+                            data-rating="{{ entry.rating }}"
+                            data-title="{{ entry.title }}">Edit</button>
+                    <form method="POST" action="/delete/{{ entry.id }}" style="margin:0" data-loading-form data-delete-form data-delete-title="{{ entry.title }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="delete-btn">Delete</button>
+                        <button type="submit" class="delete-btn" data-loading-label="Deleting...">Delete</button>
                     </form>
-                </div>
                 {% endif %}
+                </div>
             </div>
         </article>
     {% endmacro %}
 
-    <h2 class="section-title" data-reveal><span class="section-index">01</span><span class="section-name">Movies</span><span class="section-count">{{ movies | length }} titles</span></h2>
-    {% if movies %}
-        <div class="card-grid" data-reveal>
+    <section class="library-section" data-library-section="Movie" aria-labelledby="movies-title">
+    <h2 id="movies-title" class="section-title" data-reveal><span class="section-index">01</span><span class="section-name">Movies</span><span class="section-count" data-section-count>{{ movies | length }} titles</span></h2>
+        <div class="card-grid" data-card-grid data-reveal{% if not movies %} hidden{% endif %}>
             {% for entry in movies %}{{ render_card(entry) }}{% endfor %}
         </div>
-    {% else %}
-        <p class="empty-section">No movies added yet.</p>
-    {% endif %}
+        <p class="empty-section" data-section-empty{% if movies %} hidden{% endif %}>No movies added yet.</p>
+    </section>
 
-    <h2 class="section-title" data-reveal><span class="section-index">02</span><span class="section-name">TV Shows</span><span class="section-count">{{ shows | length }} titles</span></h2>
-    {% if shows %}
-        <div class="card-grid" data-reveal>
+    <section class="library-section" data-library-section="TV Show" aria-labelledby="shows-title">
+    <h2 id="shows-title" class="section-title" data-reveal><span class="section-index">02</span><span class="section-name">TV Shows</span><span class="section-count" data-section-count>{{ shows | length }} titles</span></h2>
+        <div class="card-grid" data-card-grid data-reveal{% if not shows %} hidden{% endif %}>
             {% for entry in shows %}{{ render_card(entry) }}{% endfor %}
         </div>
-    {% else %}
-        <p class="empty-section">No TV shows added yet.</p>
-    {% endif %}
+        <p class="empty-section" data-section-empty{% if shows %} hidden{% endif %}>No TV shows added yet.</p>
+    </section>
 
 </main>
 
@@ -181,10 +274,52 @@
     </div>
 </footer>
 
+<div id="detail-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="detail-modal-title" tabindex="-1">
+    <div class="modal-card detail-card">
+        <button type="button" class="modal-dismiss" id="detail-close" aria-label="Close title details">×</button>
+        <div class="detail-layout">
+            <div class="detail-poster" id="detail-poster" aria-hidden="true">
+                <span class="poster-mark">SW</span>
+                <span>Artwork unavailable</span>
+            </div>
+            <div class="detail-copy">
+                <p class="detail-kicker" id="detail-type">Title</p>
+                <h2 id="detail-modal-title">Title details</h2>
+                <p class="detail-synopsis" id="detail-synopsis">No synopsis supplied.</p>
+                <dl class="detail-meta">
+                    <div><dt>Status</dt><dd id="detail-status">Unknown</dd></div>
+                    <div><dt>Rating</dt><dd id="detail-rating">—</dd></div>
+                    <div><dt>Release</dt><dd id="detail-release">Unknown</dd></div>
+                    <div><dt>Added</dt><dd id="detail-added">Unknown</dd></div>
+                    <div><dt>Metadata</dt><dd id="detail-source">Manual</dd></div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if logged_in %}
+<div id="delete-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="delete-modal-title" tabindex="-1">
+    <div class="modal-card confirmation-card">
+        <p class="detail-kicker">Destructive action</p>
+        <h2 id="delete-modal-title">Delete this title?</h2>
+        <p class="confirmation-copy">This removes the title from the tracker. You can undo the deletion from the next screen for 30 seconds.</p>
+        <form id="delete-confirm-form" method="POST" action="" data-loading-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-actions">
+                <button type="button" id="delete-cancel">Keep title</button>
+                <button type="submit" class="delete-confirm-btn" data-loading-label="Deleting...">Delete title</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 {% if logged_in %}
 <div id="edit-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="edit-modal-title" tabindex="-1">
     <div class="modal-card">
-        <h2 id="edit-modal-title">Edit Entry</h2>
+        <p class="detail-kicker">Editing title</p>
+        <h2 id="edit-modal-title"><span id="edit-modal-title-text">Edit entry</span></h2>
         <form id="edit-form" method="POST" action="" data-loading-form>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-field">
@@ -209,71 +344,6 @@
     </div>
 </div>
 {% endif %}
-
-<script>
-    // Add form live rating
-    const ratingInput = document.getElementById('rating');
-    if (ratingInput) {
-        ratingInput.addEventListener('input', function () {
-            document.getElementById('rating-val').textContent = this.value;
-        });
-    }
-
-    // Edit modal
-    const modal = document.getElementById('edit-modal');
-    if (modal) {
-        let lastFocusedElement = null;
-        const closeModal = function () {
-            modal.classList.remove('active');
-            modal.setAttribute('aria-hidden', 'true');
-            if (lastFocusedElement) lastFocusedElement.focus();
-        };
-        document.querySelectorAll('.edit-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                lastFocusedElement = this;
-                document.getElementById('edit-form').action = '/edit/' + this.dataset.id;
-                document.getElementById('modal-status').value = this.dataset.status;
-                document.getElementById('modal-rating').value = this.dataset.rating;
-                document.getElementById('modal-rating-val').textContent = this.dataset.rating;
-                modal.classList.add('active');
-                modal.setAttribute('aria-hidden', 'false');
-                document.getElementById('modal-status').focus();
-            });
-        });
-
-        document.getElementById('modal-close').addEventListener('click', function () {
-            closeModal();
-        });
-
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) closeModal();
-        });
-
-        modal.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeModal();
-            if (e.key !== 'Tab') return;
-
-            const focusable = modal.querySelectorAll(
-                'button:not([disabled]), select:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
-            );
-            if (!focusable.length) return;
-
-            const first = focusable[0];
-            const last = focusable[focusable.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first.focus();
-            }
-        });
-
-        document.getElementById('modal-rating').addEventListener('input', function () {
-            document.getElementById('modal-rating-val').textContent = this.value;
-        });
-    }
-</script>
 
 </body>
 </html>

@@ -4,6 +4,7 @@ import os
 import secrets
 import sys
 import time
+from datetime import datetime, timezone
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from flask import Flask, abort, jsonify, render_template, request, redirect, url_for, session, flash
@@ -15,7 +16,9 @@ from database import (
     add_entry,
     delete_entry,
     get_all,
+    get_entry,
     record_usage_event,
+    restore_entry,
     update_entry,
 )
 from observability import log_event
@@ -46,6 +49,10 @@ CSRF_SESSION_KEY = "_csrf_token"
 LOGIN_ATTEMPT_WINDOW_SECONDS = 60
 MAX_LOGIN_ATTEMPTS = 5
 _login_attempts = {}
+PENDING_ADD_SESSION_KEY = "_pending_add"
+ADD_RECOVERY_SESSION_KEY = "_add_recovery"
+UNDO_ENTRY_SESSION_KEY = "_undo_entry"
+UNDO_TTL_SECONDS = 30
 
 
 def _record_usage_event(event_name):
@@ -127,6 +134,63 @@ def _validated_entry_form(include_title=False):
     return (None, errors) if errors else (values, [])
 
 
+def _pending_add_values(values):
+    return {
+        "title": values.get("title", ""),
+        "entry_type": values.get("entry_type", "Movie"),
+        "status": values.get("status", "Watched"),
+        "rating": values.get("rating") or 7,
+    }
+
+
+def _clear_add_recovery():
+    session.pop(PENDING_ADD_SESSION_KEY, None)
+    session.pop(ADD_RECOVERY_SESSION_KEY, None)
+
+
+def _set_add_recovery(values, message, kind="provider"):
+    session[PENDING_ADD_SESSION_KEY] = _pending_add_values(values)
+    session[ADD_RECOVERY_SESSION_KEY] = {"message": message, "kind": kind}
+
+
+def _set_undo_entry(entry):
+    if not entry:
+        session.pop(UNDO_ENTRY_SESSION_KEY, None)
+        return
+    recoverable = {
+        key: entry.get(key)
+        for key in (
+            "title",
+            "entry_type",
+            "status",
+            "rating",
+            "poster_url",
+            "added_on",
+            "tmdb_id",
+            "tmdb_media_type",
+            "genre_ids",
+            "synopsis",
+            "release_date",
+            "metadata_source",
+            "metadata_updated_at",
+        )
+    }
+    if isinstance(recoverable.get("metadata_updated_at"), datetime):
+        recoverable["metadata_updated_at"] = recoverable["metadata_updated_at"].isoformat()
+    session[UNDO_ENTRY_SESSION_KEY] = {
+        "expires_at": time.time() + UNDO_TTL_SECONDS,
+        "entry": recoverable,
+    }
+
+
+def _get_undo_entry():
+    undo = session.get(UNDO_ENTRY_SESSION_KEY)
+    if not isinstance(undo, dict) or undo.get("expires_at", 0) <= time.time():
+        session.pop(UNDO_ENTRY_SESSION_KEY, None)
+        return None
+    return undo.get("entry")
+
+
 @app.route("/healthz")
 def healthz():
     return jsonify(status="ok")
@@ -142,6 +206,7 @@ def recommendations():
             "recommendations.html",
             recommendations=[],
             error=str(error),
+            generated_at=None,
         ), 503
 
     try:
@@ -153,6 +218,7 @@ def recommendations():
             "recommendations.html",
             recommendations=[],
             error=str(error),
+            generated_at=None,
         ), 503
 
     _record_usage_event("recommendation_view")
@@ -160,6 +226,7 @@ def recommendations():
         "recommendations.html",
         recommendations=results,
         error=None,
+        generated_at=datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -173,9 +240,33 @@ def index():
             "index.html",
             entries=[],
             logged_in=session.get("logged_in", False),
+            pending_add=session.get(PENDING_ADD_SESSION_KEY, {}),
+            add_recovery=session.get(ADD_RECOVERY_SESSION_KEY),
+            undo_entry=_get_undo_entry(),
         ), 503
     _record_usage_event("public_view")
-    return render_template("index.html", entries=entries, logged_in=session.get("logged_in", False))
+    return render_template(
+        "index.html",
+        entries=entries,
+        logged_in=session.get("logged_in", False),
+        pending_add=session.get(PENDING_ADD_SESSION_KEY, {}),
+        add_recovery=session.get(ADD_RECOVERY_SESSION_KEY),
+        undo_entry=_get_undo_entry(),
+    )
+
+
+@app.route("/search")
+def search():
+    if not session.get("logged_in"):
+        return jsonify(error="Authentication required."), 401
+    query = request.args.get("q", "").strip()
+    if len(query) < 2:
+        return jsonify(result=None)
+    try:
+        result = search_tmdb(query)
+    except TMDBError as error:
+        return jsonify(error=str(error)), 503
+    return jsonify(result=result)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -234,6 +325,8 @@ def add():
     _require_csrf_token()
     values, errors = _validated_entry_form(include_title=True)
     if errors:
+        _set_add_recovery(values or {"title": request.form.get("title", "")}, "", kind="validation")
+        session.pop(ADD_RECOVERY_SESSION_KEY, None)
         for error in errors:
             flash(error)
         return redirect(url_for("index"))
@@ -241,23 +334,36 @@ def add():
     entry_type = values["entry_type"]
     status = values["status"]
     rating = values["rating"]
-    try:
-        result = search_tmdb(title)
-    except TMDBError as error:
-        flash(str(error))
-        return redirect(url_for("index"))
+    lookup_mode = request.form.get("lookup_mode", "tmdb")
+    if lookup_mode == "manual":
+        result = None
+    else:
+        try:
+            result = search_tmdb(title)
+        except TMDBError as error:
+            _set_add_recovery(values, str(error), kind="provider")
+            flash(str(error), "provider")
+            return redirect(url_for("index"))
     if result:
         full_title = result["full_title"]
         poster_url = result["poster_url"]
         tmdb_id = result.get("tmdb_id")
         tmdb_media_type = result.get("media_type")
         genre_ids = result.get("genre_ids", [])
+        synopsis = result.get("synopsis", "")
+        release_date = result.get("release_date")
+        metadata_source = "TMDB"
+        metadata_updated_at = datetime.now(timezone.utc).isoformat()
     else:
         full_title = title
         poster_url = ""
         tmdb_id = None
         tmdb_media_type = None
         genre_ids = []
+        synopsis = ""
+        release_date = None
+        metadata_source = "Manual"
+        metadata_updated_at = None
     # The admin's explicit Movie/TV Show selection is authoritative. TMDB's
     # mixed-search media_type is used for lookup metadata, not classification.
     try:
@@ -270,10 +376,16 @@ def add():
             tmdb_id=tmdb_id,
             tmdb_media_type=tmdb_media_type,
             genre_ids=genre_ids,
+            synopsis=synopsis,
+            release_date=release_date,
+            metadata_source=metadata_source,
+            metadata_updated_at=metadata_updated_at,
         )
     except DatabaseError as error:
-        flash(str(error))
+        _set_add_recovery(values, str(error), kind="database")
+        flash(str(error), "database")
     else:
+        _clear_add_recovery()
         _record_usage_event("successful_add")
     return redirect(url_for("index"))
 
@@ -304,10 +416,36 @@ def delete(entry_id):
         return redirect(url_for("login"))
     _require_csrf_token()
     try:
+        entry = get_entry(entry_id)
         deleted = delete_entry(entry_id)
     except DatabaseError as error:
-        flash(str(error))
+        flash(str(error), "database")
         return redirect(url_for("index"))
     if not deleted:
         flash("Entry not found.")
+    elif entry:
+        _set_undo_entry(entry)
+        flash(f'Deleted “{entry.get("title", "entry")}”. You can undo this for 30 seconds.', "success")
+    else:
+        session.pop(UNDO_ENTRY_SESSION_KEY, None)
+        flash("Entry deleted. Recovery details were unavailable.", "success")
+    return redirect(url_for("index"))
+
+
+@app.route("/undo", methods=["POST"])
+def undo():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    _require_csrf_token()
+    entry = _get_undo_entry()
+    if not entry:
+        flash("That recovery window has expired. You can add the title again manually.", "error")
+        return redirect(url_for("index"))
+    try:
+        restore_entry(entry)
+    except DatabaseError as error:
+        flash(str(error), "database")
+        return redirect(url_for("index"))
+    session.pop(UNDO_ENTRY_SESSION_KEY, None)
+    flash(f'Restored “{entry.get("title", "entry")}”.', "success")
     return redirect(url_for("index"))
