@@ -1,15 +1,10 @@
 # My Watch Tracker
 
-I built this as a small personal watchlist for movies and TV shows. I wanted
-one place to mark what I had watched, keep a list of things I still wanted to
-see, and get poster art without entering it by hand. It runs on Flask and
-PostgreSQL, uses TMDB for title and poster data, and is deployed as a Python
-function on Vercel.
+My Watch Tracker is a small, deliberately focused watchlist for movies and TV shows. It keeps watched and unwatched titles in one place, adds poster art from TMDB, and offers explainable recommendations when the watch history is still small.
 
-The public watchlist is open to anyone. Only my admin session can add, edit, or
-delete entries.
+The public watchlist is browseable by anyone. Only the authenticated admin session can add, edit, or delete entries. The app runs on Flask and PostgreSQL as a Python function on Vercel.
 
-Live deployment: https://movie-tracker-umber-sigma.vercel.app
+**Live deployment:** <https://movie-tracker-umber-sigma.vercel.app>
 
 ## Why I built it
 
@@ -47,54 +42,25 @@ caching and rate limiting instead of relying on one warm serverless instance.
 - The UI includes progressive loading skeletons, responsive layout rules, and reduced-motion support.
 - The recommendations page uses stored TMDB genre metadata to produce deterministic, explainable suggestions.
 
-## What I have checked in production
+## Verification boundaries
 
-My current recorded live probe was on **2026-08-16** against production
-deployment `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge` at commit
-`38d462dfd102000927a8b9f1d59aa7bc7810142c` on `main`. It covered:
+The repository includes health, authentication, mutation, database, loading,
+recommendation, and usage-measurement tests. Run them locally with
+`python -m pytest` before sharing a build.
 
-- `/healthz`: HTTP 200 with `{"status":"ok"}`.
-- `/`: HTTP 200.
-- `/login`: HTTP 200.
-- `/recommendations`: HTTP 200.
-- Anonymous `POST /add`: HTTP 302 to `/login`.
-- The live login response set a `Secure`, `HttpOnly`, `SameSite=Lax` session
-  cookie.
-
-The current audit did not run an authorized add/edit/delete fixture because no
-production admin credential was supplied. The older 2026-07-27 authorized
-add/delete fixture remains historical evidence, not current proof.
-
-The Supabase project is healthy and the database-backed routes respond, but the
-exact encrypted Vercel pooler identity was not read during this audit. Remote
-migration history now matches the six tracked migration versions, including
-the API-grant lockdown and live-schema alignment migrations. Supabase security
-and performance advisors are clean. The admin password is stored as
-`ADMIN_PASSWORD_HASH`; neither secret is tracked in this repository. The full
-probe is recorded in
+Production verification should be recorded separately from this README. Do not
+publish deployment IDs, commit identifiers, admin credentials, private pooler
+details, or raw usage counts here. The admin password belongs in
+`ADMIN_PASSWORD_HASH`; the internal verification record lives in
 [`docs/verification.md`](docs/verification.md).
-
-## Production visuals
-
-These snapshots were captured from the canonical Vercel deployment on
-**2026-08-16**. They show the public watchlist at the recorded production
-commit `38d462dfd102000927a8b9f1d59aa7bc7810142c`; they are visual evidence of
-the deployed UI, not evidence that the local audit branch has been deployed.
-
-![Movie Tracker desktop watchlist](docs/assets/production/production-desktop-2026-08-16.png)
-
-![Movie Tracker mobile watchlist at 390px](docs/assets/production/production-mobile-390x844-2026-08-16.png)
 
 ## Current limits
 
 - This is a single-admin Flask session, not a multi-user account system. I have not integrated Supabase Auth or RLS.
 - The recommender is a deterministic content-based baseline. It uses TMDB and stored genre metadata, falls back to popular picks when the history is sparse, and does not yet have a real production precision metric.
 - TMDB caching and rate limiting are limited to each warm serverless instance. Global enforcement would need shared state.
-- My usage counters record aggregate successful public views, adds, and recommendation views. They do not count registered users or identify visitors.
-- Public desktop/mobile rendering, labels, landmarks, visible focus styling,
-  and recommendation explanations were checked in a browser against the
-  current production deployment. A manual admin-session keyboard,
-  screen-reader, modal Escape, and focus-return pass is still open.
+- Usage counters describe aggregate activity events rather than unique people or registered users.
+- Browser keyboard, screen-reader, and responsive visual review still need a proper browser pass.
 
 ## Privacy and measurement
 
@@ -102,10 +68,8 @@ I do not use an external analytics provider. The app stores only daily counts
 for successful public views, adds, and recommendation views. It does not store
 IP addresses, user agents, referrers, account IDs, or browser identifiers.
 
-For **2026-07-27**, the production `public.usage_daily` table contained 22
-public views, 1 successful add, and 1 recommendation view. I read those values
-with a read-only aggregate query. They describe activity events, not unique
-people or registered users.
+Keep exact production counts in private verification notes rather than in a
+public README.
 
 ### Offline recommendation benchmark
 
@@ -212,3 +176,4 @@ For the remaining work and the evidence behind these decisions, see the
 [`docs/local-development.md`](docs/local-development.md),
 [`docs/operations.md`](docs/operations.md), and
 [`docs/usage-measurement.md`](docs/usage-measurement.md).
+
