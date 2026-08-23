@@ -1,15 +1,10 @@
 # My Watch Tracker
 
-I built this as a small personal watchlist for movies and TV shows. I wanted
-one place to mark what I had watched, keep a list of things I still wanted to
-see, and get poster art without entering it by hand. It runs on Flask and
-PostgreSQL, uses TMDB for title and poster data, and is deployed as a Python
-function on Vercel.
+My Watch Tracker is a small, deliberately focused watchlist for movies and TV shows. It keeps watched and unwatched titles in one place, adds poster art from TMDB, and offers explainable recommendations when the watch history is still small.
 
-The public watchlist is open to anyone. Only my admin session can add, edit, or
-delete entries.
+The public watchlist is browseable by anyone. Only the authenticated admin session can add, edit, or delete entries. The app runs on Flask and PostgreSQL as a Python function on Vercel.
 
-Live deployment: https://movie-tracker-umber-sigma.vercel.app
+**Live deployment:** <https://movie-tracker-umber-sigma.vercel.app>
 
 ## Why I built it
 
@@ -47,20 +42,16 @@ caching and rate limiting instead of relying on one warm serverless instance.
 - The UI includes progressive loading skeletons, responsive layout rules, and reduced-motion support.
 - The recommendations page uses stored TMDB genre metadata to produce deterministic, explainable suggestions.
 
-## What I have checked in production
+## Verification boundaries
 
-My last recorded live probe was on **2026-07-27**. It covered:
+The repository includes health, authentication, mutation, database, loading,
+recommendation, and usage-measurement tests. Run them locally with
+`python -m pytest` before sharing a build.
 
-- `/healthz`: HTTP 200 with `{"status":"ok"}`.
-- `/`: HTTP 200.
-- `/login`: HTTP 200.
-- `/recommendations`: HTTP 200.
-- Anonymous `POST /add`: HTTP 302 to `/login`.
-- A reversible authorized add/delete smoke test using a temporary entry, followed by a public read confirming that the marker was gone.
-
-The production database uses the current Supabase transaction pooler, and the
-admin password is stored as `ADMIN_PASSWORD_HASH`; neither secret is tracked
-in this repository. The full probe is recorded in
+Production verification should be recorded separately from this README. Do not
+publish deployment IDs, commit identifiers, admin credentials, private pooler
+details, or raw usage counts here. The admin password belongs in
+`ADMIN_PASSWORD_HASH`; the internal verification record lives in
 [`docs/verification.md`](docs/verification.md).
 
 ## Current limits
@@ -68,7 +59,7 @@ in this repository. The full probe is recorded in
 - This is a single-admin Flask session, not a multi-user account system. I have not integrated Supabase Auth or RLS.
 - The recommender is a deterministic content-based baseline. It uses TMDB and stored genre metadata, falls back to popular picks when the history is sparse, and does not yet have a real production precision metric.
 - TMDB caching and rate limiting are limited to each warm serverless instance. Global enforcement would need shared state.
-- My usage counters record aggregate successful public views, adds, and recommendation views. They do not count registered users or identify visitors.
+- Usage counters describe aggregate activity events rather than unique people or registered users.
 - Browser keyboard, screen-reader, and responsive visual review still need a proper browser pass.
 
 ## Privacy and measurement
@@ -77,10 +68,8 @@ I do not use an external analytics provider. The app stores only daily counts
 for successful public views, adds, and recommendation views. It does not store
 IP addresses, user agents, referrers, account IDs, or browser identifiers.
 
-For **2026-07-27**, the production `public.usage_daily` table contained 22
-public views, 1 successful add, and 1 recommendation view. I read those values
-with a read-only aggregate query. They describe activity events, not unique
-people or registered users.
+Keep exact production counts in private verification notes rather than in a
+public README.
 
 ### Offline recommendation benchmark
 
