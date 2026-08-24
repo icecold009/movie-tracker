@@ -168,12 +168,20 @@ def search_tmdb(title):
             for genre_id in first_result.get("genre_ids", [])
             if isinstance(genre_id, int)
         ]
+        synopsis = first_result.get("overview")
+        if not isinstance(synopsis, str):
+            synopsis = ""
+        release_date = first_result.get("release_date") or first_result.get("first_air_date")
+        if not isinstance(release_date, str) or not release_date.strip():
+            release_date = None
         result = {
             "full_title": full_title,
             "poster_url": poster_url,
             "media_type": media_type,
             "tmdb_id": tmdb_id,
             "genre_ids": genre_ids,
+            "synopsis": synopsis.strip(),
+            "release_date": release_date,
         }
 
     _set_cached(key, result, now)
@@ -214,12 +222,20 @@ def discover_tmdb(media_type, genre_ids=()):
         if not isinstance(title, str) or not title.strip():
             continue
         poster_path = item.get("poster_path")
+        synopsis = item.get("overview")
+        if not isinstance(synopsis, str):
+            synopsis = ""
+        release_date = item.get("release_date") or item.get("first_air_date")
+        if not isinstance(release_date, str) or not release_date.strip():
+            release_date = None
         candidates.append({
             "title": title,
             "tmdb_id": item["id"],
             "media_type": media_type,
             "genre_ids": [genre_id for genre_id in item.get("genre_ids", []) if isinstance(genre_id, int)],
             "poster_url": f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else "",
+            "synopsis": synopsis.strip(),
+            "release_date": release_date,
         })
 
     _set_cached(key, candidates, now)

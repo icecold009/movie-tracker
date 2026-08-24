@@ -57,7 +57,15 @@ def test_authenticated_write_accepts_valid_csrf_token(app, monkeypatch):
     assert added == [
         (
             ("Example", "Movie", "Watched", 7, ""),
-            {"tmdb_id": None, "tmdb_media_type": None, "genre_ids": []},
+            {
+                "tmdb_id": None,
+                "tmdb_media_type": None,
+                "genre_ids": [],
+                "synopsis": "",
+                "release_date": None,
+                "metadata_source": "Manual",
+                "metadata_updated_at": None,
+            },
         )
     ]
 
@@ -79,3 +87,23 @@ def test_authenticated_write_rejects_missing_csrf_token(app, monkeypatch):
 
     assert response.status_code == 400
     assert writes == []
+
+
+def test_search_route_requires_authentication(app):
+    response = app.test_client().get("/search?q=dune")
+
+    assert response.status_code == 401
+    assert response.get_json() == {"error": "Authentication required."}
+
+
+def test_authenticated_search_route_returns_safe_tmdb_result(app, monkeypatch):
+    monkeypatch.setattr(
+        index,
+        "search_tmdb",
+        lambda query: {"full_title": "Dune", "poster_url": "", "media_type": "movie"},
+    )
+
+    response = logged_in_client(app).get("/search?q=dune")
+
+    assert response.status_code == 200
+    assert response.get_json()["result"]["full_title"] == "Dune"
