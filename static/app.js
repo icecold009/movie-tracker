@@ -384,7 +384,9 @@
         }
         let timer = null;
         let controller = null;
+        let searchSequence = 0;
         input.addEventListener("input", function () {
+            const requestSequence = ++searchSequence;
             window.clearTimeout(timer);
             if (controller) {
                 controller.abort();
@@ -403,6 +405,9 @@
                 try {
                     const response = await fetch(`/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
                     const payload = await response.json();
+                    if (requestSequence !== searchSequence) {
+                        return;
+                    }
                     if (!response.ok || payload.error) {
                         throw new Error(payload.error || "Search unavailable.");
                     }
@@ -423,7 +428,7 @@
                     results.appendChild(suggestion);
                     results.hidden = false;
                 } catch (error) {
-                    if (error.name !== "AbortError") {
+                    if (requestSequence === searchSequence && error.name !== "AbortError") {
                         feedback.textContent = "TMDB search is unavailable. You can save this title manually.";
                     }
                 }

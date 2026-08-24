@@ -77,6 +77,10 @@ capability and evidence that people actually use it.
 - [ ] Capture fixture-backed empty, loading, provider-error, and manual-fallback
       browser states, plus add/edit/recommendation recordings after a safe
       browser fixture or staging environment is available.
+- [x] Prevent stale asynchronous TMDB title-search results from overwriting a
+      newer query after an abort or slow provider response. The client now
+      checks a monotonically increasing request identity before applying
+      results or errors; Node syntax validation passed on 2026-08-24.
 
 ## P0 — Make the existing project truthful and reliable
 
