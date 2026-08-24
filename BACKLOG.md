@@ -72,6 +72,39 @@ these current gates.
 - TMDB requests now have bounded timeout, HTTP/JSON validation, safe error
   handling, five-minute caching, and per-warm-instance rate limiting.
 
+### UX and recovery slice — 2026-08-22
+
+- [x] Add in-place type, status, rating, recency, title, and rating-order
+      controls. Counts and empty states update without navigation or scroll
+      resets.
+- [x] Add a public detail modal with synopsis, rating, status, added date,
+      release date, metadata source/freshness state, and branded poster
+      fallback.
+- [x] Preserve add-form values after provider/database failure; expose TMDB
+      search feedback, retry/manual-save paths, exact recovery messaging, and
+      duplicate-submit loading protection.
+- [x] Add accessible edit/detail/delete modals with title context, Escape,
+      focus trapping/restoration, a 30-second undo path, and touch-safe action
+      layout.
+- [x] Add recommendation evidence chips and a generated freshness timestamp
+      without claiming model quality.
+- [x] Add additive migration
+      `20260822000000_add_display_metadata.sql` for synopsis, release date,
+      metadata source, and metadata update time.
+- [x] Local evidence: 60 pytest tests, Ruff, Python compilation, Node syntax,
+      diff check, 1280x720 browser captures, 390x844 no-overflow check, in-place
+      filtering, detail Escape/focus return, authenticated edit, and delete
+      confirmation. Browser mutation submission was intentionally not performed.
+- [ ] Apply and verify the new migration against the intended hosted database;
+      no deployment or production-readiness claim is made from this local slice.
+- [ ] Capture fixture-backed empty, loading, provider-error, and manual-fallback
+      browser states, plus add/edit/recommendation recordings after a safe
+      browser fixture or staging environment is available.
+- [x] Prevent stale asynchronous TMDB title-search results from overwriting a
+      newer query after an abort or slow provider response. The client now
+      checks a monotonically increasing request identity before applying
+      results or errors; Node syntax validation passed on 2026-08-24.
+
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime

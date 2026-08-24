@@ -14,7 +14,10 @@
         <p class="eyebrow"><span class="status-dot status-dot-accent"></span> Discovery engine / beta</p>
         <h1>Next up,<br><em>with a reason.</em></h1>
         <p class="hero-description">A transparent mix of genre affinity, your history, and TMDB discovery signals.</p>
-        <span class="engine-chip">TMDB + genre affinity <b>↗</b></span>
+        <div class="engine-chip-group" aria-label="Recommendation evidence">
+            <span class="engine-chip">TMDB + genre affinity <b>↗</b></span>
+            {% if generated_at %}<span class="freshness-chip">Updated {{ generated_at[:16].replace('T', ' ') }} UTC</span>{% endif %}
+        </div>
     </section>
 
     <div class="loading-skeleton" data-page-skeleton hidden aria-hidden="true">
@@ -36,7 +39,15 @@
     </div>
 
     {% if error %}
-        <p class="flash-error" role="alert">{{ error }}</p>
+        <div class="state-panel state-error" role="alert">
+            <p class="state-kicker">Provider unavailable</p>
+            <p>{{ error }}</p>
+            <span>Try again when TMDB is reachable. Your watchlist is unchanged.</span>
+            <div class="state-actions">
+                <a href="{{ url_for('recommendations') }}" class="state-primary" data-loading-link>Retry recommendations</a>
+                <a href="{{ url_for('index') }}" class="state-secondary" data-loading-link>Back to tracker</a>
+            </div>
+        </div>
     {% elif recommendations %}
         <div class="card-grid" aria-live="polite" data-reveal>
             {% for recommendation in recommendations %}
@@ -44,23 +55,31 @@
                     <div class="card-media">
                         {% if recommendation.poster_url %}
                             <img src="{{ recommendation.poster_url }}" alt="{{ recommendation.title }}" loading="lazy">
+                            <div class="poster-placeholder" hidden aria-hidden="true"><span class="poster-mark">SW</span><span>Artwork unavailable</span></div>
                         {% else %}
-                            <div class="poster-placeholder">No Image</div>
+                            <img src="" alt="" hidden>
+                            <div class="poster-placeholder"><span class="poster-mark">SW</span><span>Artwork unavailable</span></div>
                         {% endif %}
                         <span class="media-index">{{ "%02d" | format(loop.index) }}</span>
                     </div>
                     <div class="card-body">
                         <div class="card-topline"><span>Recommended</span><span class="card-arrow">↗</span></div>
                         <h2>{{ recommendation.title }}</h2>
-                        <p>{{ recommendation.reason }}</p>
+                        <div class="reason-chips" aria-label="Why this was recommended">
+                            {% for tag in recommendation.reason_tags or [] %}<span>{{ tag }}</span>{% endfor %}
+                        </div>
+                        <p class="recommendation-reason">{{ recommendation.reason }}</p>
                     </div>
                 </article>
             {% endfor %}
         </div>
     {% else %}
-        <p class="empty-section" aria-live="polite">
-            Recommendations are not available yet. Add watchlist entries with TMDB metadata first.
-        </p>
+        <div class="state-panel" aria-live="polite">
+            <p class="state-kicker">No recommendation yet</p>
+            <p>Recommendations need at least one watchlist entry with TMDB metadata.</p>
+            <span>You can add a title manually now and enrich it later when the provider is available.</span>
+            <div class="state-actions"><a href="{{ url_for('index') }}" class="state-primary" data-loading-link>Open tracker</a></div>
+        </div>
     {% endif %}
 </main>
 <footer class="site-footer">

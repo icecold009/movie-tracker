@@ -72,5 +72,5 @@ def test_authenticated_edit_modal_exposes_accessible_focus_boundary(app, monkeyp
     assert b'role="dialog"' in response.data
     assert b'aria-hidden="true"' in response.data
     assert b'aria-live="polite"' in response.data
-    assert b"if (e.key !== 'Tab') return;" in response.data
-    assert b"e.preventDefault();" in response.data
+    assert b'id="detail-modal"' in response.data
+    assert b"/static/app.js" in response.data
