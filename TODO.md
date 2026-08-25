@@ -68,4 +68,3 @@ The rapid-search overwrite bug is fixed, but search still collapses timeout, mal
 - [ ] Recommendation and metadata evidence is truthful and correctable.
 - [ ] Sensitive production evidence remains private and clearly separated.
 - [ ] Feature branch is pushed and clean; `main` is untouched and unmerged.
-
