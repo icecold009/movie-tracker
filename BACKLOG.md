@@ -11,6 +11,58 @@ Turn the project from a conventional TMDB watchlist CRUD app into a reliable,
 security-conscious application with one genuinely non-trivial engineering
 capability and evidence that people actually use it.
 
+## Active implementation queue — 2026-08-25
+
+This section is the only queue from which an implementation agent should select
+new work. The detailed priority sections and evidence log below explain the
+acceptance boundaries and history; their unchecked conditional, alternative, or
+deferred entries are not separate assignments. Update this queue and the
+affected detailed entry together when work completes, blocks, splits, or is
+intentionally deferred.
+
+Current baseline: the rapid-search overwrite defect is fixed with abort and
+request-sequence guards, Python verification passes 67 tests, and JavaScript
+syntax validation passes. Do not repeat those fixes.
+
+- [ ] **MT-01 — Make title search failure behavior testable and explicit.**
+      Add a locked frontend unit/DOM harness; cover debounce, abort, response
+      ordering, clear input, no result, and selection. Distinguish timeout,
+      offline, rate-limited, provider-unavailable, malformed-response, and retry
+      states. Decide whether the last good results remain visible while a newer
+      request is pending or fails.
+- [ ] **MT-02 — Prove form, modal, and session recovery end to end.**
+      Cover add/edit/delete, CSRF failure, duplicate submission, session expiry,
+      database failure, metadata fallback, reload, Escape, focus trap, and focus
+      return. Preserve user input after retryable failures and verify keyboard,
+      320 px, and 200% zoom behavior with forced error responses.
+- [ ] **MT-03 — Finish recommendation and metadata trust presentation.**
+      Show source, freshness, stale/manual/missing state, sparse-input limits,
+      uncertainty, and correction paths consistently across cards, detail, edit,
+      and recommendations. Cached or fallback data must never appear exact.
+- [ ] **MT-04 — Define and test the private data lifecycle.**
+      Document and enforce export, deletion, retention, logging, screenshots,
+      aggregate analytics, and session-expiry behavior for watch history,
+      ratings, metadata, and recommendations. Authorization and CSRF must cover
+      every mutation without exposing secrets or private production evidence.
+- [ ] **MT-05 — Close hosted database and production gates.**
+      Apply and verify `20260822000000_add_display_metadata.sql`; reconcile the
+      exact Vercel pooler identity; deploy the intended commit; run reversible
+      authorized mutations and live auth-security checks; and verify backup
+      restore and credential rotation. Record local, database, provider,
+      browser, and production evidence separately.
+- [ ] **MT-06 — Close product evidence and release handoff.**
+      Capture fixture-backed empty/loading/provider-error/manual-fallback states,
+      recruit 5–10 testers, fix the highest-value findings, and retain screenshots
+      or recordings tied to the verified deployment. Refresh stale test counts,
+      README limitations, release evidence, and recommender evaluation claims.
+      A synthetic holdout is not a production-quality metric.
+
+Recommended commit checkpoints:
+
+1. `test(search): add request-order and failure-state coverage`
+2. `feat(movie): finish browser and session recovery`
+3. `docs(movie): close private data and production gates`
+
 ## Definition of done
 
 - [ ] The deployment target, runtime entrypoint, environment variables, and
