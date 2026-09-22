@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from flask import Flask, abort, jsonify, render_template, request, redirect, url_for, session, flash
+from flask import Flask, Response, abort, jsonify, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import check_password_hash
 
 from config import ADMIN_PASSWORD_HASH, SECRET_KEY
@@ -31,6 +31,29 @@ app = Flask(__name__,
 )
 
 app.secret_key = SECRET_KEY
+
+PUBLIC_ORIGIN = "https://movie-tracker-umber-sigma.vercel.app"
+
+@app.get("/robots.txt")
+def robots_txt():
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /login\n"
+        "Sitemap: " + PUBLIC_ORIGIN + "/sitemap.xml\n"
+    )
+    return Response(body, mimetype="text/plain")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    body = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://movie-tracker-umber-sigma.vercel.app/</loc></url>
+  <url><loc>https://movie-tracker-umber-sigma.vercel.app/recommendations</loc></url>
+</urlset>"""
+    return Response(body, mimetype="application/xml")
+
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
