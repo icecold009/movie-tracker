@@ -199,6 +199,38 @@ these current gates.
 - [ ] Complete Jev source-backed plan/diff review. Automatic approval review
       previously rejected source transmission before sending any repository
       content. Source-free plan advisories remained generic; no source was sent.
+
+### Recommendations and login package — 2026-10-02
+
+- [x] Separate recommendation evidence, freshness, and limitations. Show the
+      timestamp as page generation time and disclose that the TMDB cache refresh
+      age is not exposed; do not present generation time as provider freshness.
+- [x] Keep deterministic per-title explanations and show media type/year only
+      when the provider result contains those fields. Add Retry and library
+      actions for empty, TMDB-provider, and database-error states, each with
+      accurate recovery copy.
+- [x] Align the login page with the shared visual system, fit its card/footer
+      within the viewport, and provide a 44px password visibility control while
+      preserving autofill, focus, generic errors, CSRF, rate limiting, and auth.
+- [x] Local verification: 71 pytest tests, Python/JavaScript syntax, and diff
+      checks passed. Synthetic Playwright covered recommendation result, sparse
+      metadata, omitted provider fields, empty/TMDB/database error recovery,
+      and login at
+      390/768/1024/1440px; no-JS recommendation/login rendering; the password
+      toggle; and the generic invalid-password state. Layouts had no horizontal
+      overflow, and the shared login footer fit exactly at all four sizes. The
+      only POST was the deliberate wrong-password request to the local fixture;
+      the only console errors were the expected synthetic TMDB and database
+      503s. No external TMDB call or real user data was used. Screenshots and
+      report are in the Package 4 visual evidence folder.
+- [x] Obtain independent package validation before starting Package 5. Review
+      cleared the database-vs-TMDB messaging and 390x844 login-height findings;
+      no functional blocker remains.
+- [x] Complete Jev review. Source-free plan reviews were generic; the complete
+      6-file diff was transmitted and covered with no exclusions. Jev returned
+      `resolve_findings_or_human_review` / `no_clear_issue`; local test and
+      browser evidence plus independent review resolved its generic test-gap
+      signal. No concrete Jev finding remains.
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime

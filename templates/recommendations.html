@@ -3,16 +3,33 @@
 {% block title %}Recommendations — My Watch Tracker{% endblock %}
 
 {% block page_content %}
-<main>
+<main class="recommendations-page">
     <a href="{{ url_for('index') }}" class="back-link" data-loading-link>← Back to tracker</a>
     <section class="recommendation-hero" data-reveal>
         <p class="eyebrow"><span class="status-dot status-dot-accent"></span> Discovery engine / beta</p>
         <h1>Next up,<br><em>with a reason.</em></h1>
-        <p class="hero-description">A transparent mix of genre affinity, your history, and TMDB discovery signals.</p>
-        <div class="engine-chip-group" aria-label="Recommendation evidence">
-            <span class="engine-chip">TMDB + genre affinity <b>↗</b></span>
-            {% if generated_at %}<span class="freshness-chip">Updated {{ generated_at[:16].replace('T', ' ') }} UTC</span>{% endif %}
-        </div>
+        <p class="hero-description">Deterministic content matches, with a clear view of the signals and limits.</p>
+    </section>
+
+    <section class="recommendation-context" aria-label="Recommendation context" data-recommendation-context>
+        <article class="recommendation-context-item">
+            <h2>Based on</h2>
+            <p>Available genre and media-type signals from your saved titles, paired with TMDB discovery candidates.</p>
+            <span>Sparse metadata uses discovery results as a fallback.</span>
+        </article>
+        <article class="recommendation-context-item">
+            <h2>Data freshness</h2>
+            {% if generated_at %}
+                <p>Page generated <time datetime="{{ generated_at }}">{{ generated_at[:16].replace('T', ' ') }} UTC</time></p>
+            {% else %}
+                <p>No generation timestamp is available for this response.</p>
+            {% endif %}
+            <span>TMDB cache refresh age is not exposed here.</span>
+        </article>
+        <article class="recommendation-context-item recommendation-limitations">
+            <h2>Limitations</h2>
+            <p>These content matches do not verify streaming availability or prove that a result is right for you.</p>
+        </article>
     </section>
 
     <div class="loading-skeleton" data-page-skeleton hidden aria-hidden="true">
@@ -35,9 +52,13 @@
 
     {% if error %}
         <div class="state-panel state-error" role="alert">
-            <p class="state-kicker">Provider unavailable</p>
+            <p class="state-kicker">{{ "Saved titles unavailable" if error_kind == "database" else "Provider unavailable" }}</p>
             <p>{{ error }}</p>
-            <span>Try again when TMDB is reachable. Your watchlist is unchanged.</span>
+            {% if error_kind == "database" %}
+                <span>Try again when Movie Tracker can reach your saved titles. Your watchlist is unchanged.</span>
+            {% else %}
+                <span>Try again when TMDB is reachable. Your watchlist is unchanged.</span>
+            {% endif %}
             <div class="state-actions">
                 <a href="{{ url_for('recommendations') }}" class="state-primary" data-loading-link>Retry recommendations</a>
                 <a href="{{ url_for('index') }}" class="state-secondary" data-loading-link>Back to tracker</a>
@@ -60,6 +81,14 @@
                     <div class="card-body">
                         <div class="card-topline"><span>Recommended</span><span class="card-arrow">↗</span></div>
                         <h2>{{ recommendation.title }}</h2>
+                        {% if recommendation.media_type in ["movie", "tv"] or recommendation.release_date %}
+                        <div class="recommendation-meta" aria-label="Available title details">
+                            {% if recommendation.media_type in ["movie", "tv"] %}
+                                <span>{{ "Movie" if recommendation.media_type == "movie" else "TV show" }}</span>
+                            {% endif %}
+                            {% if recommendation.release_date %}<span>{{ recommendation.release_date[:4] }}</span>{% endif %}
+                        </div>
+                        {% endif %}
                         <div class="reason-chips" aria-label="Why this was recommended">
                             {% for tag in recommendation.reason_tags or [] %}<span>{{ tag }}</span>{% endfor %}
                         </div>
@@ -70,10 +99,13 @@
         </div>
     {% else %}
         <div class="state-panel" aria-live="polite">
-            <p class="state-kicker">No recommendation yet</p>
-            <p>Recommendations need at least one watchlist entry with TMDB metadata.</p>
-            <span>You can add a title manually now and enrich it later when the provider is available.</span>
-            <div class="state-actions"><a href="{{ url_for('index') }}" class="state-primary" data-loading-link>Open tracker</a></div>
+            <p class="state-kicker">No results to show</p>
+            <p>No titles matched this discovery snapshot.</p>
+            <span>Try discovery again later, or return to your library to add or review saved titles.</span>
+            <div class="state-actions">
+                <a href="{{ url_for('recommendations') }}" class="state-primary" data-loading-link>Retry recommendations</a>
+                <a href="{{ url_for('index') }}" class="state-secondary" data-loading-link>Open tracker</a>
+            </div>
         </div>
     {% endif %}
 </main>
