@@ -9,7 +9,10 @@
         <a href="#library" class="login-link" aria-current="page">Library</a>
         <a href="{{ url_for('recommendations') }}" class="login-link" data-loading-link>Recommendations</a>
         {% if logged_in %}
-            <a href="#add-form" class="login-link">Manage</a>
+            <a href="#management-workspace" class="login-link" id="manage-toggle" data-manage-toggle
+               aria-controls="management-workspace" aria-expanded="{{ 'true' if add_recovery else 'false' }}">
+                {{ 'Done' if add_recovery else 'Manage' }}
+            </a>
             <form method="POST" action="/logout" style="margin:0" data-loading-form>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="logout-btn">Log Out</button>
@@ -22,7 +25,7 @@
 {% endblock %}
 
 {% block page_content %}
-<main>
+<main{% if logged_in %} data-management-mode="{{ 'active' if add_recovery else 'inactive' }}"{% endif %}>
 
     <div class="loading-skeleton" data-page-skeleton hidden aria-hidden="true">
         <div class="skeleton-shell">
@@ -79,7 +82,15 @@
     {% endif %}
 
     {% if logged_in %}
-    <form id="add-form" method="POST" action="/add" class="add-form" data-loading-form data-reveal>
+    <section id="management-workspace" class="management-workspace" data-management-workspace aria-labelledby="management-title">
+        <div class="management-heading">
+            <div>
+                <p class="eyebrow">Curator workspace</p>
+                <h2 id="management-title">Manage your archive.</h2>
+                <p id="management-guidance">Look up a title with TMDB, or save it without external metadata.</p>
+            </div>
+        </div>
+    <form id="add-form" method="POST" action="/add" class="add-form" data-loading-form data-reveal aria-describedby="management-guidance">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-field form-field-title">
             <label class="form-label sr-only" for="title">Movie or show title</label>
@@ -107,8 +118,8 @@
             <span><span id="rating-val" aria-live="polite">{{ pending_add.get('rating', 7) }}</span>/10</span>
         </div>
         <div class="add-actions">
-            <button type="submit" name="lookup_mode" value="tmdb" class="add-btn" data-loading-label="Adding...">+ Add title</button>
-            <button type="submit" name="lookup_mode" value="manual" class="manual-add-btn" data-loading-label="Saving...">Save manually</button>
+            <button type="submit" name="lookup_mode" value="tmdb" class="add-btn" data-loading-label="Adding...">Search TMDB and add</button>
+            <button type="submit" name="lookup_mode" value="manual" class="manual-add-btn" data-loading-label="Saving...">Save without metadata</button>
         </div>
     </form>
     {% if add_recovery %}
@@ -120,6 +131,7 @@
         <span>Nothing was discarded. Retry the lookup or use “Save manually” to keep the title without TMDB metadata.</span>
     </div>
     {% endif %}
+    </section>
     {% endif %}
 
     <section class="browse-toolbar" id="library" aria-labelledby="browse-title" data-reveal>
@@ -177,7 +189,7 @@
         <h2 id="library-empty-title">No titles yet.</h2>
         {% if logged_in %}
             <p>Add your first movie or show to begin building the collection.</p>
-            <a href="#add-form" class="empty-state-link">Add the first title</a>
+            <a href="#add-form" class="empty-state-link" data-management-trigger>Add the first title</a>
         {% else %}
             <p>This personal archive will grow one considered title at a time.</p>
             <a href="/login" class="empty-state-link" data-loading-link>Curate this archive</a>
@@ -234,15 +246,40 @@
                             data-detail-synopsis="{{ entry.synopsis or '' }}"
                             data-detail-poster="{{ entry.poster_url or '' }}">Details</button>
                 {% if logged_in %}
-                    <button type="button" class="edit-btn"
+                    <div class="card-management-actions" data-management-actions role="group" aria-label="Manage {{ entry.title }}">
+                    <details class="card-action-fallback card-edit-fallback">
+                        <summary class="edit-btn">Edit</summary>
+                        <form class="card-edit-fallback-form" method="POST" action="/edit/{{ entry.id }}" data-loading-form>
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <label class="card-fallback-field">
+                                <span>Status</span>
+                                <select name="status">
+                                    <option value="Watched"{% if entry.status == "Watched" %} selected{% endif %}>Watched</option>
+                                    <option value="Want to Watch"{% if entry.status == "Want to Watch" %} selected{% endif %}>Want to Watch</option>
+                                </select>
+                            </label>
+                            <label class="card-fallback-field">
+                                <span>Rating</span>
+                                <input type="range" name="rating" min="1" max="10" step="1" value="{{ entry.rating }}">
+                            </label>
+                            <button type="submit" class="btn-save" data-loading-label="Saving...">Save changes</button>
+                        </form>
+                    </details>
+                    <button type="button" class="edit-btn card-edit-js"
                             data-id="{{ entry.id }}"
                             data-status="{{ entry.status }}"
                             data-rating="{{ entry.rating }}"
                             data-title="{{ entry.title }}">Edit</button>
                     <form method="POST" action="/delete/{{ entry.id }}" style="margin:0" data-loading-form data-delete-form data-delete-title="{{ entry.title }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="delete-btn" data-loading-label="Deleting...">Delete</button>
+                        <details class="card-action-fallback card-delete-fallback">
+                            <summary class="delete-btn">Delete</summary>
+                            <p class="card-fallback-confirmation">Delete {{ entry.title }}? You can undo this from the next screen for 30 seconds.</p>
+                            <button type="submit" class="delete-confirm-btn card-fallback-delete-confirm" data-loading-label="Deleting...">Delete title</button>
+                        </details>
+                        <button type="submit" class="delete-btn card-delete-js" data-loading-label="Deleting...">Delete</button>
                     </form>
+                    </div>
                 {% endif %}
                 </div>
             </div>

@@ -113,3 +113,72 @@ def test_authenticated_edit_modal_exposes_accessible_focus_boundary(app, monkeyp
     assert b'aria-live="polite"' in response.data
     assert b'id="detail-modal"' in response.data
     assert b"/static/app.js" in response.data
+    assert b'aria-modal="true" aria-hidden="true" aria-labelledby="detail-modal-title"' in response.data
+    assert b'id="delete-modal"' in response.data
+    assert b'id="edit-modal"' in response.data
+
+
+def test_authenticated_library_groups_mutations_behind_manage_mode(app, monkeypatch):
+    monkeypatch.setattr(index, "get_all", lambda: [{
+        "id": 41,
+        "title": "Arrival",
+        "entry_type": "Movie",
+        "status": "Watched",
+        "rating": 9,
+        "poster_url": None,
+    }])
+    monkeypatch.setattr(index, "_record_usage_event", lambda event_name: None)
+    client = app.test_client()
+    with client.session_transaction() as session:
+        session["logged_in"] = True
+        session["_csrf_token"] = "test-csrf-token"
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b'data-management-mode="inactive"' in response.data
+    assert b'id="manage-toggle"' in response.data
+    assert b'aria-expanded="false"' in response.data
+    assert b'id="management-workspace"' in response.data
+    assert b"Curator workspace" in response.data
+    assert b"Search TMDB and add" in response.data
+    assert b"Save without metadata" in response.data
+    assert b'data-management-actions role="group"' in response.data
+    assert b'class="card-edit-fallback-form" method="POST" action="/edit/41"' in response.data
+    assert b'name="status"' in response.data
+    assert b'name="rating" min="1" max="10" step="1" value="9"' in response.data
+    assert b'class="card-action-fallback card-delete-fallback"' in response.data
+    assert b'class="delete-confirm-btn card-fallback-delete-confirm"' in response.data
+    assert b'class="edit-btn card-edit-js"' in response.data
+    assert b'class="delete-btn card-delete-js"' in response.data
+    assert b'action="/delete/41"' in response.data
+    assert b'name="csrf_token" value="test-csrf-token"' in response.data
+
+
+def test_add_recovery_reopens_curator_workspace_with_entered_values(app, monkeypatch):
+    monkeypatch.setattr(index, "get_all", lambda: [])
+    monkeypatch.setattr(index, "_record_usage_event", lambda event_name: None)
+    client = app.test_client()
+    with client.session_transaction() as session:
+        session["logged_in"] = True
+        session[index.PENDING_ADD_SESSION_KEY] = {
+            "title": "Unchanged title",
+            "entry_type": "TV Show",
+            "status": "Want to Watch",
+            "rating": 8,
+        }
+        session[index.ADD_RECOVERY_SESSION_KEY] = {
+            "kind": "provider",
+            "message": "TMDB fixture unavailable.",
+        }
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b'data-management-mode="active"' in response.data
+    assert b'aria-expanded="true"' in response.data
+    assert b'value="Unchanged title"' in response.data
+    assert b'value="TV Show" selected' in response.data
+    assert b'value="Want to Watch" selected' in response.data
+    assert b'value="8"' in response.data
+    assert b"TMDB fixture unavailable." in response.data

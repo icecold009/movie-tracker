@@ -162,6 +162,43 @@ these current gates.
       rejected the source-bearing request before transmission; no repository
       content was sent. Source-free Jev advisories remained generic due to the
       missing selected source context, with no concrete finding.
+
+### Details and admin accessibility package — 2026-10-01
+
+- [x] Move add/edit/delete controls into a focused Manage mode while keeping
+      the server-rendered admin workspace and actions usable without JavaScript.
+      Empty-library and recovery links open the workspace; add failures reopen
+      it with title, type, status, and rating preserved.
+- [x] Make TMDB lookup and save-without-metadata actions distinct; keep server
+      routes, CSRF fields, authentication, validation, undo TTL, and database
+      behavior unchanged.
+- [x] Isolate Details, Edit, and Delete dialogs from the background with
+      `inert` and `aria-hidden`, lock page scroll, contain focus, and restore
+      focus and scroll after Escape, cancel, close, or backdrop dismissal.
+      Exclude hidden CSRF controls from the keyboard focus sequence.
+- [x] Keep management, modal, and undo actions at least 44px; preserve the
+      explicit delete confirmation and 30-second recovery message.
+- [x] Preserve admin behavior without JavaScript using a native per-card edit
+      form and an explicit delete disclosure followed by a separate submit.
+- [x] Local verification: all 71 pytest tests, JavaScript syntax, and diff
+      checks passed. Synthetic Playwright fixtures covered 390, 768, 1024, and
+      1440px, dialog roles/names, keyboard focus containment, background
+      isolation, scroll lock/restoration, Manage mode, add recovery, undo
+      visibility, and no-JS edit/delete behavior. The no-JS edit action, current
+      values, CSRF token, delete disclosure, and 44px targets were exercised;
+      both JS Manage mode and no-JS admin use a single-column card grid on
+      mobile. Add/edit/delete/undo were not submitted. Browser report records
+      zero POSTs,
+      page errors, or unexplained console errors. Playwright checked dialog
+      roles and names; a human screen-reader session was not performed.
+      Screenshots and report are in this task's visual evidence folder.
+- [x] Obtain independent package validation before starting Package 4. Final
+      read-only review confirmed the no-JS fallbacks, modal flows, and scoped
+      mobile layout have no functional blocker; human screen-reader proof is
+      still unverified.
+- [ ] Complete Jev source-backed plan/diff review. Automatic approval review
+      previously rejected source transmission before sending any repository
+      content. Source-free plan advisories remained generic; no source was sent.
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime
