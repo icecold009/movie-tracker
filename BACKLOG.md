@@ -130,6 +130,38 @@ these current gates.
 - [ ] Complete Jev source-backed plan/diff review. Auto-review rejected the
       selected source/backlog payload before transmission; no repository
       content was sent. Jev review remains unavailable for this payload.
+
+### Library experience package — 2026-10-01
+
+- [x] Add Library, Recommendations, and Admin/Manage navigation plus a compact
+      identity hero with total/watched counts and a direct browse cue.
+- [x] Add local library title search composed with type/status/rating filters
+      and ordering; keep it separate from the authenticated TMDB add-title
+      lookup. Summarize active criteria and provide one clear-all action.
+- [x] Hide sections without matches, use one global no-match state, and keep
+      the server-rendered empty-library state distinct for no-JavaScript use.
+- [x] Reduce public cards to poster, title, status, score, and Details; retain
+      rating context, synopsis, dates, and metadata provenance in details.
+      Preserve the existing detail flow's keyboard close, focus return, filter
+      state, and scroll position; show branded poster failure states.
+- [x] Local verification: 69 pytest tests, JavaScript syntax, and diff checks
+      passed. Playwright used synthetic local fixtures at 390, 768, 1024, and
+      1440px with no horizontal overflow; keyboard order/focus, 44px nav/search/
+      filter/Details/Browse and empty-library CTA targets, composed search/filter,
+      clear-all, global empty, poster failure, details Escape/focus/scroll
+      preservation, reduced motion, populated and empty no-JS rendering, clean
+      JavaScript console, and no TMDB search requests were verified. Hero height
+      stayed between 260px and 272px. The only browser errors were intentional
+      404 responses from the broken-poster fixture used to verify its fallback.
+      Screenshots and report are in this task's visual evidence folder.
+- [x] Obtain independent package validation before starting Package 3. The
+      final read-only review confirmed both 44px CTA targets and the viewport
+      measurements; the no-JS failed-poster icon is not a blocker for this
+      package's no-JS rendering gate.
+- [ ] Complete Jev source-backed plan/diff review. Automatic approval review
+      rejected the source-bearing request before transmission; no repository
+      content was sent. Source-free Jev advisories remained generic due to the
+      missing selected source context, with no concrete finding.
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime
