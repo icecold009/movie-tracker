@@ -1,0 +1,18 @@
+<footer class="site-footer{% if footer_class %} {{ footer_class }}{% endif %}">
+    <div class="footer-top">
+        <div class="footer-identity">
+            <span class="footer-monogram">SW</span>
+            <div><strong>Shaurya</strong><span>Personal watchlist</span></div>
+        </div>
+        <div class="footer-links">
+            <a href="https://shauryasaria.me" target="_blank" rel="noopener noreferrer">Personal website</a>
+            <a href="https://github.com/icecold009/movie-tracker" target="_blank" rel="noopener noreferrer">Source</a>
+            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>
+            {% if footer_live %}<a href="https://movie-tracker-umber-sigma.vercel.app" target="_blank" rel="noopener noreferrer">Live</a>{% endif %}
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 Shaurya</span>
+        <span>{{ footer_caption }}</span>
+    </div>
+</footer>
