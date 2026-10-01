@@ -231,6 +231,30 @@ these current gates.
       `resolve_findings_or_human_review` / `no_clear_issue`; local test and
       browser evidence plus independent review resolved its generic test-gap
       signal. No concrete Jev finding remains.
+
+### Motion and performance package — 2026-10-02
+
+- [x] Reduce card and reveal motion to 180ms, poster motion to 200ms, and
+      button press feedback to 140ms. Remove reveal staggering and replace the
+      background-position skeleton shimmer with an opacity pulse.
+- [x] Keep animated properties to transform/opacity, put every hover treatment
+      under fine-pointer media, and make reduced motion expose content at once
+      while disabling transitions, animations, hover movement, and pointer glow.
+- [x] Local verification: 71 pytest tests, JavaScript syntax, static motion/
+      hover-scope checks, and `git diff --check` passed. Synthetic Playwright
+      verified fine-pointer hover, 140–200ms property timings, immediate Enter/
+      Escape detail behavior and focus return, coarse touch with no pointer glow,
+      and reduced motion at 390×844. All 11 reveal items were immediately
+      visible; the skeleton animation and card hover movement were disabled.
+      No console/page errors or non-local requests occurred. Screenshots and
+      report are in this task's Package 5 visual evidence folder.
+- [x] Obtain independent package validation before starting Package 6. The
+      read-only reviewer confirmed the motion/reduced-motion behavior and
+      browser evidence with no concrete blocker.
+- [x] Complete Jev review of the full Package 5 diff. All 3 files were covered
+      with no exclusions; Jev returned `resolve_findings_or_human_review` /
+      `no_clear_issue` with a generic verification-gap signal. Focused source,
+      browser, and independent-review evidence address that signal.
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime
