@@ -264,13 +264,10 @@ these current gates.
 - [x] Add a loopback-only Flask fixture server that replaces all database read
       and mutation functions plus TMDB calls, and a Playwright browser matrix
       runner that blocks non-local requests and refuses dirty worktrees.
-- [ ] Finish the responsive/state/pointer/reduced-motion/no-JS browser matrix,
-      accessibility checks, and commit-bound screenshots.
-- [ ] Record final local Python/JavaScript checks and complete-diff Jev review.
-- [ ] Confirm whether the connected Vercel API can deploy this exact commit to
-      a preview without pushing a branch or selecting a production target.
-- [ ] Keep production evidence separate; this package does not authorize a
-      production deployment.
+- [x] Finish the responsive/state/pointer/reduced-motion/no-JS browser matrix, targeted accessibility checks, and commit-bound screenshots. On source commit `599a395967a6a168f1a9d3a7cfc0f254cf464728`, 12 route/viewport captures, 12 states, 28 accessibility records, and 27 screenshots passed.
+- [x] Record final local Python/JavaScript checks and complete Jev review. Final checks: 74 pytest passed, Ruff, compileall, pip check, Node syntax, and browser matrix. Jev covered all nine unique Package 6 changed files across bounded complete-diff batches and follow-up diffs, with zero exclusions.
+- [x] Check the connected Vercel preview path. No deployment was created: returned Vercel deployments identify GitHub commit refs/SHAs, the exact tested SHA is local and absent from the 17 returned records, and the exposed deploy operation does not document source-revision or explicit preview-target selection. No push was made.
+- [x] Keep production evidence separate; this package did not authorize or perform a production deployment.
 
 ## P0 — Make the existing project truthful and reliable
 

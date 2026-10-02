@@ -103,4 +103,14 @@ report. Set UI_EVIDENCE_DIR to save screenshots and the report outside Git.
 - **Production:** record only a separately user-approved production release
   and runtime check. A preview or local test is not production evidence.
 
-Package 6 browser and Vercel status is pending final verification.
+### Package 6 run record — 2026-10-02
+
+- **Tested source:** `codex/ui-release-evidence` at `599a395967a6a168f1a9d3a7cfc0f254cf464728`. The later documentation-only checkpoint does not change this tested source revision.
+- **Local checks:** 74 pytest tests passed; Ruff passed; Python compileall passed using an external cache; `pip check` reported no broken requirements; Node syntax checks passed for `static/app.js` and `scripts/ui_browser_matrix.cjs`.
+- **Browser:** Playwright Chromium `151.0.7922.34`, Python `3.14.0`; 12 route/viewport captures across 390×844, 768×1024, 1024×900, and 1440×1000; 12 named states; 28 accessibility/DOM records; 27 screenshots.
+- **Interactions:** no-JavaScript manual submission; keyboard order and visible focus; dialog isolation, focus trap, Escape, and focus return; coarse-pointer behavior; reduced motion.
+- **Results:** zero small-target failures, zero horizontal overflow, zero browser console errors, zero uncaught page errors, and zero external requests. All browser requests stayed on the local fixture origin; three synthetic POSTs went only to `/add` against the in-memory fixture.
+- **Limits:** accessibility coverage consists of targeted DOM/keyboard checks, not axe or a screen-reader pass. The fixture is synthetic and proves neither a production database nor a live TMDB provider.
+- **Artifacts:** 27 PNGs and `verification-report.json` are outside Git at `C:\Users\91829\.codex\visualizations\2026\10\01\01a0f7ab-a4b8-7820-8350-28127f2882fc\movie-tracker-ui-package-6\`. The JSON report records the exact tested branch and commit.
+- **Vercel preview:** no preview deployment was created. The read-only deployment list returned GitHub commit refs/SHAs, and the tested local SHA was absent from the 17 returned deployment records. The exposed deploy tool is described as deploying the current project and does not document a selectable local source revision or explicit preview target. The exact safe preview path was therefore not established; no push was made.
+- **Production:** unchanged; no production deployment or data access was part of this package.
