@@ -352,6 +352,7 @@ img { display: block; max-width: 100%; }
 
 .back-link {
     display: block;
+    min-block-size: 44px;
     text-align: center;
     color: var(--text-muted);
     font-size: 0.85rem;
