@@ -564,7 +564,9 @@ async function verifyManualFallbackAndNoJs() {
   );
   try {
     await navigate(page, "/?fixture=manual-fallback", "manual-metadata-fallback", 200, viewport);
-    await page.getByRole("link", { name: "Manage archive" }).click();
+    assert.equal(await page.locator('main[data-management-mode="active"]').count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Finish managing archive" }).count(), 1);
+    assert.equal(await page.locator("#add-form").isVisible(), true);
     assert.equal(await page.locator(".add-recovery").getAttribute("role"), "alert");
     assert.equal(await page.locator("#title").inputValue(), "Preserved fixture title");
     await screenshot(page, "manual-metadata-fallback-mobile");
