@@ -539,6 +539,7 @@ async function verifyProviderRecovery() {
   );
   try {
     await navigate(page, "/?fixture=admin-tmdb-error", "tmdb-error-recovery", 200, viewport);
+    await page.getByRole("link", { name: "Manage archive" }).click();
     await page.locator("#title").fill("Synthetic provider failure");
     const button = page.getByRole("button", { name: "Search TMDB and add" });
     await Promise.all([
@@ -563,6 +564,7 @@ async function verifyManualFallbackAndNoJs() {
   );
   try {
     await navigate(page, "/?fixture=manual-fallback", "manual-metadata-fallback", 200, viewport);
+    await page.getByRole("link", { name: "Manage archive" }).click();
     assert.equal(await page.locator(".add-recovery").getAttribute("role"), "alert");
     assert.equal(await page.locator("#title").inputValue(), "Preserved fixture title");
     await screenshot(page, "manual-metadata-fallback-mobile");
