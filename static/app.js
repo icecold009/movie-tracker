@@ -555,6 +555,7 @@
         });
         toggle.setAttribute("aria-expanded", String(mainRegion.dataset.managementMode === "active"));
         toggle.textContent = mainRegion.dataset.managementMode === "active" ? "Done" : "Manage";
+        toggle.setAttribute("aria-label", mainRegion.dataset.managementMode === "active" ? "Finish managing archive" : "Manage archive");
         if (window.location.hash === "#management-workspace" || window.location.hash === "#add-form") {
             setMode(true, false);
         }

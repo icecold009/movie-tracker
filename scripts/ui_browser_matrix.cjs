@@ -775,11 +775,14 @@ async function run() {
   });
   await captureState("authenticated-admin", "/?fixture=admin", 200, async (page) => {
     assert.equal(await page.locator('main[data-management-mode="inactive"]').count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Manage archive" }).count(), 1);
     await page.getByRole("link", { name: "Manage archive" }).click();
     assert.equal(await page.locator('main[data-management-mode="active"]').count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Finish managing archive" }).count(), 1);
     assert.equal(await page.locator("#title").isVisible(), true);
     await page.locator("#manage-toggle").click();
     assert.equal(await page.locator('main[data-management-mode="inactive"]').count(), 1);
+    assert.equal(await page.getByRole("link", { name: "Manage archive" }).count(), 1);
   });
 
   await verifyZeroSearch();
