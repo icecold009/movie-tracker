@@ -255,6 +255,23 @@ these current gates.
       with no exclusions; Jev returned `resolve_findings_or_human_review` /
       `no_clear_issue` with a generic verification-gap signal. Focused source,
       browser, and independent-review evidence address that signal.
+### Evidence and release package — 2026-10-02
+
+- [x] Add reusable synthetic pytest fixtures for empty/results/admin, database
+      and TMDB failures, manual recovery, stale metadata, undo, and empty
+      recommendations. Fixture writes are recorded in memory; provider calls
+      are stubbed.
+- [x] Add a loopback-only Flask fixture server that replaces all database read
+      and mutation functions plus TMDB calls, and a Playwright browser matrix
+      runner that blocks non-local requests and refuses dirty worktrees.
+- [ ] Finish the responsive/state/pointer/reduced-motion/no-JS browser matrix,
+      accessibility checks, and commit-bound screenshots.
+- [ ] Record final local Python/JavaScript checks and complete-diff Jev review.
+- [ ] Confirm whether the connected Vercel API can deploy this exact commit to
+      a preview without pushing a branch or selecting a production target.
+- [ ] Keep production evidence separate; this package does not authorize a
+      production deployment.
+
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime
