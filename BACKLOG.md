@@ -185,7 +185,30 @@ these current gates.
 - [x] Complete source-backed Jev review of the full seven-file Package 1
       diff (jev-1.13.0, no exclusions). Jev returned a generic verification-
       gap advisory; 17 focused route/auth/loading/recommendation tests passed.
-## P0 — Make the existing project truthful and reliable
+
+### Library experience package — 2026-10-04
+
+- [x] Add Library, Recommendations, and Admin/Manage navigation plus a compact
+      identity hero with total/watched counts and a direct browse cue.
+- [x] Add local library title search composed with type/status/rating filters
+      and ordering; keep it separate from the authenticated TMDB add-title
+      lookup. Summarize active criteria and provide one clear-all action.
+- [x] Hide sections without matches, use one global no-match state, and keep
+      the server-rendered empty-library state distinct for no-JavaScript use.
+- [x] Reduce public cards to poster, title, status, score, and Details; retain
+      rating context, synopsis, dates, and metadata provenance in details.
+      Preserve detail-dialog focus behavior and the active filter state.
+- [x] Adapt the existing Package 2 implementation to the current-main shared
+      Jinja shell and metadata. No backend, auth, or data changes.
+- [x] Local focused regression checks: 21 Flask tests passed; `node --check
+      static/app.js` and `git diff --cached --check` passed on this branch.
+- [ ] Run the synthetic viewport and interaction matrix on the completed UI
+      branch in Package 6; no browser-interaction result is claimed here.
+- [x] Jev reviewed the complete six-file diff (jev-1.13.0; no exclusions,
+      sensitive files, binary files, or truncation). Its generic
+      verification-gap advisory called for interaction coverage; the focused
+      route/loading/metadata checks passed and the browser matrix is explicitly
+      reserved for Package 6.## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime
 

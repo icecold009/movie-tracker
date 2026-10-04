@@ -151,27 +151,33 @@
 
     function setupImageFallbacks() {
         document.querySelectorAll(".card-media img").forEach(function (image) {
-            image.addEventListener("error", function () {
+            const showFallback = function () {
                 image.hidden = true;
                 const fallback = image.parentElement.querySelector(".poster-placeholder");
                 if (fallback) {
                     fallback.hidden = false;
                     fallback.setAttribute("aria-hidden", "false");
                 }
-            });
+            };
+            image.addEventListener("error", showFallback);
+            if (image.complete && image.naturalWidth === 0) {
+                showFallback();
+            }
         });
     }
 
     function setupLibraryFilters() {
         const cards = Array.from(document.querySelectorAll("[data-entry-card]"));
         const sections = Array.from(document.querySelectorAll("[data-library-section]"));
+        const searchInput = document.getElementById("library-search");
         const typeFilter = document.getElementById("filter-type");
         const statusFilter = document.getElementById("filter-status");
         const ratingFilter = document.getElementById("filter-rating");
         const sortControl = document.getElementById("sort-library");
         const summary = document.getElementById("filter-summary");
         const reset = document.getElementById("filter-reset");
-        if (!typeFilter || !statusFilter || !ratingFilter || !sortControl || !summary) {
+        const filterEmpty = document.querySelector("[data-filter-empty]");
+        if (!searchInput || !typeFilter || !statusFilter || !ratingFilter || !sortControl || !summary || !reset) {
             return;
         }
 
@@ -182,7 +188,7 @@
 
         function compareCards(left, right, mode) {
             if (mode === "title-asc" || mode === "title-desc") {
-                const result = left.dataset.entryTitle.localeCompare(right.dataset.entryTitle, undefined, { sensitivity: "base" });
+                const result = (left.dataset.entryTitle || "").localeCompare(right.dataset.entryTitle || "", undefined, { sensitivity: "base" });
                 return mode === "title-desc" ? -result : result;
             }
             if (mode === "rating-asc" || mode === "rating-desc") {
@@ -195,10 +201,14 @@
         }
 
         function applyFilters() {
+            const searchText = searchInput.value.trim();
+            const normalizedQuery = searchText.toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const type = typeFilter.value;
             const status = statusFilter.value;
             const minimumRating = ratingFilter.value === "all" ? 0 : numeric(ratingFilter.value);
             const sort = sortControl.value;
+            const hasFilterCriteria = Boolean(normalizedQuery) || type !== "all" || status !== "all" || minimumRating > 0;
+            const hasActiveCriteria = hasFilterCriteria || sort !== "added-desc";
             let visibleTotal = 0;
 
             sections.forEach(function (section) {
@@ -206,25 +216,21 @@
                     return card.closest("[data-library-section]") === section;
                 });
                 const visibleCards = sectionCards.filter(function (card) {
+                    const normalizedTitle = (card.dataset.entryTitle || "").toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     const visible = (type === "all" || card.dataset.entryType === type) &&
                         (status === "all" || card.dataset.entryStatus === status) &&
-                        numeric(card.dataset.entryRating) >= minimumRating;
+                        numeric(card.dataset.entryRating) >= minimumRating &&
+                        (!normalizedQuery || normalizedTitle.includes(normalizedQuery));
                     card.hidden = !visible;
                     return visible;
                 }).sort(function (left, right) { return compareCards(left, right, sort); });
                 const grid = section.querySelector("[data-card-grid]");
-                const empty = section.querySelector("[data-section-empty]");
                 const count = section.querySelector("[data-section-count]");
                 if (grid) {
                     visibleCards.forEach(function (card) { grid.appendChild(card); });
                     grid.hidden = visibleCards.length === 0;
                 }
-                if (empty) {
-                    empty.hidden = visibleCards.length !== 0;
-                    empty.textContent = sectionCards.length && !visibleCards.length
-                        ? "No titles match these filters."
-                        : `No ${section.dataset.librarySection === "Movie" ? "movies" : "TV shows"} added yet.`;
-                }
+                section.hidden = visibleCards.length === 0;
                 if (count) {
                     count.textContent = visibleCards.length === sectionCards.length
                         ? `${sectionCards.length} titles`
@@ -232,14 +238,36 @@
                 }
                 visibleTotal += visibleCards.length;
             });
-            summary.textContent = `Showing ${visibleTotal} of ${cards.length} titles`;
+            const summaryParts = [`Showing ${visibleTotal} of ${cards.length} titles`];
+            if (normalizedQuery) {
+                summaryParts.push(`Search “${searchText}”`);
+            }
+            if (type !== "all") {
+                summaryParts.push(typeFilter.selectedOptions[0].textContent.trim());
+            }
+            if (status !== "all") {
+                summaryParts.push(statusFilter.selectedOptions[0].textContent.trim());
+            }
+            if (minimumRating > 0) {
+                summaryParts.push(ratingFilter.selectedOptions[0].textContent.trim());
+            }
+            if (sort !== "added-desc") {
+                summaryParts.push(`Sorted: ${sortControl.selectedOptions[0].textContent.trim()}`);
+            }
+            summary.textContent = summaryParts.join(" · ");
+            reset.hidden = !hasActiveCriteria;
+            if (filterEmpty) {
+                filterEmpty.hidden = !(cards.length > 0 && visibleTotal === 0 && hasFilterCriteria);
+            }
         }
 
         [typeFilter, statusFilter, ratingFilter, sortControl].forEach(function (control) {
             control.addEventListener("change", applyFilters);
         });
+        searchInput.addEventListener("input", applyFilters);
         if (reset) {
             reset.addEventListener("click", function () {
+                searchInput.value = "";
                 typeFilter.value = "all";
                 statusFilter.value = "all";
                 ratingFilter.value = "all";
@@ -256,23 +284,24 @@
         ));
     }
 
-    function setupModal(modal, closeButton, initialFocus) {
+    function setupModal(modal, closeButton, initialFocus, preserveScrollOnFocus) {
         if (!modal || !closeButton) {
             return { open: function () {}, close: function () {} };
         }
         let lastFocusedElement = null;
+        const focusOptions = preserveScrollOnFocus ? { preventScroll: true } : undefined;
         function close() {
             modal.classList.remove("active");
             modal.setAttribute("aria-hidden", "true");
             if (lastFocusedElement) {
-                lastFocusedElement.focus();
+                lastFocusedElement.focus(focusOptions);
             }
         }
         function open(trigger) {
             lastFocusedElement = trigger;
             modal.classList.add("active");
             modal.setAttribute("aria-hidden", "false");
-            (initialFocus || closeButton).focus();
+            (initialFocus || closeButton).focus(focusOptions);
         }
         closeButton.addEventListener("click", close);
         modal.addEventListener("click", function (event) {
@@ -333,13 +362,13 @@
         }
         const title = document.getElementById("detail-modal-title");
         const poster = document.getElementById("detail-poster");
-        const controller = setupModal(modal, document.getElementById("detail-close"));
+        const controller = setupModal(modal, document.getElementById("detail-close"), null, true);
         document.querySelectorAll("[data-detail-trigger]").forEach(function (button) {
             button.addEventListener("click", function () {
                 title.textContent = button.dataset.detailTitle;
                 document.getElementById("detail-type").textContent = button.dataset.detailType;
                 document.getElementById("detail-status").textContent = button.dataset.detailStatus;
-                document.getElementById("detail-rating").textContent = `${button.dataset.detailRating}/10`;
+                document.getElementById("detail-rating").textContent = `${button.dataset.detailRating}/10 · ${button.dataset.detailRatingContext}`;
                 document.getElementById("detail-release").textContent = button.dataset.detailRelease;
                 document.getElementById("detail-added").textContent = button.dataset.detailAdded;
                 document.getElementById("detail-source").textContent = button.dataset.detailSource;
