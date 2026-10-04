@@ -105,7 +105,8 @@
 
     function setupReveal() {
         const revealItems = document.querySelectorAll("[data-reveal]");
-        if (!("IntersectionObserver" in window)) {
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduceMotion || !("IntersectionObserver" in window)) {
             revealItems.forEach(function (item) { item.classList.add("is-visible"); });
             return;
         }
@@ -117,14 +118,14 @@
                 }
             });
         }, { threshold: 0.08 });
-        revealItems.forEach(function (item, index) {
-            item.style.setProperty("--reveal-delay", `${Math.min(index * 45, 300)}ms`);
+        revealItems.forEach(function (item) {
             revealObserver.observe(item);
         });
     }
 
     function setupPointerGlow() {
-        if (!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches)) {
+        if (!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches)
+            || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
         }
         document.querySelectorAll("[data-pointer-glow]").forEach(function (card) {

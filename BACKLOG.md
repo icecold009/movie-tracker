@@ -271,7 +271,28 @@ these current gates.
       sensitive/binary files, or truncation; outcome `no_clear_issue`, with no
       concrete finding. Focused tests, omitted-year regression, and synthetic
       browser checks cover the indicated UI and recovery contracts.
-## P0 — Make the existing project truthful and reliable
+
+### Motion and performance package — 2026-10-04
+
+- [x] Reduce card/reveal movement to 180ms, poster movement to 200ms, and
+      button press feedback to 140ms. Remove reveal staggering and replace the
+      background-position skeleton shimmer with an opacity pulse.
+- [x] Keep hover effects under fine-pointer media, retain only purposeful
+      transform/opacity motion, and make reduced motion reveal content at once
+      while disabling animation, transitions, hover movement, and pointer glow.
+- [x] Focused auth, route, loading, and recommendations regressions: 22 passed;
+      `node --check static/app.js` and `git diff --cached --check` passed. Source
+      scan confirms hover selectors stay within the fine-pointer media block and
+      frequent transitions are 140–200ms; no reveal delay or shimmer remains.
+- [x] Headless Playwright Chromium with synthetic entries: at 1280x800, fine
+      pointer produced the intended card lift; at 390x844 with coarse pointer,
+      hover produced no transform. With reduced motion, every reveal was visible,
+      transitions were 0s, skeleton animation was `none`, pointer glow opacity
+      was 0, and hover produced no transform. No console errors or non-local
+      requests occurred. Fixture stubs prevented database, provider, and usage
+      writes.
+- [ ] Run full route/viewport screenshots at 390/768/1024/1440 in Package 6.
+- [x] Jev `jev-1.13.0` reviewed the complete diff: 3/3 changed files, no exclusions, sensitive/binary files, or truncation; usage 11,225 input / 501 output tokens. The typed gate was `resolve_findings_or_human_review` with `correctness_concern` at 0.25 confidence and no source-specific finding in the response. Validated against the focused 22-test run and synthetic Chromium fine/coarse/reduced-motion checks above; the four-viewport route matrix remains in Package 6.## P0 — Make the existing project truthful and reliable
 ### Deployment and runtime
 
 - [x] Decide whether the canonical deployment is Vercel or Render. Vercel is
