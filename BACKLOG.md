@@ -292,7 +292,30 @@ these current gates.
       requests occurred. Fixture stubs prevented database, provider, and usage
       writes.
 - [ ] Run full route/viewport screenshots at 390/768/1024/1440 in Package 6.
-- [x] Jev `jev-1.13.0` reviewed the complete diff: 3/3 changed files, no exclusions, sensitive/binary files, or truncation; usage 11,225 input / 501 output tokens. The typed gate was `resolve_findings_or_human_review` with `correctness_concern` at 0.25 confidence and no source-specific finding in the response. Validated against the focused 22-test run and synthetic Chromium fine/coarse/reduced-motion checks above; the four-viewport route matrix remains in Package 6.## P0 — Make the existing project truthful and reliable
+- [x] Jev `jev-1.13.0` reviewed the complete diff: 3/3 changed files, no exclusions, sensitive/binary files, or truncation; usage 11,225 input / 501 output tokens. The typed gate was `resolve_findings_or_human_review` with `correctness_concern` at 0.25 confidence and no source-specific finding in the response. Validated against the focused 22-test run and synthetic Chromium fine/coarse/reduced-motion checks above; the four-viewport route matrix remains in Package 6.### Evidence and release package — 2026-10-04
+
+- [x] Add reusable synthetic pytest fixtures for empty/results/admin, database
+      and TMDB failures, manual recovery, stale metadata, undo, and empty
+      recommendations. Fixture writes are recorded in memory; provider calls
+      are stubbed.
+- [x] Add a loopback-only Flask fixture server replacing database reads/writes
+      and TMDB calls, plus a Playwright matrix that blocks non-local requests,
+      refuses dirty worktrees, and writes screenshots/reports outside Git.
+- [x] Review the Package 6 plan with Jev `jev-1.13.0` against six selected
+      current source/docs files. Two plan results were generic
+      `revise_plan_before_changes` advisories with scope/order risk scores; no
+      source-specific defect or user decision was identified. The final sequence
+      is limited to evidence tooling, test-driven corrections, and exact-commit
+      reporting.
+- [ ] Run the responsive route/state/pointer/reduced-motion/no-JS matrix at
+      390/768/1024/1440; inspect screenshots, interaction records, and errors.
+- [ ] Apply only reproducible UI/accessibility corrections and rerun the matrix
+      against the final code revision.
+- [ ] Record final pytest, Ruff, compilation, dependency, JavaScript, Jev, and
+      exact-commit preview evidence. Keep human axe/screen-reader and production
+      evidence explicitly unverified unless performed.
+- [x] Keep this package separate from production deployment and data mutation.
+## P0 — Make the existing project truthful and reliable
 ### Deployment and runtime
 
 - [x] Decide whether the canonical deployment is Vercel or Render. Vercel is
