@@ -291,30 +291,44 @@ these current gates.
       was 0, and hover produced no transform. No console errors or non-local
       requests occurred. Fixture stubs prevented database, provider, and usage
       writes.
-- [ ] Run full route/viewport screenshots at 390/768/1024/1440 in Package 6.
-- [x] Jev `jev-1.13.0` reviewed the complete diff: 3/3 changed files, no exclusions, sensitive/binary files, or truncation; usage 11,225 input / 501 output tokens. The typed gate was `resolve_findings_or_human_review` with `correctness_concern` at 0.25 confidence and no source-specific finding in the response. Validated against the focused 22-test run and synthetic Chromium fine/coarse/reduced-motion checks above; the four-viewport route matrix remains in Package 6.### Evidence and release package — 2026-10-04
+- [x] Run full route/viewport screenshots at 390/768/1024/1440 in Package 6; see the final matrix record below.
+- [x] Jev `jev-1.13.0` reviewed the complete diff: 3/3 changed files, no exclusions, sensitive/binary files, or truncation; usage 11,225 input / 501 output tokens. The typed gate was `resolve_findings_or_human_review` with `correctness_concern` at 0.25 confidence and no source-specific finding in the response. Validated against the focused 22-test run and synthetic Chromium fine/coarse/reduced-motion checks above; the four-viewport route matrix remains in Package 6.
+
+### Evidence and release package — 2026-10-05
 
 - [x] Add reusable synthetic pytest fixtures for empty/results/admin, database
       and TMDB failures, manual recovery, stale metadata, undo, and empty
       recommendations. Fixture writes are recorded in memory; provider calls
       are stubbed.
-- [x] Add a loopback-only Flask fixture server replacing database reads/writes
-      and TMDB calls, plus a Playwright matrix that blocks non-local requests,
-      refuses dirty worktrees, and writes screenshots/reports outside Git.
-- [x] Review the Package 6 plan with Jev `jev-1.13.0` against six selected
-      current source/docs files. Two plan results were generic
-      `revise_plan_before_changes` advisories with scope/order risk scores; no
-      source-specific defect or user decision was identified. The final sequence
-      is limited to evidence tooling, test-driven corrections, and exact-commit
-      reporting.
-- [ ] Run the responsive route/state/pointer/reduced-motion/no-JS matrix at
-      390/768/1024/1440; inspect screenshots, interaction records, and errors.
-- [ ] Apply only reproducible UI/accessibility corrections and rerun the matrix
-      against the final code revision.
-- [ ] Record final pytest, Ruff, compilation, dependency, JavaScript, Jev, and
-      exact-commit preview evidence. Keep human axe/screen-reader and production
-      evidence explicitly unverified unless performed.
-- [x] Keep this package separate from production deployment and data mutation.
+- [x] Add a loopback-only Flask fixture server and Playwright matrix that blocks
+      non-local requests, refuses dirty worktrees, and writes evidence outside
+      Git.
+- [x] Run and visually inspect the final route/viewport/state matrix against
+      source commit `9b828537a9041a2c3fcdbe2106978fdbd21823f8`: 12 route/viewport
+      captures at 390x844, 768x1024, 1024x900, and 1440x1000; 12 named states;
+      28 DOM/accessibility records; 5 keyboard, dialog, no-JavaScript,
+      coarse-pointer, and reduced-motion interaction checks; and 27 screenshots.
+      Every viewport had exactly one main landmark, zero horizontal overflow, and no
+      unnamed controls, missing image alternatives, broken ARIA references,
+      undersized targets, or overlays. There were no external requests, console errors, or
+      page errors. The three 503 responses are expected synthetic error states.
+- [x] Fix issues reproduced by the matrix: footer/back-link target heights,
+      the login main landmark, pre-JavaScript Manage naming, mobile Manage
+      target width, recovery fixture flow, and screenshot scrolling to reveal
+      below-fold content.
+- [x] Verify 75 pytest tests; Ruff; Python compileall; pip check; JavaScript
+      syntax for `static/app.js` and the matrix runner; and `git diff --check`.
+- [x] Verify preview deployment `dpl_9k7NNpWXREX5aceoVV8dCQNoE6GA` is READY at
+      `movie-tracker-4nttj6hmk-shaurya-s-projects11.vercel.app`, built from
+      `codex/ui-release-evidence-20261004` at exact source commit
+      `9b828537a9041a2c3fcdbe2106978fdbd21823f8` (Vercel target is null,
+      indicating a preview, not production).
+- [x] Keep the screenshots and `verification-report.json` outside the
+      repository. The report records Python 3.14.0, Node v24.19.0, and
+      Chromium 151.0.7922.34; its evidence is local synthetic-fixture evidence.
+- [ ] Run an axe scan and a human screen-reader review; neither is claimed.
+- [x] Keep production deployment and data mutation outside this package.
+
 ## P0 — Make the existing project truthful and reliable
 ### Deployment and runtime
 

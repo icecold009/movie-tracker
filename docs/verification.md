@@ -103,4 +103,39 @@ report. Set UI_EVIDENCE_DIR to save screenshots and the report outside Git.
 - **Production:** record only a separately user-approved production release
   and runtime check. A preview or local test is not production evidence.
 
-Package 6 browser and Vercel status is pending final verification.
+Package 6 final verification was captured on 2026-10-05 against source commit
+`9b828537a9041a2c3fcdbe2106978fdbd21823f8` on
+`codex/ui-release-evidence-20261004`.
+
+- **Local checks:** 75 pytest tests passed; Ruff, compileall, pip check,
+  `node --check static/app.js`, `node --check scripts/ui_browser_matrix.cjs`,
+  and `git diff --check` passed.
+- **Browser matrix:** 12 route/viewport captures across 390x844, 768x1024,
+  1024x900, and 1440x1000; 12 named states; 28 DOM/accessibility records;
+  five interaction checks; and 27 screenshots. All viewport audits passed:
+  exactly one main landmark, zero horizontal overflow, and no unnamed controls,
+  missing image alternatives, broken ARIA references, undersized targets, or
+  overlays.
+  There were zero external requests, console errors, or page errors. Three
+  expected HTTP 503 responses represented synthetic provider/database errors.
+- **Interaction coverage:** server-rendered no-JavaScript form; keyboard order
+  and visible focus; dialog isolation, focus trap, Escape, and focus return;
+  coarse-pointer hover behavior; and reduced-motion behavior all passed.
+- **Evidence artifact:** `verification-report.json` and 27 screenshots were
+  saved under the configured external UI evidence directory, outside Git. The
+  report identifies source SHA `9b828537a9041a2c3fcdbe2106978fdbd21823f8`.
+- **Jev:** plan and diff reviews are advisory. The plan review returned a
+  generic revise advisory without naming a source defect or user decision;
+  the diff review batches and their exact coverage are recorded in the final
+  PR and task handoff.
+- **Preview:** Vercel deployment
+  `dpl_9k7NNpWXREX5aceoVV8dCQNoE6GA` is READY at
+  [movie-tracker-4nttj6hmk-shaurya-s-projects11.vercel.app](https://movie-tracker-4nttj6hmk-shaurya-s-projects11.vercel.app).
+  Vercel metadata confirms branch
+  `codex/ui-release-evidence-20261004` and exact source SHA
+  `9b828537a9041a2c3fcdbe2106978fdbd21823f8`; target is null, identifying
+  this as a preview deployment.
+- **Limits:** browser evidence uses only the local synthetic Flask fixture
+  server, with provider/database access replaced and external requests blocked.
+  The targeted DOM/keyboard checks are not axe results or a human screen-reader
+  pass. This record does not represent production deployment or production data.
