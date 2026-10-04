@@ -711,3 +711,8 @@ questions without new evidence.
 Track A is selected because it can be deterministic, explainable, and evaluated
 with the existing personal watchlist. Track B remains out of scope unless a
 legitimate availability source and historical snapshot terms are established.
+
+
+## Architecture documentation publication — 2026-10-04
+
+Goal: publish source-linked architecture documentation and diagram previews. Scope: README, this backlog and docs/architecture artifacts. Source snapshot: f2209af2891c9f5c9df3e03de8399419e2b51897; no runtime, dependency, data or deployment changes. Acceptance: pinned inventory/source-map/embedding checks, ten intended negative cases, renderer checks, bounded Jev review, documentation-only commit and remotely verified PR. Jev remains advisory; pre-existing workspace changes are excluded.
