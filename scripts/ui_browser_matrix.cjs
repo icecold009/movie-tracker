@@ -173,7 +173,27 @@ async function newPage(contextOptions, label) {
   return { context, page };
 }
 
+async function prepareRevealScreenshot(page) {
+  const original = await page.evaluate(() => ({
+    left: window.scrollX,
+    top: window.scrollY,
+    height: document.documentElement.scrollHeight,
+    viewport: window.innerHeight,
+  }));
+  const step = Math.max(160, Math.floor(original.viewport * 0.75));
+  for (let top = 0; top < original.height; top += step) {
+    await page.evaluate((nextTop) => window.scrollTo({ top: nextTop, behavior: "instant" }), top);
+    await delay(210);
+  }
+  await page.evaluate(
+    ({ left, top }) => window.scrollTo({ left, top, behavior: "instant" }),
+    original,
+  );
+  await delay(210);
+}
+
 async function screenshot(page, label) {
+  await prepareRevealScreenshot(page);
   const filename = label.replace(/[^a-z0-9-]+/gi, "-").toLowerCase() + ".png";
   const filepath = path.join(output, filename);
   await page.screenshot({
