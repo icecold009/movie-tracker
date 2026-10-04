@@ -1459,6 +1459,7 @@ button:disabled { cursor: wait; opacity: 0.62; }
     .library-header .site-title { font-size: 1rem; }
     .site-nav { width: 100%; justify-content: space-between; gap: 0; }
     .site-nav .login-link { justify-content: center; padding: 8px 5px; font-size: 0.69rem; }
+    .site-nav [data-manage-toggle] { min-inline-size: 44px; }
     .site-nav .logout-btn { padding: 7px 9px; font-size: 0.69rem; }
     .library-hero {
         align-items: flex-start;
