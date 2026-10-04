@@ -245,6 +245,32 @@ these current gates.
       the modal and management behavior. Plan reviews also returned generic
       revise advisories without a concrete concern or user decision.
 
+### Recommendations and login package — 2026-10-04
+
+- [x] Separate recommendation signals, generation time, and limitations; state
+      that TMDB cache age is not exposed and avoid quality or availability claims.
+- [x] Show provider-supplied media type/year only when present. Give empty,
+      TMDB-provider, and database-error states accurate messages with Retry and
+      library actions.
+- [x] Align login presentation while retaining password visibility, autofill,
+      focus behavior, CSRF, generic errors, rate limiting, and authentication.
+- [x] Distinguish database failure from TMDB failure in the existing route data;
+      no auth/session/data mutation behavior changes.
+- [x] Focused recommendation/auth/route/loading suite: 35 passed; JavaScript
+      syntax and `git diff --cached --check` passed.
+- [x] Added a route regression proving the year is omitted when absent from
+      provider data. The in-app browser at 1280x720 verified a synthetic result,
+      empty state, TMDB failure, database failure with distinct recovery copy,
+      and the unauthenticated login form/footer. No credentials were entered;
+      recommendation/provider calls and usage recording were stubbed.
+- [ ] Run the responsive 390/768/1024/1440 browser matrix in Package 6.
+- [x] Source-backed Jev plan review covered the six selected package files
+      (jev-1.13.0); its generic revise advisory had no concrete source issue or
+      user-decision request.
+- [x] Jev `jev-1.13.0` reviewed the complete six-file diff with no exclusions,
+      sensitive/binary files, or truncation; outcome `no_clear_issue`, with no
+      concrete finding. Focused tests, omitted-year regression, and synthetic
+      browser checks cover the indicated UI and recovery contracts.
 ## P0 — Make the existing project truthful and reliable
 ### Deployment and runtime
 
