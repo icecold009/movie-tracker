@@ -908,6 +908,11 @@ main { position: relative; max-width: 1180px; margin: 0 auto; padding: 0 0 56px;
     gap: 16px;
 }
 .footer-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
     color: var(--text-muted);
     font-size: 0.72rem;
     text-decoration: none;
