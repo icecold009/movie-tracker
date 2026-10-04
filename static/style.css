@@ -351,6 +351,7 @@ img { display: block; max-width: 100%; }
 }
 
 .back-link {
+    min-block-size: 44px;
     display: block;
     text-align: center;
     color: var(--text-muted);
