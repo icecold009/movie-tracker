@@ -177,3 +177,43 @@ For the remaining work and the evidence behind these decisions, see the
 [`docs/operations.md`](docs/operations.md), and
 [`docs/usage-measurement.md`](docs/usage-measurement.md).
 
+
+## Source-reviewed architecture overview
+
+```mermaid
+%% Source-reviewed overview; 2026-10-03; commit f2209af2891c9f5c9df3e03de8399419e2b51897
+%% Solid edges: core flow. Dashed edges: optional or separately invoked services.
+%%{init: {"theme":"base","securityLevel":"loose","fontFamily":"Arial, sans-serif","themeVariables":{"background":"#0b1220","primaryColor":"#17283d","primaryTextColor":"#edf4ff","primaryBorderColor":"#71c4ec","lineColor":"#9fadc1","secondaryColor":"#213548","tertiaryColor":"#17283d","edgeLabelBackground":"#0b1220","clusterBkg":"#101d2e","clusterBorder":"#456783","fontSize":"17px"},"flowchart":{"htmlLabels":true,"curve":"linear","nodeSpacing":35,"rankSpacing":50}}}%%
+flowchart TD
+  B["Public / admin browser"]
+  F["Flask routes + Jinja"]
+  S["Signed session + CSRF"]
+  D["Direct database transactions"]
+  P["PostgreSQL entries + usage"]
+  T["TMDB adapter + warm cache"]
+  X["TMDB API + image CDN"]
+  R["Deterministic recommendations"]
+  B --> F
+  B -. poster images .-> X
+  F -->|watchlist mutations require| S
+  S -->|authorized mutation| D
+  F -->|public reads and usage counters| D
+  D <--> P
+  F --> T
+  T -.->|bounded request| X
+  X -.->|metadata and candidates| T
+  F -->|entries and candidates| R
+  R -->|explained suggestions| F
+  click B "templates/index.html" "Open source"
+  click F "api/index.py" "Open source"
+  click S "api/index.py" "Open source"
+  click D "database.py" "Open source"
+  click P "supabase/migrations" "Open source"
+  click T "tmdb.py" "Open source"
+  click X "tmdb.py" "Open source"
+  click R "recommendations.py" "Open source"
+  classDef core fill:#17283d,stroke:#71c4ec,stroke-width:1.6px,color:#edf4ff;
+  class B,F,S,D,P,T,X,R core;
+```
+
+See the [architecture case study and source map](docs/architecture/README.md) for the main flow, engineering decision, limitations and source snapshot; [editable Mermaid](docs/architecture/overview.mmd) is retained for editing; PNG previews remain in the separate downloadable gallery.
