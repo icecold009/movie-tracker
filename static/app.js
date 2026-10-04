@@ -375,67 +375,6 @@
         };
     }
 
-    function setupTitleSearch() {
-        const input = document.getElementById("title");
-        const feedback = document.getElementById("title-search-feedback");
-        const results = document.getElementById("title-search-results");
-        if (!input || !feedback || !results) {
-            return;
-        }
-        let timer = null;
-        let controller = null;
-        let searchSequence = 0;
-        input.addEventListener("input", function () {
-            const requestSequence = ++searchSequence;
-            window.clearTimeout(timer);
-            if (controller) {
-                controller.abort();
-            }
-            results.replaceChildren();
-            results.hidden = true;
-            const query = input.value.trim();
-            if (query.length < 2) {
-                feedback.hidden = true;
-                return;
-            }
-            feedback.hidden = false;
-            feedback.textContent = "Checking TMDB match...";
-            timer = window.setTimeout(async function () {
-                controller = new AbortController();
-                try {
-                    const response = await fetch(`/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });
-                    const payload = await response.json();
-                    if (requestSequence !== searchSequence) {
-                        return;
-                    }
-                    if (!response.ok || payload.error) {
-                        throw new Error(payload.error || "Search unavailable.");
-                    }
-                    if (!payload.result) {
-                        feedback.textContent = "No TMDB match found. You can save this title manually.";
-                        return;
-                    }
-                    feedback.textContent = "TMDB match found. Review it or save manually.";
-                    const suggestion = document.createElement("button");
-                    suggestion.type = "button";
-                    suggestion.className = "search-suggestion";
-                    suggestion.textContent = `Use “${payload.result.full_title}”`;
-                    suggestion.addEventListener("click", function () {
-                        input.value = payload.result.full_title;
-                        feedback.textContent = "TMDB match selected.";
-                        results.hidden = true;
-                    });
-                    results.appendChild(suggestion);
-                    results.hidden = false;
-                } catch (error) {
-                    if (requestSequence === searchSequence && error.name !== "AbortError") {
-                        feedback.textContent = "TMDB search is unavailable. You can save this title manually.";
-                    }
-                }
-            }, 260);
-        });
-    }
-
     setupReveal();
     setupPointerGlow();
     setupImageFallbacks();
@@ -443,5 +382,7 @@
     setupEditModal();
     setupDetailModal();
     setupDeleteModal();
-    setupTitleSearch();
+    if (window.MovieTrackerTitleSearch) {
+        window.MovieTrackerTitleSearch.setupTitleSearch();
+    }
 }());

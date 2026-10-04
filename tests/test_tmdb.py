@@ -86,8 +86,23 @@ def test_search_wraps_timeout(monkeypatch):
         Mock(side_effect=requests.Timeout("timed out")),
     )
 
-    with pytest.raises(tmdb.TMDBRequestError, match="too long"):
+    with pytest.raises(tmdb.TMDBRequestError, match="too long") as error:
         tmdb.search_tmdb("Timeout")
+
+    assert error.value.code == "timeout"
+
+
+def test_search_marks_network_failure_as_offline(monkeypatch):
+    monkeypatch.setattr(
+        tmdb.requests,
+        "get",
+        Mock(side_effect=requests.ConnectionError("offline")),
+    )
+
+    with pytest.raises(tmdb.TMDBRequestError, match="unavailable") as error:
+        tmdb.search_tmdb("Offline")
+
+    assert error.value.code == "offline"
 
 
 def test_search_enforces_warm_instance_rate_limit(monkeypatch):
@@ -110,8 +125,10 @@ def test_search_wraps_non_success_status(monkeypatch):
     response.raise_for_status.side_effect = requests.HTTPError("503")
     monkeypatch.setattr(tmdb.requests, "get", Mock(return_value=response))
 
-    with pytest.raises(tmdb.TMDBResponseError, match="returned an error"):
+    with pytest.raises(tmdb.TMDBResponseError, match="returned an error") as error:
         tmdb.search_tmdb("Unavailable")
+
+    assert error.value.code == "provider_unavailable"
 
 
 def test_search_wraps_provider_quota_status(monkeypatch):
@@ -119,8 +136,11 @@ def test_search_wraps_provider_quota_status(monkeypatch):
     response.raise_for_status.side_effect = requests.HTTPError("429")
     monkeypatch.setattr(tmdb.requests, "get", Mock(return_value=response))
 
-    with pytest.raises(tmdb.TMDBResponseError, match="rate limit"):
+    with pytest.raises(tmdb.TMDBRateLimitError, match="rate limit") as error:
         tmdb.search_tmdb("Quota")
+
+    assert error.value.code == "rate_limited"
+    assert error.value.status_code == 429
 
 
 def test_search_wraps_malformed_json(monkeypatch):
@@ -128,8 +148,10 @@ def test_search_wraps_malformed_json(monkeypatch):
     response.json.side_effect = ValueError("invalid json")
     monkeypatch.setattr(tmdb.requests, "get", Mock(return_value=response))
 
-    with pytest.raises(tmdb.TMDBResponseError, match="invalid response"):
+    with pytest.raises(tmdb.TMDBResponseError, match="invalid response") as error:
         tmdb.search_tmdb("Malformed")
+
+    assert error.value.code == "malformed_response"
 
 
 def test_discover_normalizes_movie_candidates_and_genre_filter(monkeypatch):

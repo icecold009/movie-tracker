@@ -9,7 +9,11 @@ def test_watchlist_includes_progressive_loading_skeleton(app, monkeypatch):
 
     assert response.status_code == 200
     assert b"data-page-skeleton" in response.data
+    assert b"/static/title-search.js" in response.data
     assert b"/static/app.js" in response.data
+    assert response.data.index(b"/static/title-search.js") < response.data.index(
+        b"/static/app.js"
+    )
     assert b"Shaurya's watchlist" in response.data
 
 

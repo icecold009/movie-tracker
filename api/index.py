@@ -321,7 +321,11 @@ def search():
     try:
         result = search_tmdb(query)
     except TMDBError as error:
-        return jsonify(error=str(error)), 503
+        return jsonify(
+            error=str(error),
+            error_code=error.code,
+            retryable=error.retryable,
+        ), error.status_code
     return jsonify(result=result)
 
 

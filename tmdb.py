@@ -24,9 +24,20 @@ _state_lock = Lock()
 class TMDBError(Exception):
     """Base class for safe, user-visible TMDB integration failures."""
 
+    code = "provider_unavailable"
+    status_code = 503
+    retryable = True
+
+    def __init__(self, message, *, code=None, retryable=None):
+        super().__init__(message)
+        if code is not None:
+            self.code = code
+        if retryable is not None:
+            self.retryable = retryable
+
 
 class TMDBRequestError(TMDBError):
-    pass
+    code = "offline"
 
 
 class TMDBResponseError(TMDBError):
@@ -34,7 +45,8 @@ class TMDBResponseError(TMDBError):
 
 
 class TMDBRateLimitError(TMDBError):
-    pass
+    code = "rate_limited"
+    status_code = 429
 
 
 def _cache_key(title):
@@ -88,7 +100,10 @@ def _request_json(url, params):
         response = requests.get(url, params=params, timeout=TMDB_REQUEST_TIMEOUT_SECONDS)
     except requests.Timeout as exc:
         log_event(logger, logging.WARNING, "tmdb.request_timeout", provider="tmdb")
-        raise TMDBRequestError("TMDB took too long to respond. Try again later.") from exc
+        raise TMDBRequestError(
+            "TMDB took too long to respond. Try again later.",
+            code="timeout",
+        ) from exc
     except requests.RequestException as exc:
         log_event(
             logger,
@@ -112,17 +127,21 @@ def _request_json(url, params):
         )
         if status_code in (401, 403):
             message = "TMDB rejected the server API configuration."
+            error = TMDBResponseError(message, retryable=False)
         elif status_code == 429:
-            message = "TMDB rate limit reached. Try again later."
+            error = TMDBRateLimitError("TMDB rate limit reached. Try again later.")
         else:
-            message = "TMDB returned an error. Try again later."
-        raise TMDBResponseError(message) from exc
+            error = TMDBResponseError("TMDB returned an error. Try again later.")
+        raise error from exc
 
     try:
         return response.json()
     except (TypeError, ValueError) as exc:
         log_event(logger, logging.WARNING, "tmdb.malformed_json", provider="tmdb")
-        raise TMDBResponseError("TMDB returned an invalid response.") from exc
+        raise TMDBResponseError(
+            "TMDB returned an invalid response.",
+            code="malformed_response",
+        ) from exc
 
 
 def search_tmdb(title):
@@ -145,7 +164,10 @@ def search_tmdb(title):
     results = data.get("results") if isinstance(data, dict) else None
     if not isinstance(results, list):
         log_event(logger, logging.WARNING, "tmdb.invalid_search_shape", provider="tmdb")
-        raise TMDBResponseError("TMDB returned an invalid response.")
+        raise TMDBResponseError(
+            "TMDB returned an invalid response.",
+            code="malformed_response",
+        )
 
     # Filter out people; the multi-search endpoint returns actors/directors too.
     results = [
@@ -212,7 +234,10 @@ def discover_tmdb(media_type, genre_ids=()):
     results = data.get("results") if isinstance(data, dict) else None
     if not isinstance(results, list):
         log_event(logger, logging.WARNING, "tmdb.invalid_discovery_shape", provider="tmdb")
-        raise TMDBResponseError("TMDB returned an invalid response.")
+        raise TMDBResponseError(
+            "TMDB returned an invalid response.",
+            code="malformed_response",
+        )
 
     candidates = []
     for item in results:

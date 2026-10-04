@@ -104,6 +104,34 @@ these current gates.
       newer query after an abort or slow provider response. The client now
       checks a monotonically increasing request identity before applying
       results or errors; Node syntax validation passed on 2026-08-24.
+- [x] **MT-01 — Make title search failure behavior testable and explicit.**
+      The browser search is isolated behind `static/title-search.js`, with a
+      pinned jsdom/package-lock harness and a dedicated CI job. Fifteen DOM
+      checks cover the real browser bootstrap, debounce, abort, response order,
+      clear input, no result, selection, timeout, offline, rate limit, provider
+      unavailability, malformed responses, stale-result removal, and retry.
+      The `/search` boundary now returns safe `error_code`, `retryable`, and HTTP
+      status fields without exposing provider or configuration details.
+  - Decision: clear the last good result immediately when the query changes and
+    keep it cleared while the newer request is pending or fails. A selectable
+    result for an older title is more misleading than an explicit loading or
+    retry state for the current query.
+  - Evidence on 2026-08-27: `npm.cmd ci` installed the lockfile (39 packages,
+    audit clean); `npm.cmd run test:frontend` passed 15 checks; focused Python
+    search/provider/template coverage passed 29 tests; the full suite passed 74
+    tests; Ruff, Python compilation, `pip check`, JavaScript syntax, and
+    `git diff --check` passed.
+  - Browser evidence on 2026-08-27: a fixture-backed local run at
+    `http://127.0.0.1:5017/` rendered the authenticated add form, returned a
+    selectable Dune fixture, copied the selection, replaced it with the timeout
+    message and retry control for a newer query, and produced no new console
+    warnings/errors after the fix. The timeout state had no horizontal overflow
+    at 390x844. The fixture made no database, TMDB, deployment, or production
+    mutation.
+  - [ ] Follow-up: run the locked frontend job in hosted CI and capture hosted
+        provider-state evidence after this branch is published and intentionally
+        deployed. Local DOM and fixture-browser checks do not prove live TMDB,
+        production network, physical-device, or deployed behavior.
 
 ## P0 — Make the existing project truthful and reliable
 

@@ -8,6 +8,26 @@ permissions:
   contents: read
 
 jobs:
+  frontend:
+    name: Frontend DOM tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.12.0"
+          cache: npm
+
+      - name: Install locked frontend dependencies
+        run: npm ci
+
+      - name: Run frontend DOM tests
+        run: npm run test:frontend
+
   test:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

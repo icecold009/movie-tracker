@@ -1,4 +1,7 @@
+import pytest
+
 from api import index
+from tmdb import TMDBRateLimitError, TMDBRequestError, TMDBResponseError
 
 
 def logged_in_client(app):
@@ -107,3 +110,60 @@ def test_authenticated_search_route_returns_safe_tmdb_result(app, monkeypatch):
 
     assert response.status_code == 200
     assert response.get_json()["result"]["full_title"] == "Dune"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_status", "expected_code", "expected_retryable"),
+    [
+        (
+            TMDBRequestError("TMDB took too long.", code="timeout"),
+            503,
+            "timeout",
+            True,
+        ),
+        (TMDBRequestError("TMDB is unavailable."), 503, "offline", True),
+        (TMDBRateLimitError("Try again later."), 429, "rate_limited", True),
+        (
+            TMDBResponseError("TMDB returned an error."),
+            503,
+            "provider_unavailable",
+            True,
+        ),
+        (
+            TMDBResponseError(
+                "TMDB returned an invalid response.",
+                code="malformed_response",
+            ),
+            503,
+            "malformed_response",
+            True,
+        ),
+        (
+            TMDBResponseError("TMDB rejected its configuration.", retryable=False),
+            503,
+            "provider_unavailable",
+            False,
+        ),
+    ],
+)
+def test_authenticated_search_route_returns_typed_safe_errors(
+    app,
+    monkeypatch,
+    error,
+    expected_status,
+    expected_code,
+    expected_retryable,
+):
+    def fail_search(query):
+        raise error
+
+    monkeypatch.setattr(index, "search_tmdb", fail_search)
+
+    response = logged_in_client(app).get("/search?q=dune")
+
+    assert response.status_code == expected_status
+    assert response.get_json() == {
+        "error": str(error),
+        "error_code": expected_code,
+        "retryable": expected_retryable,
+    }
