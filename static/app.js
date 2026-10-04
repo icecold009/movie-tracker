@@ -7,6 +7,9 @@
     const skeleton = document.querySelector("[data-page-skeleton]");
     const main = document.querySelector("main");
     let openDeleteConfirmation = null;
+    let activeModalElement = null;
+    let modalBackgroundState = new Map();
+    let modalScrollState = null;
 
     function showLoadingState() {
         if (skeleton) {
@@ -67,7 +70,7 @@
         if (form.matches("[data-delete-form]") && form.dataset.confirmed !== "true") {
             event.preventDefault();
             if (openDeleteConfirmation) {
-                openDeleteConfirmation(form);
+                openDeleteConfirmation(form, event.submitter);
             }
             return;
         }
@@ -280,28 +283,124 @@
 
     function focusableIn(modal) {
         return Array.from(modal.querySelectorAll(
-            "button:not([disabled]), select:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex=\"-1\"])"
-        ));
+            "button:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), input:not([type=\"hidden\"]):not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), [href]:not([hidden]), [contenteditable=\"true\"]:not([hidden]), [tabindex]:not([tabindex=\"-1\"]):not([hidden])"
+        )).filter(function (element) {
+            return element.getClientRects().length > 0 && element.getAttribute("aria-hidden") !== "true";
+        });
     }
 
-    function setupModal(modal, closeButton, initialFocus, preserveScrollOnFocus) {
+    function isolatePageForModal(modal) {
+        modalBackgroundState = new Map();
+        Array.from(document.body.children).forEach(function (region) {
+            if (region === modal || region.contains(modal)) {
+                return;
+            }
+            modalBackgroundState.set(region, {
+                inert: region.inert,
+                ariaHidden: region.getAttribute("aria-hidden"),
+            });
+            region.inert = true;
+            region.setAttribute("aria-hidden", "true");
+        });
+    }
+
+    function restorePageAfterModal() {
+        modalBackgroundState.forEach(function (state, region) {
+            region.inert = state.inert;
+            if (state.ariaHidden === null) {
+                region.removeAttribute("aria-hidden");
+            } else {
+                region.setAttribute("aria-hidden", state.ariaHidden);
+            }
+        });
+        modalBackgroundState.clear();
+    }
+
+    function lockPageScroll() {
+        if (modalScrollState) {
+            return;
+        }
+        const body = document.body;
+        const root = document.documentElement;
+        const scrollY = window.scrollY || root.scrollTop || 0;
+        const scrollbarWidth = Math.max(0, window.innerWidth - root.clientWidth);
+        const currentPadding = Number.parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+        modalScrollState = {
+            scrollY: scrollY,
+            bodyStyle: body.getAttribute("style"),
+            rootStyle: root.getAttribute("style"),
+        };
+        root.style.overflow = "hidden";
+        body.style.position = "fixed";
+        body.style.top = `-${scrollY}px`;
+        body.style.left = "0";
+        body.style.right = "0";
+        body.style.width = "100%";
+        body.style.overflow = "hidden";
+        if (scrollbarWidth > 0) {
+            body.style.paddingRight = `${currentPadding + scrollbarWidth}px`;
+        }
+    }
+
+    function unlockPageScroll() {
+        if (!modalScrollState) {
+            return;
+        }
+        const state = modalScrollState;
+        modalScrollState = null;
+        if (state.bodyStyle === null) {
+            document.body.removeAttribute("style");
+        } else {
+            document.body.setAttribute("style", state.bodyStyle);
+        }
+        if (state.rootStyle === null) {
+            document.documentElement.removeAttribute("style");
+        } else {
+            document.documentElement.setAttribute("style", state.rootStyle);
+        }
+        window.scrollTo(0, state.scrollY);
+    }
+
+    function setupModal(modal, closeButton, initialFocus) {
         if (!modal || !closeButton) {
             return { open: function () {}, close: function () {} };
         }
         let lastFocusedElement = null;
-        const focusOptions = preserveScrollOnFocus ? { preventScroll: true } : undefined;
+        const focusOptions = { preventScroll: true };
         function close() {
+            if (!modal.classList.contains("active")) {
+                return;
+            }
+            const returnFocus = lastFocusedElement;
             modal.classList.remove("active");
             modal.setAttribute("aria-hidden", "true");
-            if (lastFocusedElement) {
-                lastFocusedElement.focus(focusOptions);
+            document.removeEventListener("focusin", keepFocusInside, true);
+            if (activeModalElement === modal) {
+                activeModalElement = null;
+                restorePageAfterModal();
+                unlockPageScroll();
+            }
+            if (returnFocus && returnFocus.isConnected) {
+                returnFocus.focus(focusOptions);
             }
         }
         function open(trigger) {
+            if (activeModalElement && activeModalElement !== modal) {
+                return;
+            }
             lastFocusedElement = trigger;
+            activeModalElement = modal;
+            isolatePageForModal(modal);
+            lockPageScroll();
             modal.classList.add("active");
             modal.setAttribute("aria-hidden", "false");
+            document.addEventListener("focusin", keepFocusInside, true);
             (initialFocus || closeButton).focus(focusOptions);
+        }
+        function keepFocusInside(event) {
+            if (activeModalElement === modal && !modal.contains(event.target)) {
+                (initialFocus || closeButton).focus(focusOptions);
+            }
         }
         closeButton.addEventListener("click", close);
         modal.addEventListener("click", function (event) {
@@ -311,6 +410,7 @@
         });
         modal.addEventListener("keydown", function (event) {
             if (event.key === "Escape") {
+                event.preventDefault();
                 close();
                 return;
             }
@@ -323,12 +423,16 @@
             }
             const first = focusable[0];
             const last = focusable[focusable.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
+            const activeIndex = focusable.indexOf(document.activeElement);
+            if (!focusable.length) {
                 event.preventDefault();
-                last.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
+                modal.focus(focusOptions);
+            } else if (event.shiftKey && activeIndex <= 0) {
                 event.preventDefault();
-                first.focus();
+                last.focus(focusOptions);
+            } else if (!event.shiftKey && (activeIndex === -1 || activeIndex === focusable.length - 1)) {
+                event.preventDefault();
+                first.focus(focusOptions);
             }
         });
         return { open: open, close: close };
@@ -343,7 +447,7 @@
         const rating = document.getElementById("modal-rating");
         const title = document.getElementById("edit-modal-title-text");
         const controller = setupModal(modal, document.getElementById("modal-close"), status);
-        document.querySelectorAll(".edit-btn").forEach(function (button) {
+        document.querySelectorAll(".card-edit-js").forEach(function (button) {
             button.addEventListener("click", function () {
                 document.getElementById("edit-form").action = `/edit/${button.dataset.id}`;
                 status.value = button.dataset.status;
@@ -362,7 +466,7 @@
         }
         const title = document.getElementById("detail-modal-title");
         const poster = document.getElementById("detail-poster");
-        const controller = setupModal(modal, document.getElementById("detail-close"), null, true);
+        const controller = setupModal(modal, document.getElementById("detail-close"), null);
         document.querySelectorAll("[data-detail-trigger]").forEach(function (button) {
             button.addEventListener("click", function () {
                 title.textContent = button.dataset.detailTitle;
@@ -397,11 +501,65 @@
             return;
         }
         const controller = setupModal(modal, document.getElementById("delete-cancel"), document.getElementById("delete-cancel"));
-        openDeleteConfirmation = function (form) {
+        openDeleteConfirmation = function (form, submitter) {
             confirmForm.action = form.action;
             title.textContent = `Delete ${form.dataset.deleteTitle}?`;
-            controller.open(form.querySelector("button[type=submit]"));
+            const trigger = submitter && form.contains(submitter)
+                ? submitter
+                : form.querySelector(".card-delete-js");
+            controller.open(trigger);
         };
+    }
+
+    function setupManagementMode() {
+        const mainRegion = document.querySelector("main[data-management-mode]");
+        const toggle = document.querySelector("[data-manage-toggle]");
+        const workspace = document.querySelector("[data-management-workspace]");
+        if (!mainRegion || !toggle || !workspace) {
+            return;
+        }
+
+        function setMode(active, focusWorkspace) {
+            mainRegion.dataset.managementMode = active ? "active" : "inactive";
+            toggle.setAttribute("aria-expanded", String(active));
+            toggle.textContent = active ? "Done" : "Manage";
+            toggle.setAttribute("aria-label", active ? "Finish managing archive" : "Manage archive");
+            if (active && focusWorkspace) {
+                workspace.scrollIntoView({ block: "start" });
+                const titleInput = workspace.querySelector("#title");
+                if (titleInput) {
+                    titleInput.focus({ preventScroll: true });
+                }
+            } else if (!active && focusWorkspace) {
+                toggle.focus({ preventScroll: true });
+            }
+        }
+
+        function handleManagementLink(event, toggleMode) {
+            if (
+                event.defaultPrevented || event.button !== 0 || event.metaKey ||
+                event.ctrlKey || event.shiftKey || event.altKey
+            ) {
+                return;
+            }
+            event.preventDefault();
+            const currentMode = mainRegion.dataset.managementMode === "active";
+            setMode(toggleMode ? !currentMode : true, true);
+        }
+
+        toggle.addEventListener("click", function (event) {
+            handleManagementLink(event, true);
+        });
+        document.querySelectorAll("[data-management-trigger]").forEach(function (link) {
+            link.addEventListener("click", function (event) {
+                handleManagementLink(event, false);
+            });
+        });
+        toggle.setAttribute("aria-expanded", String(mainRegion.dataset.managementMode === "active"));
+        toggle.textContent = mainRegion.dataset.managementMode === "active" ? "Done" : "Manage";
+        if (window.location.hash === "#management-workspace" || window.location.hash === "#add-form") {
+            setMode(true, false);
+        }
     }
 
     function setupTitleSearch() {
@@ -472,5 +630,6 @@
     setupEditModal();
     setupDetailModal();
     setupDeleteModal();
+    setupManagementMode();
     setupTitleSearch();
 }());
