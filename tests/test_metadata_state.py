@@ -13,7 +13,7 @@ def test_metadata_state_distinguishes_missing_tmdb_and_stale_entries():
     }) == "Stale"
 
 
-def test_index_renders_metadata_state_on_cards_and_details(app, monkeypatch):
+def test_index_keeps_metadata_state_in_the_details_surface(app, monkeypatch):
     monkeypatch.setattr(index, "get_all", lambda: [{
         "id": 1,
         "title": "Old Metadata",
@@ -30,5 +30,6 @@ def test_index_renders_metadata_state_on_cards_and_details(app, monkeypatch):
     response = app.test_client().get("/")
 
     assert response.status_code == 200
-    assert b"Stale metadata" in response.data
     assert b'data-detail-metadata-state="Stale"' in response.data
+    assert b'data-detail-source="TMDB"' in response.data
+    assert b'class="metadata-indicator' not in response.data
