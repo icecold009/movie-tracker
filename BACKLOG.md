@@ -157,6 +157,34 @@ these current gates.
       checks a monotonically increasing request identity before applying
       results or errors; Node syntax validation passed on 2026-08-24.
 
+### UI foundation package — 2026-10-01
+
+- [x] Add a shared Jinja base and footer partial; convert the library,
+      recommendations, and login pages to page-specific blocks while keeping
+      their existing server-rendered content, forms, dialogs, and footer links.
+- [x] Consolidate design tokens and shared-shell rules while preserving the
+      mobile header's `flex-start` alignment cascade.
+- [x] Consolidate the single-source design tokens and shared-shell/header
+      rules, removing the superseded pre-refresh header and token blocks.
+      Keep remaining component, state, responsive, and motion rules with their
+      owning library, admin/detail, recommendations/login, and motion packages
+      so their existing cascade stays visible during package-specific changes.
+- [x] Local verification: 67 pytest tests passed and `git diff --check` passed.
+- [x] Capture before/after browser baselines for the library, recommendations,
+      and login at 390x844, 768x900, 1024x900, and 1440x1000 using synthetic
+      fixture data. All 24 route screenshots match exactly; snapshots show no
+      horizontal overflow. Eight server-rendered states plus loading, admin,
+      no-JS form submission, and zero-result filtering also match exactly.
+      Scripts were blocked during route captures. Evidence is saved with this
+      task's visuals.
+- [x] Obtain independent package validation before starting the next UI package;
+      reviewer confirmed 24/24 exact screenshot pairs and no new parity defect.
+- [x] Adapt only the Package 1 change onto current main at 68d3a12; keep its
+      page metadata, canonical/OG tags, Google verification, and existing
+      footer destinations intact. No unrelated base commits were carried.
+- [x] Complete source-backed Jev review of the full seven-file Package 1
+      diff (jev-1.13.0, no exclusions). Jev returned a generic verification-
+      gap advisory; 17 focused route/auth/loading/recommendation tests passed.
 ## P0 — Make the existing project truthful and reliable
 
 ### Deployment and runtime
