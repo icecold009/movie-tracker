@@ -21,6 +21,9 @@ def test_login_uses_clean_password_panel(app):
     assert b"data-password-input" in response.data
     assert b"data-password-toggle" in response.data
     assert b'autocomplete="current-password"' in response.data
+    assert b'role="alert"' not in response.data
+    assert b'name="csrf_token"' in response.data
+    assert b'href="/" class="back-link"' in response.data
 
 
 def test_login_success_sets_authenticated_session(app, monkeypatch):

@@ -285,6 +285,7 @@ def recommendations():
             "recommendations.html",
             recommendations=[],
             error=str(error),
+            error_kind="database",
             generated_at=None,
         ), 503
 
@@ -297,6 +298,7 @@ def recommendations():
             "recommendations.html",
             recommendations=[],
             error=str(error),
+            error_kind="provider",
             generated_at=None,
         ), 503
 
