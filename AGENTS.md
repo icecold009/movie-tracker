@@ -54,11 +54,12 @@ Current application locations:
   session. It does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections with a five-second
   connect timeout. Vercel is intended to use the Supabase Shared Pooler
-  transaction-mode URL. The current database has RLS enabled on public tables,
-  but no tracked migration or tested policy aligns row authorization with the
-  Flask session, so do not claim Flask-session-backed RLS. Database operations
-  use a shared transaction context that commits on success and rolls
-  back/closes resources on failure.
+  transaction-mode URL. The 2026-08-16 audit reported RLS enabled on public
+  tables, but no tracked policy aligned row authorization with the Flask
+  session, so do not claim Flask-session-backed RLS. Current live RLS state
+  cannot be rechecked while Supabase is inactive. Database operations use a
+  shared transaction context that commits on success and rolls back/closes
+  resources on failure.
 - Database failures are converted to a safe `DatabaseError`; public reads use
   HTTP 503 with an empty-state message, while authorized mutations flash a
   retryable error without exposing driver details.
@@ -69,20 +70,21 @@ Current application locations:
   `supabase/migrations/`; the obsolete `init_db()` bootstrap was removed so it
   cannot create a weaker competing `entries` schema. Do not assume a fresh
   deployment has applied the migrations.
-- The Supabase `movie-tracker` project is currently `ACTIVE_HEALTHY`, and the
-  canonical Vercel routes are database-backed and returning 200. A current
-  project SQL check reports the `postgres` database role on port 5432; that is
-  not proof of the encrypted Vercel `DATABASE_URL` pooler identity. Re-read the
-  current Connect string and reconcile it with Vercel before claiming the
-  connection configuration is fully verified. The Flask app does not use
-  Supabase REST or GraphQL; production migration `20260816060348` revokes
-  `SELECT` on `public.entries` from `PUBLIC`, `anon`, and `authenticated` while
-  retaining the trusted `postgres` path.
-- The current remote migration history contains six rows and the tracked branch
-  contains six matching migration versions. The live schema was normalized by
-  `20260816090126_align_entries_schema`; Supabase security and performance
-  advisors are clean. Keep the exact encrypted Vercel pooler identity as a
-  separate verification gate.
+- The 2026-08-16 connector audit reported the Supabase `movie-tracker`
+  project as `ACTIVE_HEALTHY`, database-backed routes as HTTP 200, six matching
+  remote migration versions, and clean advisors. Treat those as historical
+  results. On 2026-10-05, Supabase reports the project `INACTIVE`; current
+  migration-history and role-privilege queries timed out. Do not claim live
+  schema, grants, migration parity, or database-backed route health until
+  rechecked.
+- The latest Vercel production deployment is `READY` on `main` at commit
+  `778e0031d6ffec99b69dd0422a4f176b702c73e5`; this is deployment evidence,
+  not route or database health. The exact encrypted Vercel `DATABASE_URL`
+  pooler identity remains unverified because the connector returned metadata
+  without the secret value. The Flask app uses direct PostgreSQL and no
+  Supabase REST or GraphQL; the tracked grant migration revokes `SELECT` on
+  `public.entries` from `PUBLIC`, `anon`, and `authenticated`. Live
+  non-SELECT grants are unverified.
 - A pytest suite and CI workflow are tracked. The 2026-08-16 audit branch run
   passed 61 tests, Ruff, compilation, pip check, JavaScript syntax, and diff
   checks; keep later claims tied to a current branch and commit.
