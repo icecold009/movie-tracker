@@ -78,7 +78,21 @@ Recommended commit checkpoints:
 
 ## Current state and known gaps
 
-### Current audit note — 2026-08-16
+### Current status snapshot — 2026-10-05
+
+The Supabase connector reports Movie Tracker project `vgirgwxehcsxloclanhf` as
+`INACTIVE`. Read-only migration-history and role-privilege queries timed out,
+so current live schema, grants, and database-backed route health have not been
+reverified. The latest Vercel production deployment
+`dpl_2KPyLrvSThXB7R6C75nR1yXXw1Ls` is `READY` from `main` commit
+`778e0031d6ffec99b69dd0422a4f176b702c73e5`; this is deployment evidence, not
+route or database health. A grouped production runtime-status query returned no
+rows in its seven-day window and was not a route probe. The 2026-08-16 audit
+below is historical and must not be read as current provider health. Exact
+deployed `DATABASE_URL` identity, authorized admin mutation, backup restore,
+historical credential rotation, and admin accessibility remain unverified.
+
+### Historical audit note — 2026-08-16
 
 The canonical Vercel production alias currently serves deployment
 `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge` from `main` commit
