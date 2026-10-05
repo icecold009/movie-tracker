@@ -1498,3 +1498,108 @@ button:disabled { cursor: wait; opacity: 0.62; }
     .card-grid { padding-left: 12px; padding-right: 12px; gap: 9px; }
     .card-body { padding: 9px; }
 }
+
+/* ADMIN MANAGEMENT AND DIALOG ACCESSIBILITY */
+html.js-ready main[data-management-mode="inactive"] [data-management-workspace],
+html.js-ready main[data-management-mode="inactive"] [data-management-actions] {
+    display: none !important;
+}
+
+.management-workspace {
+    margin: 18px 40px 32px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(24,24,24,0.58);
+}
+.management-heading { margin-bottom: 16px; }
+.management-heading .eyebrow { margin-bottom: 8px; }
+.management-heading h2 { color: var(--text); font-size: clamp(1.15rem, 2.4vw, 1.5rem); letter-spacing: -0.04em; }
+.management-heading > div > p:last-child { margin-top: 7px; color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
+.management-workspace .add-form { margin: 0; }
+.management-workspace .add-recovery { margin: 14px 0 0; }
+.management-workspace .add-form input[type="text"],
+.management-workspace .add-form select,
+.management-workspace .add-actions > button { min-height: 44px; }
+.management-workspace .rating-group input[type="range"],
+.modal-rating-row input[type="range"] { min-height: 44px; }
+.management-workspace .add-actions > button { flex: 1 1 180px; white-space: normal; }
+
+.card-actions > [data-management-actions] {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+.card-management-actions > button,
+.card-management-actions > form,
+.card-management-actions > details { flex: 1 1 0; min-width: 0; }
+.card-management-actions > form { display: flex; margin: 0; }
+.card-management-actions > form > button,
+.card-management-actions > details > summary { width: 100%; }
+.card-management-actions .edit-btn,
+.card-management-actions .delete-btn,
+.recovery-banner .recovery-btn { min-height: 44px; }
+
+.card-action-fallback { display: flex; flex-direction: column; min-width: 0; }
+.card-action-fallback > summary { list-style: none; cursor: pointer; }
+.card-action-fallback > summary::-webkit-details-marker { display: none; }
+.card-edit-js,
+.card-delete-js { display: none; }
+.card-edit-fallback-form {
+    display: grid;
+    gap: 10px;
+    margin: 8px 0 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(12,12,12,0.92);
+}
+.card-fallback-field { display: grid; gap: 5px; color: var(--text-muted); font-size: 0.72rem; }
+.card-fallback-field select,
+.card-fallback-field input[type="range"] { width: 100%; min-height: 44px; }
+.card-fallback-field select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text); }
+.card-edit-fallback-form .btn-save,
+.card-fallback-delete-confirm { min-height: 44px; }
+.card-fallback-confirmation { margin: 10px 0; color: var(--text-muted); font-size: 0.76rem; line-height: 1.5; }
+.card-delete-fallback .card-fallback-delete-confirm {
+    width: 100%;
+    border: 1px solid rgba(255,107,107,0.42);
+    border-radius: 999px;
+    background: transparent;
+    color: #ff8585;
+    font-weight: 800;
+}
+
+html.js-ready .card-edit-fallback,
+html.js-ready .card-delete-fallback { display: none !important; }
+html.js-ready .card-edit-js,
+html.js-ready .card-delete-js { display: block; }
+html:not(.js-ready) .card-management-actions { display: flex; flex-direction: column; align-items: stretch; }
+html:not(.js-ready) .card-management-actions > form { display: block; }
+html:not(.js-ready) .card-management-actions > .card-action-fallback,
+html:not(.js-ready) .card-management-actions > form > .card-action-fallback { display: flex; }
+
+.modal-overlay { overscroll-behavior: contain; }
+.modal-card {
+    max-height: min(720px, calc(100vh - 32px));
+    max-height: min(720px, calc(100dvh - 32px));
+}
+.modal-dismiss { top: 10px; right: 10px; width: 44px; height: 44px; }
+.modal-field select,
+.modal-actions > button,
+.confirmation-card .modal-actions > button { min-height: 44px; }
+
+html.modal-open { overflow: hidden; overscroll-behavior: none; }
+
+@media (max-width: 700px) {
+    .management-workspace { margin: 16px 16px 28px; padding: 16px; }
+    .management-workspace .add-actions { flex-direction: column; }
+    .management-workspace .add-actions > button { flex-basis: auto; width: 100%; }
+    .card-actions > [data-management-actions] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    html:not(.js-ready) main[data-management-mode] .card-grid,
+    html.js-ready main[data-management-mode="active"] .card-grid { grid-template-columns: minmax(0, 1fr); }
+    .modal-overlay { padding: 12px; }
+    .modal-card { max-height: min(720px, calc(100vh - 24px)); max-height: min(720px, calc(100dvh - 24px)); }
+}

@@ -200,16 +200,52 @@ these current gates.
       Preserve detail-dialog focus behavior and the active filter state.
 - [x] Adapt the existing Package 2 implementation to the current-main shared
       Jinja shell and metadata. No backend, auth, or data changes.
-- [x] Local focused regression checks: 21 Flask tests passed; `node --check
-      static/app.js` and `git diff --cached --check` passed on this branch.
+- [x] Focused regression checks: 21 Flask route/auth/loading/metadata/
+      recommendation tests passed; `node --check static/app.js` and
+      `git diff --cached --check` passed.
 - [ ] Run the synthetic viewport and interaction matrix on the completed UI
       branch in Package 6; no browser-interaction result is claimed here.
 - [x] Jev reviewed the complete six-file diff (jev-1.13.0; no exclusions,
-      sensitive files, binary files, or truncation). Its generic
-      verification-gap advisory called for interaction coverage; the focused
-      route/loading/metadata checks passed and the browser matrix is explicitly
-      reserved for Package 6.## P0 — Make the existing project truthful and reliable
+      sensitive files, binary files, or truncation). The generic
+      verification-gap advisory called for interaction coverage; browser
+      validation is explicitly reserved for Package 6.
 
+### Details and admin accessibility package — 2026-10-04
+
+- [x] Move add/edit/delete controls into a focused Manage mode while keeping
+      the server-rendered workspace and actions usable without JavaScript.
+      Empty-library and recovery links open the workspace; add failures reopen
+      it with title, type, status, and rating preserved.
+- [x] Make TMDB lookup and save-without-metadata actions distinct; keep server
+      routes, CSRF fields, authentication, validation, undo TTL, and database
+      behavior unchanged.
+- [x] Isolate Details, Edit, and Delete dialogs from the background with
+      `inert` and saved `aria-hidden` state, lock page scroll, contain and
+      restore focus, and restore scroll after close. Exclude hidden controls
+      from the keyboard focus sequence.
+- [x] Preserve the explicit delete confirmation and 30-second recovery path.
+      Keep no-JavaScript edit and delete disclosures with the existing POST
+      actions and CSRF tokens.
+- [x] Focused route/auth/mutation/loading/metadata/recommendation suite: 30
+      passed; `node --check static/app.js` and `git diff --cached --check` passed.
+- [x] Synthetic localhost fixture with three titles and a temporary admin
+      session; no database, provider, add, edit, or delete request was sent.
+      At 1280x720, the in-app browser confirmed modal-only accessibility-tree
+      exposure, Edit Tab and Shift+Tab wrapping, Escape and Cancel focus return,
+      scroll lock/restoration after opening Details near the page bottom, and
+      Manage mode on/off. Delete Cancel first exposed a focus-return defect;
+      passing the actual submitter fixed it, and a repeat check returned focus
+      to the visible Delete button.
+- [ ] Complete 390/768/1024/1440 responsive and no-JavaScript interaction checks
+      in Package 6. A human screen-reader session and axe scan remain unverified.
+- [x] Jev `jev-1.13.0` reviewed the complete five-file Package 3 diff with
+      no exclusions, sensitive/binary files, or truncation. Its typed result
+      was a generic verification-gap advisory with no source-specific finding;
+      focused tests and the synthetic browser integration checks above validate
+      the modal and management behavior. Plan reviews also returned generic
+      revise advisories without a concrete concern or user decision.
+
+## P0 — Make the existing project truthful and reliable
 ### Deployment and runtime
 
 - [x] Decide whether the canonical deployment is Vercel or Render. Vercel is
