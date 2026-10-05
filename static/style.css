@@ -351,6 +351,7 @@ img { display: block; max-width: 100%; }
 }
 
 .back-link {
+    min-block-size: 44px;
     display: block;
     text-align: center;
     color: var(--text-muted);
@@ -908,6 +909,11 @@ main { position: relative; max-width: 1180px; margin: 0 auto; padding: 0 0 56px;
     gap: 16px;
 }
 .footer-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
     color: var(--text-muted);
     font-size: 0.72rem;
     text-decoration: none;
@@ -1453,6 +1459,7 @@ button:disabled { cursor: wait; opacity: 0.62; }
     .library-header .site-title { font-size: 1rem; }
     .site-nav { width: 100%; justify-content: space-between; gap: 0; }
     .site-nav .login-link { justify-content: center; padding: 8px 5px; font-size: 0.69rem; }
+    .site-nav [data-manage-toggle] { min-inline-size: 44px; }
     .site-nav .logout-btn { padding: 7px 9px; font-size: 0.69rem; }
     .library-hero {
         align-items: flex-start;

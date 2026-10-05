@@ -48,7 +48,8 @@
         <a href="{{ url_for('recommendations') }}" class="login-link" data-loading-link>Recommendations</a>
         {% if logged_in %}
             <a href="#management-workspace" class="login-link" id="manage-toggle" data-manage-toggle
-               aria-controls="management-workspace" aria-expanded="{{ 'true' if add_recovery else 'false' }}">
+               aria-controls="management-workspace" aria-expanded="{{ 'true' if add_recovery else 'false' }}"
+               aria-label="{{ 'Finish managing archive' if add_recovery else 'Manage archive' }}">
                 {{ 'Done' if add_recovery else 'Manage' }}
             </a>
             <form method="POST" action="/logout" style="margin:0" data-loading-form>

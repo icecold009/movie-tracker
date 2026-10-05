@@ -182,3 +182,74 @@ def test_add_recovery_reopens_curator_workspace_with_entered_values(app, monkeyp
     assert b'value="Want to Watch" selected' in response.data
     assert b'value="8"' in response.data
     assert b"TMDB fixture unavailable." in response.data
+
+def test_reusable_fixture_renders_every_required_server_state(ui_state_render):
+    cases = [
+        ("empty-library", "/", 200, b"No titles yet."),
+        ("authenticated-admin-empty", "/", 200, b'data-management-mode="inactive"'),
+        ("database-error", "/", 503, b"Synthetic database outage."),
+        ("manual-fallback", "/", 200, b"Preserved fixture title"),
+        ("stale-metadata", "/", 200, b'data-detail-metadata-state="Stale"'),
+        ("undo-recovery", "/", 200, b"Undo delete"),
+        ("recommendation-empty", "/recommendations", 200, b"No results to show"),
+        (
+            "recommendation-provider-error",
+            "/recommendations",
+            503,
+            b"Synthetic TMDB outage.",
+        ),
+        (
+            "recommendation-database-error",
+            "/recommendations",
+            503,
+            b"Synthetic saved-title outage.",
+        ),
+    ]
+
+    for state, path, status, marker in cases:
+        rendered = ui_state_render(state, path)
+        assert rendered["response"].status_code == status, state
+        if marker:
+            assert marker in rendered["response"].data, state
+
+
+def test_manual_no_metadata_submission_uses_only_fixture_write(ui_state_render):
+    rendered = ui_state_render("authenticated-admin-empty")
+    response = rendered["client"].post(
+        "/add",
+        data={
+            "csrf_token": "ui-fixture-csrf",
+            "title": "Fixture-only addition",
+            "entry_type": "Movie",
+            "status": "Want to Watch",
+            "rating": "7",
+            "lookup_mode": "manual",
+        },
+    )
+
+    assert response.status_code == 302
+    assert len(rendered["writes"]) == 1
+    assert rendered["writes"][0][0] == "add"
+    assert rendered["writes"][0][1][0] == "Fixture-only addition"
+    assert rendered["provider_calls"] == []
+
+def test_fixture_tmdb_failure_preserves_add_values_for_manual_recovery(ui_state_render):
+    rendered = ui_state_render("tmdb-error")
+    response = rendered["client"].post(
+        "/add",
+        data={
+            "csrf_token": "ui-fixture-csrf",
+            "title": "Synthetic provider failure",
+            "entry_type": "Movie",
+            "status": "Want to Watch",
+            "rating": "6",
+            "lookup_mode": "tmdb",
+        },
+    )
+    page = rendered["client"].get("/")
+
+    assert response.status_code == 302
+    assert b"Synthetic TMDB outage." in page.data
+    assert b'value="Synthetic provider failure"' in page.data
+    assert rendered["provider_calls"] == ["Synthetic provider failure"]
+    assert rendered["writes"] == []
