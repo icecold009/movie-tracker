@@ -1,0 +1,28 @@
+flowchart TB
+  %% Solid arrows: runtime/data dependency; dotted arrows: optional, build or local-only boundary.
+  UI["Jinja pages, mobile dialogs and browser behavior"]
+  API["Flask CRUD, search, login, undo and health routes"]
+  AUTH["Signed sessions, authorization, CSRF and config"]
+  DB["Direct PostgreSQL transactions and migrations"]
+  META["TMDB lookup/search, metadata and throttling"]
+  RANK["Explainable recommendation ranking"]
+  OBS["Safe structured diagnostics"]
+  EVAL["Recommender evaluation and UI fixtures"]
+  RUN["Vercel runtime definition"]
+  RECOVERY["Undo snapshot/token and pending-add metadata states"]
+  SUPPORT["Supporting tests, assets, documentation and delivery config"]
+  IMAGES["TMDB image CDN"]
+  UI --> API
+  UI -. poster images .-> IMAGES
+  AUTH --> API
+  API -->|entries and usage counters| DB
+  API --> META
+  API --> RANK
+  META -->|candidate metadata via route| RANK
+  DB --> RANK
+  API --> OBS
+  EVAL -. evaluates .-> RANK
+  RUN -. entry .-> API
+  API --> RECOVERY
+  RECOVERY --> UI
+  SUPPORT -. supports .-> UI
