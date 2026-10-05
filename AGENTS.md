@@ -54,11 +54,12 @@ Current application locations:
   session. It does not currently integrate Supabase Auth.
 - The database layer uses direct `psycopg2` connections with a five-second
   connect timeout. Vercel is intended to use the Supabase Shared Pooler
-  transaction-mode URL. The current database has RLS enabled on public tables,
-  but no tracked migration or tested policy aligns row authorization with the
-  Flask session, so do not claim Flask-session-backed RLS. Database operations
-  use a shared transaction context that commits on success and rolls
-  back/closes resources on failure.
+  transaction-mode URL. The 2026-08-16 audit reported RLS enabled on public
+  tables, but no tracked policy aligned row authorization with the Flask
+  session, so do not claim Flask-session-backed RLS. Current live RLS state
+  cannot be rechecked while Supabase is inactive. Database operations use a
+  shared transaction context that commits on success and rolls back/closes
+  resources on failure.
 - Database failures are converted to a safe `DatabaseError`; public reads use
   HTTP 503 with an empty-state message, while authorized mutations flash a
   retryable error without exposing driver details.
