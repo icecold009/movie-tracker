@@ -266,7 +266,8 @@ these current gates.
       runner that blocks non-local requests and refuses dirty worktrees.
 - [x] Finish the responsive/state/pointer/reduced-motion/no-JS browser matrix, targeted accessibility checks, and commit-bound screenshots. On source commit `599a395967a6a168f1a9d3a7cfc0f254cf464728`, 12 route/viewport captures, 12 states, 28 accessibility records, and 27 screenshots passed.
 - [x] Record final local Python/JavaScript checks and complete Jev review. Final checks: 74 pytest passed, Ruff, compileall, pip check, Node syntax, and browser matrix. Jev covered all nine unique Package 6 changed files across bounded complete-diff batches and follow-up diffs, with zero exclusions.
-- [x] Check the connected Vercel preview path. No deployment was created: returned Vercel deployments identify GitHub commit refs/SHAs, the exact tested SHA is local and absent from the 17 returned records, and the exposed deploy operation does not document source-revision or explicit preview-target selection. No push was made.
+- [x] Check the connected Vercel preview path on 2026-10-02. At that time no deployment was created: returned Vercel deployments identified GitHub commit refs/SHAs, the exact tested SHA was local and absent from the 17 returned records, and the exposed deploy operation did not document source-revision or explicit preview-target selection. No push was made then.
+- [x] Follow-up on 2026-10-04: publish `codex/ui-release-evidence` at the exact reviewed SHA and verify the Git-triggered Vercel Preview reached READY. No PR, merge or production deployment was created.
 - [x] Keep production evidence separate; this package did not authorize or perform a production deployment.
 
 ## P0 — Make the existing project truthful and reliable
@@ -712,6 +713,13 @@ Track A is selected because it can be deterministic, explainable, and evaluated
 with the existing personal watchlist. Track B remains out of scope unless a
 legitimate availability source and historical snapshot terms are established.
 
+## Architecture documentation package — 2026-10-03
+
+Goal: explain the committed Movie Tracker architecture with source-linked evidence.
+Scope: root README and docs/architecture/{README.md,overview.mmd,detail.mmd,coverage.md,verification.md,verify.mjs}; previews are separate gallery outputs. Application behavior, dependencies, data, deployment and publication are outside this package; a separately authorized branch sync is recorded on 2026-10-04.
+Snapshot: `f2209af2891c9f5c9df3e03de8399419e2b51897`; branch: `codex/architecture-case-studies-20261004`. Canonical uncommitted work is excluded.
+Acceptance: source/commit-link checks, Mermaid rendering, dark PNG visual inspection, whitespace checks and complete-diff Jev review. Reproducible documentation checks and their limits are recorded in verification.md; runtime, hosted and provider gates remain separate.
+Status: documentation changes were published on `codex/architecture-case-studies-20261004` after the requested sync. This remains a feature branch; no PR, merge or production deployment is included. Jev is advisory and its review limits remain disclosed.
 
 ## Architecture documentation publication — 2026-10-04
 
