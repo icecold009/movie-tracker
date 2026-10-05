@@ -25,8 +25,8 @@ route or database health. The checked items and run results below are from the
       live schema verification then found 10 entries and zero incomplete rows.
       Current remote migration history and schema could not be rechecked because
       Supabase is inactive.
-- [ ] The encrypted deployed connection identity is still not verified from
-      current Connect settings because the connector returned metadata but no decrypted secret value.
+- [ ] The encrypted deployed connection identity is not verified. The
+      connector returned metadata but no decrypted secret value.
 - [x] The 2026-08-16 audit reported clean Supabase security advisors after
       revoking `SELECT` on `public.entries` from `PUBLIC`, `anon`, and
       `authenticated`. Current live grants and advisor results are unverified
@@ -49,7 +49,7 @@ route or database health. The checked items and run results below are from the
       against deployment commit `38d462dfd102000927a8b9f1d59aa7bc7810142c`.
 
 Historical local verification recorded for branch `codex/release-audit-2026-08-16` on
-**2026-08-16*: 61 pytest tests, Ruff, compilation, pip dependency validation,
+**2026-08-16**: 61 pytest tests, Ruff, compilation, pip dependency validation,
 JavaScript syntax checks, and `git diff --check` pass. These are local checks
 for the audit branch. The exact production deployment is `main` commit
 `38d462dfd102000927a8b9f1d59aa7bc7810142c`. This audit branch is local-only;
