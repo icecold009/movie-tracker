@@ -1,6 +1,23 @@
 # Verification record
 
-## Current audit — 2026-08-16
+## Current status check — 2026-10-05
+
+- Current `main` is `778e0031d6ffec99b69dd0422a4f176b702c73e5`.
+- Latest production deployment `dpl_2KPyLrvSThXB7R6C75nR1yXXw1Ls` is
+  `READY` from that `main` commit. A READY deployment is not route or
+  database-health evidence.
+- Supabase project `vgirgwxehcsxloclanhf` is `INACTIVE`. Read-only migration
+  history and role-privilege queries timed out; current live schema, migration
+  parity, grants, and database-backed routes are unverified.
+- The grouped seven-day Vercel runtime-status query returned no rows. It was not
+  an HTTP route probe and does not establish application health.
+- The exact encrypted Vercel `DATABASE_URL` identity remains unverified. The
+  connector returned variable metadata but no secret value; no credential was
+  read.
+- No database or production mutation was performed. All August 16 route,
+  database, grant, and deployment observations below are historical.
+
+## Historical audit — 2026-08-16
 
 - Canonical live URL: https://movie-tracker-umber-sigma.vercel.app
 - Canonical production deployment: `dpl_AD1kFbNeNY3A6WrkurMKRpJLVHge`
