@@ -700,6 +700,22 @@ async function verifyLongTitlesAtNarrowWidth() {
           true,
           "The narrow library fixture keeps a missing-poster fallback beside the long title.",
         );
+        const card = page.locator("[data-entry-card]").filter({ hasText: item.expectedTitle }).first();
+        const detailTrigger = card.locator("[data-detail-trigger]");
+        await detailTrigger.click();
+        assert.equal(await page.locator("#detail-modal").getAttribute("aria-hidden"), "false");
+        assert.equal(
+          (await page.locator("#detail-modal-title").innerText()).trim(),
+          item.expectedTitle,
+          "The detail dialog exposes the complete title when the card clamps it.",
+        );
+        await auditPage(page, "long-title-detail-dialog-320x800", viewport);
+        await screenshot(page, "long-title-detail-dialog-320x800");
+        report.states.push({ name: "long-title-detail-dialog-320x800", viewport: viewport.name });
+        report.interactions.push({
+          name: "long-title-detail-preserves-full-title",
+          passed: true,
+        });
       }
       await auditPage(page, item.label, viewport);
       await screenshot(page, item.screenshot);
