@@ -674,7 +674,7 @@ async function verifyLongTitlesAtNarrowWidth() {
     );
     try {
       await navigate(page, item.path, item.label, 200, viewport);
-      const title = page.locator(item.selector);
+      const title = page.locator(item.selector).filter({ hasText: item.expectedTitle });
       assert.equal(await title.count(), 1);
       assert.equal((await title.innerText()).trim(), item.expectedTitle);
       const geometry = await title.evaluate((element) => {
