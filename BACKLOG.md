@@ -57,6 +57,14 @@ syntax validation passes. Do not repeat those fixes.
       README limitations, release evidence, and recommender evaluation claims.
       A synthetic holdout is not a production-quality metric.
 
+- [ ] **MT-07 — Align Movie Tracker with the shared eight-project UI system.**
+      User-selected implementation task. Apply the shared dark neutral tokens,
+      type, controls, and layout to Movie Tracker only. Preserve server-rendered
+      routes, auth/CSRF, no-JavaScript forms, MT-01 title-search ownership,
+      metadata provenance, recommendation limits, and all peer worktrees.
+      Verify the synthetic 320/390/768/1024/1440 viewport and interaction matrix;
+      record only current branch-local evidence. No production/provider claims.
+
 Recommended commit checkpoints:
 
 1. `test(search): add request-order and failure-state coverage`
