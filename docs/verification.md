@@ -156,3 +156,61 @@ Package 6 final verification was captured on 2026-10-05 against source commit
   server, with provider/database access replaced and external requests blocked.
   The targeted DOM/keyboard checks are not axe results or a human screen-reader
   pass. This record does not represent production deployment or production data.
+
+## Shared UI system — MT-07 (2026-10-18)
+
+The UI consistency change was verified locally on branch
+`codex/apple-ui-movie-tracker-20261018`, implementation source SHA
+`a3e712e6e6b83a7d2d1e698a23e4991c28146ad3`. The current commit adds this
+verification record and the MT-07 backlog completion note; those documentation
+changes do not alter the tested UI source.
+
+The P00 source-comparison preflight remains the eight-project comparison in
+`C:\Users\91829\OneDrive\Documents\ChatGPT\Movie tracker\movie-tracker-eight-project-source-comparison-2026-10-18.md`.
+It fixes the eight named projects as the comparison set and uses Apple.com only
+as a bounded design reference. No peer repository was changed; this
+implementation applies the shared proposal to Movie Tracker only.
+
+- **Changes:** shared dark neutral tokens and system typography; blue actions
+  and focus with separate success, warning, and danger colors; compact page and
+  section headings; 44px controls; simpler responsive cards and forms; visible
+  labels for the three add-form fields. Existing Jinja templates for
+  recommendations and login already exposed the required content and feedback,
+  so their markup and authentication logic were retained.
+- **Local checks:** 75 pytest tests passed; Ruff 0.15.22, Python compilation,
+  pip check, `node --check static/app.js`, `node --check
+  scripts/ui_browser_matrix.cjs`, and `git diff --check` passed. These used
+  Python 3.13.12 locally. Hosted CI was not queried.
+- **Browser matrix:** the local synthetic fixture passed at 320x800, 390x844,
+  768x1024, 1024x900, and 1440x1000. It produced 15 route/viewport captures,
+  12 named states, 35 targeted DOM/accessibility records, seven interaction
+  checks, and 32 screenshots. All had no horizontal overflow, undersized
+  visible controls, unnamed controls, missing image alternatives, broken ARIA
+  references, or framework overlays. There were zero external requests,
+  console errors, or uncaught page errors. Three expected HTTP 503 responses
+  exercised synthetic provider/database error states.
+- **Interactions:** server-rendered no-JavaScript manual add; keyboard focus;
+  dialog containment, Escape and focus return; coarse pointer and reduced
+  motion; visible management labels at 320px; and failed-login feedback.
+  Browser POSTs were limited to the synthetic `/add` and `/login` forms.
+- **Evidence:** the report and 32 PNGs are outside Git at
+  `C:\Users\91829\OneDrive\Documents\ChatGPT\Movie tracker\evidence\movie-tracker-ui-final-retry-20261018`.
+  The runner recorded the branch and exact tested source SHA above.
+- **Limits:** fixtures are synthetic and loopback-only. No production database,
+  TMDB requests, preview, deployment, or production behavior was checked.
+  DOM/keyboard records are targeted checks, not axe or a human screen-reader
+  pass.
+- **Jev:** the R9 plan verdict was `revise_plan_before_changes` (confidence
+  0.27); it named no source defect or specific user decision. The P01 stylesheet
+  diff exceeded the review limit, so its 63 hunks were reviewed in two complete
+  batches covering `static/style.css` with no exclusions; both returned
+  `regression_concern` (confidence 0.36 and 0.44), without a concrete finding.
+  The P02 complete diff (`static/style.css`, `templates/index.html`) returned
+  `verification_gap` (0.27) with no concrete source finding. The P04 complete
+  diff (`scripts/ui_browser_matrix.cjs`) returned `no_clear_issue` (0.39), and
+  the subsequent `static/style.css` 44px navigation fix returned
+  `no_clear_issue` (0.41). The MT-07 backlog entry review covered
+  `BACKLOG.md` and returned `no_clear_issue` (0.90). Every diff review included
+  all Git-visible changes, had no exclusions, and resolved to Jev 1.13.0 with
+  non-empty usage. The P01 concerns were checked against the complete local
+  browser matrix and deterministic checks.

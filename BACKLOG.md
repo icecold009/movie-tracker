@@ -57,13 +57,17 @@ syntax validation passes. Do not repeat those fixes.
       README limitations, release evidence, and recommender evaluation claims.
       A synthetic holdout is not a production-quality metric.
 
-- [ ] **MT-07 — Align Movie Tracker with the shared eight-project UI system.**
-      User-selected implementation task. Apply the shared dark neutral tokens,
-      type, controls, and layout to Movie Tracker only. Preserve server-rendered
-      routes, auth/CSRF, no-JavaScript forms, MT-01 title-search ownership,
-      metadata provenance, recommendation limits, and all peer worktrees.
-      Verify the synthetic 320/390/768/1024/1440 viewport and interaction matrix;
-      record only current branch-local evidence. No production/provider claims.
+- [x] **MT-07 — Align Movie Tracker with the shared eight-project UI system.**
+      Completed 2026-10-18 on `codex/apple-ui-movie-tracker-20261018`;
+      implementation source SHA `a3e712e6e6b83a7d2d1e698a23e4991c28146ad3`.
+      Applied the shared dark neutral tokens, type, controls, and layout to
+      Movie Tracker only. Preserved server-rendered routes, auth/CSRF,
+      no-JavaScript forms, MT-01 title-search ownership, metadata provenance,
+      recommendation limits, and all peer worktrees. Local checks: 75 pytest
+      tests, Ruff, compileall, pip check, and JavaScript syntax passed. The
+      synthetic five-width matrix passed; evidence is in `docs/verification.md`
+      and outside Git under the task evidence directory. No production/provider
+      claims.
 
 Recommended commit checkpoints:
 
