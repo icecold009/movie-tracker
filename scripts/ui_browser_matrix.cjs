@@ -485,8 +485,234 @@ async function verifyKeyboardAndDialog() {
       name: "dialog-isolation-focus-trap-escape-return",
       passed: true,
     });
+
+    await page.getByRole("link", { name: "Manage archive" }).click();
+
+    async function verifyAdminDialog(triggerSelector, dialogSelector, firstFocusId, lastFocusId, name) {
+      const adminTrigger = page.locator(triggerSelector).first();
+      await adminTrigger.click();
+      const adminDialog = page.locator(dialogSelector);
+      assert.equal(await adminDialog.getAttribute("aria-hidden"), "false");
+      assert.equal(await adminDialog.getAttribute("aria-modal"), "true");
+      assert.deepEqual(
+        await page.locator("main").evaluate((main) => ({
+          inert: main.inert,
+          ariaHidden: main.getAttribute("aria-hidden"),
+        })),
+        { inert: true, ariaHidden: "true" },
+        name + " isolates the background while open.",
+      );
+      assert.equal(
+        await adminDialog.evaluate((element) => element.contains(document.activeElement)),
+        true,
+        name + " receives focus inside the open dialog.",
+      );
+      await page.locator(firstFocusId).evaluate((element) => element.focus());
+      await page.keyboard.press("Shift+Tab");
+      assert.equal(
+        await page.locator(lastFocusId).evaluate((element) => element === document.activeElement),
+        true,
+        name + " wraps reverse focus to the last control.",
+      );
+      await page.keyboard.press("Tab");
+      assert.equal(
+        await page.locator(firstFocusId).evaluate((element) => element === document.activeElement),
+        true,
+        name + " wraps forward focus to the first control.",
+      );
+      await page.keyboard.press("Escape");
+      assert.equal(await adminDialog.getAttribute("aria-hidden"), "true");
+      assert.equal(
+        await adminTrigger.evaluate((element) => document.activeElement === element),
+        true,
+        name + " returns focus to its trigger after Escape.",
+      );
+      report.interactions.push({
+        name: name + "-focus-trap-escape-return",
+        passed: true,
+      });
+    }
+
+    await verifyAdminDialog(
+      ".card-edit-js",
+      "#edit-modal",
+      "#modal-status",
+      "#modal-close",
+      "edit-dialog",
+    );
+    await verifyAdminDialog(
+      ".card-delete-js",
+      "#delete-modal",
+      "#delete-cancel",
+      "#delete-confirm-form button[type='submit']",
+      "delete-dialog",
+    );
   } finally {
     await context.close();
+  }
+}
+
+async function verifyInvalidAndDuplicateSubmissions() {
+  const viewport = { name: "390x844", width: 390, height: 844 };
+  const { context, page } = await newPage(
+    { viewport: { width: viewport.width, height: viewport.height } },
+    "add-form-validation-and-duplicate-submit",
+  );
+  let releaseRequest;
+  try {
+    await navigate(page, "/?fixture=admin-empty", "add-form-validation", 200, viewport);
+    await page.getByRole("link", { name: "Manage archive" }).click();
+    const title = page.locator("#title");
+    const manualAdd = page.getByRole("button", { name: "Save without metadata" });
+    const initialPostCount = report.postPaths.filter((pathname) => pathname === "/add").length;
+
+    await manualAdd.click();
+    assert.equal(await title.evaluate((element) => element.validity.valueMissing), true);
+    assert.equal(page.url(), origin + "/?fixture=admin-empty");
+    assert.equal(
+      report.postPaths.filter((pathname) => pathname === "/add").length,
+      initialPostCount,
+      "The browser blocks an empty required title before POST.",
+    );
+
+    await title.fill("   ");
+    const [invalidResponse] = await Promise.all([
+      page.waitForNavigation({ waitUntil: "networkidle" }),
+      manualAdd.click(),
+    ]);
+    assert.equal(invalidResponse.status(), 200);
+    assert.match(await page.locator(".flash-message").innerText(), /Title is required\./);
+    report.interactions.push({
+      name: "blank-title-client-and-server-validation",
+      browserBlockedEmpty: true,
+      serverRejectedWhitespace: true,
+      passed: true,
+    });
+
+    await page.getByRole("link", { name: "Manage archive" }).click();
+    await title.fill("Pending fixture submission");
+    let markRequestSeen;
+    const requestSeen = new Promise((resolve) => {
+      markRequestSeen = resolve;
+    });
+    const requestGate = new Promise((resolve) => {
+      releaseRequest = resolve;
+    });
+    await context.route("**/add", async (route) => {
+      markRequestSeen();
+      await requestGate;
+      await route.continue();
+    });
+
+    const navigation = page.waitForNavigation({ waitUntil: "networkidle" });
+    const click = manualAdd.click();
+    await requestSeen;
+    assert.equal(await manualAdd.isDisabled(), true);
+    assert.equal(await page.getByRole("button", { name: "Search TMDB and add" }).isDisabled(), true);
+    assert.equal(await page.locator("#add-form").getAttribute("data-loading-started"), "true");
+    assert.equal(await page.locator("main").getAttribute("aria-busy"), "true");
+
+    const duplicateState = await page.locator("#add-form").evaluate((form) => {
+      const duplicate = new Event("submit", { bubbles: true, cancelable: true });
+      const accepted = form.dispatchEvent(duplicate);
+      return { prevented: !accepted, loadingStarted: form.dataset.loadingStarted };
+    });
+    assert.deepEqual(duplicateState, { prevented: true, loadingStarted: "true" });
+    assert.equal(
+      report.postPaths.filter((pathname) => pathname === "/add").length,
+      initialPostCount + 2,
+      "The duplicate submit is canceled while exactly one pending POST is in flight.",
+    );
+
+    releaseRequest();
+    await Promise.all([navigation, click]);
+    assert.equal(
+      await page.getByRole("heading", { name: "Pending fixture submission" }).count(),
+      1,
+      "The single manual submission completes through the isolated fixture store.",
+    );
+    report.interactions.push({
+      name: "pending-and-duplicate-add-submit",
+      onePendingPost: true,
+      duplicatePrevented: true,
+      passed: true,
+    });
+    await screenshot(page, "single-add-after-pending-submit");
+  } finally {
+    if (releaseRequest) {
+      releaseRequest();
+    }
+    await context.close();
+  }
+}
+
+async function verifyLongTitlesAtNarrowWidth() {
+  const viewport = { name: "320x800", width: 320, height: 800 };
+  const cases = [
+    {
+      label: "long-title-library-320x800",
+      path: "/?fixture=long-titles",
+      selector: "[data-entry-card] h3",
+      expectedTitle:
+        "The Extraordinary Adventures of the Remarkably Patient Astronauts of the Outer Rim",
+      screenshot: "long-title-library-320x800",
+    },
+    {
+      label: "long-title-recommendation-320x800",
+      path: "/recommendations?fixture=long-titles",
+      selector: ".recommendation-card h2",
+      expectedTitle:
+        "The Exceptionally Long Voyage Beyond the Uncharted Nebula and Back Again",
+      screenshot: "long-title-recommendation-320x800",
+    },
+  ];
+
+  for (const item of cases) {
+    const { context, page } = await newPage(
+      { viewport: { width: viewport.width, height: viewport.height } },
+      item.label,
+    );
+    try {
+      await navigate(page, item.path, item.label, 200, viewport);
+      const title = page.locator(item.selector);
+      assert.equal(await title.count(), 1);
+      assert.equal((await title.innerText()).trim(), item.expectedTitle);
+      const geometry = await title.evaluate((element) => {
+        const titleRect = element.getBoundingClientRect();
+        const cardRect = element.closest(".card").getBoundingClientRect();
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const textRects = Array.from(range.getClientRects());
+        return {
+          insideCard: titleRect.left >= cardRect.left && titleRect.right <= cardRect.right,
+          textFragmentsInsideCard: textRects.every(
+            (rect) => rect.left >= cardRect.left && rect.right <= cardRect.right,
+          ),
+          textFragments: textRects.length,
+          cardWidth: Math.round(cardRect.width),
+        };
+      });
+      assert.equal(geometry.insideCard, true, item.label + " keeps its title inside the card.");
+      assert.equal(
+        geometry.textFragmentsInsideCard,
+        true,
+        item.label + " keeps every rendered title line inside the card.",
+      );
+      assert.ok(geometry.textFragments > 0, item.label + " renders visible title text.");
+      assert.ok(geometry.cardWidth <= viewport.width, item.label + " card fits the viewport.");
+      if (item.label === "long-title-library-320x800") {
+        assert.equal(
+          await page.locator("[data-entry-card]").first().locator(".poster-placeholder").isVisible(),
+          true,
+          "The narrow library fixture keeps a missing-poster fallback beside the long title.",
+        );
+      }
+      await auditPage(page, item.label, viewport);
+      await screenshot(page, item.screenshot);
+      report.states.push({ name: item.label, viewport: viewport.name, geometry });
+    } finally {
+      await context.close();
+    }
   }
 }
 
@@ -858,8 +1084,10 @@ async function run() {
   });
 
   await verifyZeroSearch();
+  await verifyLongTitlesAtNarrowWidth();
   await verifyLoadingSkeleton();
   await verifyProviderRecovery();
+  await verifyInvalidAndDuplicateSubmissions();
   await verifyManualFallbackAndNoJs();
   await verifyKeyboardAndDialog();
   await verifyPointerAndReducedMotion();

@@ -37,6 +37,7 @@ FIXTURE_STATES = {
     "admin-tmdb-error",
     "manual-fallback",
     "stale-metadata",
+    "long-titles",
     "undo-recovery",
     "recommendation-results",
     "recommendation-empty",
@@ -120,6 +121,14 @@ def _seed_entries(state):
             datetime.now(timezone.utc) - timedelta(days=181)
         ).isoformat()
         return [stale]
+    if state == "long-titles":
+        entries = _base_entries()
+        entries[0]["title"] = (
+            "The Extraordinary Adventures of the Remarkably Patient "
+            "Astronauts of the Outer Rim"
+        )
+        entries[0]["poster_url"] = None
+        return entries
     if state == "undo-recovery":
         return [entry for entry in _base_entries() if entry["id"] != 101]
     return _base_entries()
@@ -153,6 +162,20 @@ def _discover_tmdb(media_type):
         raise TMDBRequestError("Synthetic TMDB outage.")
     if _state() == "recommendation-empty" or media_type != "movie":
         return []
+    if _state() == "long-titles":
+        return [
+            {
+                "title": (
+                    "The Exceptionally Long Voyage Beyond the "
+                    "Uncharted Nebula and Back Again"
+                ),
+                "tmdb_id": 705,
+                "media_type": "movie",
+                "genre_ids": [18],
+                "release_date": "2025-05-21",
+                "poster_url": "/fixture-poster/arrival.svg",
+            }
+        ]
     return [
         {
             "title": "New Mystery",
