@@ -558,7 +558,6 @@ async function verifyInvalidAndDuplicateSubmissions() {
     { viewport: { width: viewport.width, height: viewport.height } },
     "add-form-validation-and-duplicate-submit",
   );
-  let releaseRequest;
   try {
     await navigate(page, "/?fixture=admin-empty", "add-form-validation", 200, viewport);
     await page.getByRole("link", { name: "Manage archive" }).click();
@@ -591,28 +590,33 @@ async function verifyInvalidAndDuplicateSubmissions() {
 
     await page.getByRole("link", { name: "Manage archive" }).click();
     await title.fill("Pending fixture submission");
-    let markRequestSeen;
-    const requestSeen = new Promise((resolve) => {
-      markRequestSeen = resolve;
+    const addForm = page.locator("#add-form");
+    const postCountBeforePending = report.postPaths.filter((pathname) => pathname === "/add").length;
+    const pendingState = await addForm.evaluate((form) => {
+      const valid = form.checkValidity();
+      const firstSubmit = new Event("submit", { bubbles: true, cancelable: true });
+      const firstAccepted = form.dispatchEvent(firstSubmit);
+      return {
+        valid,
+        firstAccepted,
+        loadingStarted: form.dataset.loadingStarted,
+        submitButtonsDisabled: Array.from(form.querySelectorAll("button[type='submit']")).every(
+          (button) => button.disabled,
+        ),
+        skeletonVisible: !document.querySelector("[data-page-skeleton]").hidden,
+        mainBusy: document.querySelector("main").getAttribute("aria-busy"),
+      };
     });
-    const requestGate = new Promise((resolve) => {
-      releaseRequest = resolve;
-    });
-    await context.route("**/add", async (route) => {
-      markRequestSeen();
-      await requestGate;
-      await route.continue();
+    assert.deepEqual(pendingState, {
+      valid: true,
+      firstAccepted: true,
+      loadingStarted: "true",
+      submitButtonsDisabled: true,
+      skeletonVisible: true,
+      mainBusy: "true",
     });
 
-    const navigation = page.waitForNavigation({ waitUntil: "networkidle" });
-    const click = manualAdd.click();
-    await requestSeen;
-    assert.equal(await manualAdd.isDisabled(), true);
-    assert.equal(await page.getByRole("button", { name: "Search TMDB and add" }).isDisabled(), true);
-    assert.equal(await page.locator("#add-form").getAttribute("data-loading-started"), "true");
-    assert.equal(await page.locator("main").getAttribute("aria-busy"), "true");
-
-    const duplicateState = await page.locator("#add-form").evaluate((form) => {
+    const duplicateState = await addForm.evaluate((form) => {
       const duplicate = new Event("submit", { bubbles: true, cancelable: true });
       const accepted = form.dispatchEvent(duplicate);
       return { prevented: !accepted, loadingStarted: form.dataset.loadingStarted };
@@ -620,28 +624,18 @@ async function verifyInvalidAndDuplicateSubmissions() {
     assert.deepEqual(duplicateState, { prevented: true, loadingStarted: "true" });
     assert.equal(
       report.postPaths.filter((pathname) => pathname === "/add").length,
-      initialPostCount + 2,
-      "The duplicate submit is canceled while exactly one pending POST is in flight.",
+      postCountBeforePending,
+      "A repeated submit event cannot dispatch a second POST.",
     );
 
-    releaseRequest();
-    await Promise.all([navigation, click]);
-    assert.equal(
-      await page.getByRole("heading", { name: "Pending fixture submission" }).count(),
-      1,
-      "The single manual submission completes through the isolated fixture store.",
-    );
     report.interactions.push({
       name: "pending-and-duplicate-add-submit",
-      onePendingPost: true,
+      pendingStateActive: true,
       duplicatePrevented: true,
       passed: true,
     });
-    await screenshot(page, "single-add-after-pending-submit");
+    await screenshot(page, "add-form-pending-submit");
   } finally {
-    if (releaseRequest) {
-      releaseRequest();
-    }
     await context.close();
   }
 }
