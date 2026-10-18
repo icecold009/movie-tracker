@@ -33,6 +33,7 @@ const output = path.resolve(
     path.join(os.tmpdir(), "movie-tracker-ui-evidence", safeBranch + "-" + commit.slice(0, 8)),
 );
 const viewports = [
+  { name: "320x800", width: 320, height: 800 },
   { name: "390x844", width: 390, height: 844 },
   { name: "768x1024", width: 768, height: 1024 },
   { name: "1024x900", width: 1024, height: 900 },
@@ -636,6 +637,59 @@ async function verifyManualFallbackAndNoJs() {
   }
 }
 
+async function verifyManagementLabels() {
+  const viewport = { name: "320x800", width: 320, height: 800 };
+  const { context, page } = await newPage(
+    { viewport: { width: viewport.width, height: viewport.height } },
+    "visible-management-form-labels",
+  );
+  try {
+    await navigate(page, "/?fixture=admin", "visible-management-form-labels", 200, viewport);
+    await page.getByRole("link", { name: "Manage archive" }).click();
+
+    for (const [id, expectedText] of [
+      ["title", "Movie or show title"],
+      ["entry-type", "Entry type"],
+      ["status", "Watch status"],
+    ]) {
+      const label = page.locator(`label[for="${id}"]`);
+      assert.equal(await label.isVisible(), true, expectedText + " is visible at 320px.");
+      assert.equal((await label.innerText()).trim(), expectedText);
+    }
+
+    const audit = await auditPage(page, "management-form-labels-320x800", viewport);
+    assert.equal(audit.horizontalOverflow, false);
+    await screenshot(page, "management-form-labels-320x800");
+    report.interactions.push({ name: "visible-management-form-labels", viewport: viewport.name, passed: true });
+  } finally {
+    await context.close();
+  }
+}
+
+async function verifyFailedLoginFeedback() {
+  const viewport = { name: "390x844", width: 390, height: 844 };
+  const { context, page } = await newPage(
+    { viewport: { width: viewport.width, height: viewport.height } },
+    "failed-login-feedback",
+  );
+  try {
+    await navigate(page, "/login", "failed-login-feedback", 200, viewport);
+    await page.locator("#password").fill("synthetic-invalid-password");
+    const [response] = await Promise.all([
+      page.waitForNavigation({ waitUntil: "networkidle" }),
+      page.getByRole("button", { name: "Log In" }).click(),
+    ]);
+    assert.equal(response.status(), 200);
+    assert.equal(await page.locator(".flash-error").innerText(), "Incorrect password.");
+    assert.equal(await page.locator("#password").inputValue(), "");
+    await auditPage(page, "failed-login-feedback-390x844", viewport);
+    await screenshot(page, "failed-login-feedback-390x844");
+    report.interactions.push({ name: "failed-login-feedback-preserved", viewport: viewport.name, passed: true });
+  } finally {
+    await context.close();
+  }
+}
+
 async function verifyPointerAndReducedMotion() {
   const viewport = { name: "390x844", width: 390, height: 844 };
   const coarse = await newPage(
@@ -809,6 +863,8 @@ async function run() {
   await verifyManualFallbackAndNoJs();
   await verifyKeyboardAndDialog();
   await verifyPointerAndReducedMotion();
+  await verifyManagementLabels();
+  await verifyFailedLoginFeedback();
 
   assert.equal(report.externalRequests.length, 0, "No requests left the local fixture origin.");
   assert.equal(report.consoleErrors.length, 0, "No unexplained browser console errors occurred.");
@@ -818,8 +874,8 @@ async function run() {
     "Every browser request stays on the fixture origin.",
   );
   assert.ok(
-    report.postPaths.every((pathname) => pathname === "/add"),
-    "The only browser POST actions are fixture-only add forms.",
+    report.postPaths.every((pathname) => ["/add", "/login"].includes(pathname)),
+    "Every browser POST stays within a local synthetic add or login form.",
   );
 
   report.evidenceScope = {
