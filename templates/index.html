@@ -132,20 +132,20 @@
     <form id="add-form" method="POST" action="/add" class="add-form" data-loading-form data-reveal aria-describedby="management-guidance">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-field form-field-title">
-            <label class="form-label sr-only" for="title">Movie or show title</label>
+            <label class="form-label" for="title">Movie or show title</label>
             <input type="text" id="title" name="title" value="{{ pending_add.get('title', '') }}" placeholder="Search movie or show title..." maxlength="200" autocomplete="off" required>
             <div id="title-search-feedback" class="search-feedback" role="status" aria-live="polite" hidden></div>
             <div id="title-search-results" class="search-results" hidden></div>
         </div>
         <div class="form-field">
-        <label class="form-label sr-only" for="entry-type">Entry type</label>
+        <label class="form-label" for="entry-type">Entry type</label>
         <select id="entry-type" name="entry_type">
             <option value="Movie"{% if pending_add.get('entry_type', 'Movie') == 'Movie' %} selected{% endif %}>Movie</option>
             <option value="TV Show"{% if pending_add.get('entry_type') == 'TV Show' %} selected{% endif %}>TV Show</option>
         </select>
         </div>
         <div class="form-field">
-        <label class="form-label sr-only" for="status">Watch status</label>
+        <label class="form-label" for="status">Watch status</label>
         <select id="status" name="status">
             <option value="Watched"{% if pending_add.get('status', 'Watched') == 'Watched' %} selected{% endif %}>Watched</option>
             <option value="Want to Watch"{% if pending_add.get('status') == 'Want to Watch' %} selected{% endif %}>Want to Watch</option>

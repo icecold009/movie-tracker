@@ -1045,6 +1045,7 @@ button:disabled { cursor: wait; opacity: 0.62; }
 
 .add-form { align-items: stretch; }
 .form-field { display: grid; gap: 6px; min-width: 150px; }
+.form-label { color: var(--text-muted); font-size: 0.875rem; font-weight: 500; }
 .form-field-title { position: relative; flex: 1 1 280px; min-width: 220px; }
 .form-field select { width: 100%; height: 100%; }
 .add-actions { display: flex; align-items: stretch; gap: 8px; }
@@ -1190,7 +1191,6 @@ button:disabled { cursor: wait; opacity: 0.62; }
     .browse-toolbar { margin-left: 20px; margin-right: 20px; }
     .recovery-banner { align-items: flex-start; flex-direction: column; }
     .add-recovery { margin-top: -30px; }
-    .form-label.sr-only { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; color: var(--text-muted); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; }
     .form-field-title { flex-basis: 100%; }
     .form-field { flex: 1 1 calc(50% - 5px); }
     .rating-group { flex: 1 1 100%; justify-content: space-between; padding-top: 4px; }
