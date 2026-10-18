@@ -214,3 +214,55 @@ implementation applies the shared proposal to Movie Tracker only.
   all Git-visible changes, had no exclusions, and resolved to Jev 1.13.0 with
   non-empty usage. The P01 concerns were checked against the complete local
   browser matrix and deterministic checks.
+
+### MT-07 acceptance verification addendum — 2026-10-18
+
+The user subsequently authorized implementation of P01–P04. This follow-up
+closes the missing narrow-title, invalid-submit, duplicate-submit, pending-state,
+and all-dialog keyboard cases without changing routes, schemas, authentication,
+or data behavior. The exact tested code commit is
+`672bd23fb664df14fa777bfc111056060db7bfd1` on
+`codex/apple-ui-movie-tracker-20261018`; the documentation commit is separate.
+
+- **Fixture and layout additions:** `scripts/ui_fixture_server.py` now provides
+  synthetic long library and recommendation titles. At widths up to 360px, the
+  detail dialog stacks a compact poster above its text so the complete title
+  and metadata remain readable.
+- **Browser matrix:** 15 route/viewport baselines across 320x800, 390x844,
+  768x1024, 1024x900, and 1440x1000; 15 named fixture states; 41 targeted
+  DOM/accessibility audits; 12 interaction checks; and 36 screenshots. All
+  audits reported no horizontal overflow, undersized visible targets, unnamed
+  controls, missing image alternatives, broken ARIA references, or framework
+  overlays. There were zero external requests, console errors, and page errors;
+  three expected synthetic HTTP 503 responses exercised provider/database
+  failure states.
+- **New interactions covered:** empty required input is blocked by the browser;
+  whitespace-only input is rejected by server validation; pending/loading
+  state disables both add buttons and a repeated submit event is canceled; the
+  full long title is available in the detail dialog at 320px; detail, edit, and
+  delete dialogs all contain focus and restore it after Escape. The duplicate
+  submit guard is exercised with synthetic submit events and sends no request;
+  successful manual add remains covered by the existing synthetic fixture
+  POST. Total browser POSTs were `/add` four times and `/login` once.
+- **Local checks on the tested code:** 75 pytest tests passed; Ruff,
+  `compileall`, external `pip check`, Node syntax checks for `static/app.js` and
+  `scripts/ui_browser_matrix.cjs`, and `git diff --check` passed. The virtual
+  environment does not include pip, so dependency health was checked with
+  `python -m pip --python .venv\Scripts\python.exe check`.
+- **Evidence:** `verification-report.json` and 36 screenshots are outside Git
+  under
+  `C:\Users\91829\OneDrive\Documents\ChatGPT\Movie tracker\evidence\movie-tracker-ui-final-20261018`.
+  The report records branch, exact code commit, browser/Python versions, route
+  counts, POST paths, and evidence limits.
+- **Jev:** complete test/fixture diff review returned `no_clear_issue`
+  (confidence 0.45; Jev 1.13.0; usage 5,857 input / 497 output tokens), with
+  both changed files covered and no exclusions. Follow-up test-only reviews
+  returned `no_clear_issue` (confidence 0.24 and 0.62). The narrow-dialog CSS
+  review returned `verification_gap` (confidence 0.44; one file covered, no
+  exclusions); it named no concrete defect or user choice. The exact 320px
+  dialog audit, final matrix, and screenshot independently closed that
+  verification gap. These scores are advisory signals, not user decisions.
+- **Limits:** the fixture is synthetic and loopback-only. The focused DOM and
+  keyboard audits are not axe results or a human screen-reader pass. Hosted CI,
+  preview, production, provider health, and peer-project implementations were
+  not checked or changed.

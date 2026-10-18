@@ -68,6 +68,18 @@ syntax validation passes. Do not repeat those fixes.
       synthetic five-width matrix passed; evidence is in `docs/verification.md`
       and outside Git under the task evidence directory. No production/provider
       claims.
+      Follow-up acceptance verification completed 2026-10-18 at code commit
+      `672bd23fb664df14fa777bfc111056060db7bfd1`: synthetic long-title library
+      and recommendation states; full-title detail display and stacked dialog
+      layout at 320px; browser/server invalid-input handling; pending and
+      duplicate-submit guard; and focus containment, Escape, and focus return
+      for detail, edit, and delete dialogs. Final matrix: 15 route/viewport
+      baselines, 15 states, 41 DOM/accessibility audits, 12 interactions, and
+      36 screenshots; 75 pytest tests, Ruff, compilation, pip check, Node syntax,
+      and diff check passed. Report and screenshots are outside Git under
+      `evidence/movie-tracker-ui-final-20261018`; limits and Jev verdicts are
+      recorded in `docs/verification.md`. Other seven project repositories and
+      pending MT-01..06 were not changed or declared complete.
 
 Recommended commit checkpoints:
 
