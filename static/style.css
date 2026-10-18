@@ -1276,7 +1276,7 @@ button:disabled { cursor: wait; opacity: 0.62; }
     padding-bottom: 8px;
 }
 .site-nav { gap: 3px; }
-.site-nav .login-link { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 10px; }
+.site-nav .login-link { min-inline-size: 44px; min-height: 44px; display: inline-flex; align-items: center; padding: 8px 10px; }
 .library-header .logout-btn { min-height: 44px; }
 
 .library-hero {
